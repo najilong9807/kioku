@@ -31,15 +31,22 @@ interface AddRestaurantFormValues {
 // 바텀시트에 넘기는 children은 open() 호출 시점에 한 번 고정돼요.
 // 그래서 입력 상태는 바깥 App이 아니라 이 컴포넌트 자신이 들고 있어야
 // 타이핑/별점 선택마다 이 컴포넌트만 다시 렌더링되어 반영돼요.
-function AddRestaurantForm({
+// 새 맛집을 등록할 때와 기존 맛집을 수정할 때 모두 사용해요.
+function RestaurantForm({
+  initialValues,
+  submitLabel = "기록하기",
   onSubmit,
+  onCancel,
 }: {
+  initialValues?: AddRestaurantFormValues;
+  submitLabel?: string;
   onSubmit: (values: AddRestaurantFormValues) => void;
+  onCancel: () => void;
 }) {
-  const [name, setName] = useState("");
-  const [category, setCategory] = useState("");
-  const [memo, setMemo] = useState("");
-  const [rating, setRating] = useState(5);
+  const [name, setName] = useState(initialValues?.name ?? "");
+  const [category, setCategory] = useState(initialValues?.category ?? "");
+  const [memo, setMemo] = useState(initialValues?.memo ?? "");
+  const [rating, setRating] = useState(initialValues?.rating ?? 5);
 
   const handleSubmit = () => {
     if (!name.trim()) {
@@ -99,9 +106,14 @@ function AddRestaurantForm({
           onValueChange={setRating}
         />
       </div>
-      <Button display="block" variant="fill" onClick={handleSubmit}>
-        기록하기
-      </Button>
+      <div style={{ display: "flex", gap: "8px" }}>
+        <Button style={{ flex: 1 }} variant="weak" color="dark" onClick={onCancel}>
+          취소
+        </Button>
+        <Button style={{ flex: 1 }} variant="fill" onClick={handleSubmit}>
+          {submitLabel}
+        </Button>
+      </div>
     </div>
   );
 }
@@ -158,7 +170,9 @@ function App() {
     open({
       header: "맛집 기록하기",
       children: (
-        <AddRestaurantForm
+        <RestaurantForm
+          submitLabel="기록하기"
+          onCancel={close}
           onSubmit={(values) => {
             setRestaurants((prev) => [
               {
@@ -168,6 +182,32 @@ function App() {
               },
               ...prev,
             ]);
+            close();
+          }}
+        />
+      ),
+    });
+  };
+
+  const openEditSheet = (restaurant: Restaurant) => {
+    open({
+      header: "맛집 수정하기",
+      children: (
+        <RestaurantForm
+          initialValues={{
+            name: restaurant.name,
+            category: restaurant.category,
+            memo: restaurant.memo,
+            rating: restaurant.rating,
+          }}
+          submitLabel="수정하기"
+          onCancel={close}
+          onSubmit={(values) => {
+            setRestaurants((prev) =>
+              prev.map((item) =>
+                item.id === restaurant.id ? { ...item, ...values } : item,
+              ),
+            );
             close();
           }}
         />
@@ -202,47 +242,56 @@ function App() {
       ) : (
         <List>
           {restaurants.map((restaurant) => (
-            <ListRow
+            <div
               key={restaurant.id}
-              left={
-                <ListRow.AssetText shape="squircle" size="medium">
-                  {restaurant.name.slice(0, 1)}
-                </ListRow.AssetText>
-              }
-              contents={
-                <ListRow.Texts
-                  type="2RowTypeA"
-                  top={restaurant.name}
-                  bottom={`${restaurant.category} · ${restaurant.visitedAt}`}
-                />
-              }
-              right={
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "flex-end",
-                    gap: "8px",
-                  }}
-                >
-                  <Rating
-                    readOnly
-                    value={restaurant.rating}
-                    max={5}
-                    size="small"
-                    variant="iconOnly"
+              onClick={() => openEditSheet(restaurant)}
+              style={{ cursor: "pointer" }}
+            >
+              <ListRow
+                withTouchEffect
+                left={
+                  <ListRow.AssetText shape="squircle" size="medium">
+                    {restaurant.name.slice(0, 1)}
+                  </ListRow.AssetText>
+                }
+                contents={
+                  <ListRow.Texts
+                    type="2RowTypeA"
+                    top={restaurant.name}
+                    bottom={`${restaurant.category} · ${restaurant.visitedAt}`}
                   />
-                  <Button
-                    size="small"
-                    variant="weak"
-                    color="danger"
-                    onClick={() => handleDelete(restaurant)}
+                }
+                right={
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-end",
+                      gap: "8px",
+                    }}
                   >
-                    삭제
-                  </Button>
-                </div>
-              }
-            />
+                    <Rating
+                      readOnly
+                      value={restaurant.rating}
+                      max={5}
+                      size="small"
+                      variant="iconOnly"
+                    />
+                    <Button
+                      size="small"
+                      variant="weak"
+                      color="danger"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleDelete(restaurant);
+                      }}
+                    >
+                      삭제
+                    </Button>
+                  </div>
+                }
+              />
+            </div>
           ))}
         </List>
       )}
