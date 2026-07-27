@@ -25,6 +25,16 @@ import {
   type Restaurant,
 } from "./restaurantStorage";
 
+// 목록에서 메뉴가 많으면 2개까지만 보여주고 나머지는 "+N"으로 축약해요.
+function summarizeMenus(menus: string[]): string {
+  if (menus.length === 0) {
+    return "";
+  }
+  const shown = menus.slice(0, 2).join(", ");
+  const remaining = menus.length - 2;
+  return remaining > 0 ? `${shown} +${remaining}` : shown;
+}
+
 const ALL_CATEGORY = "전체";
 const FILTER_CATEGORIES = [ALL_CATEGORY, ...CATEGORIES] as const;
 
@@ -120,6 +130,7 @@ function QuickPickChips({
 interface AddRestaurantFormValues {
   name: string;
   category: Category;
+  menus: string[];
   companion: string;
   weather: string;
   memo: string;
@@ -145,6 +156,8 @@ function RestaurantForm({
 }) {
   const [name, setName] = useState(initialValues?.name ?? "");
   const [category, setCategory] = useState<Category>(initialValues?.category ?? CATEGORIES[0]);
+  const [menus, setMenus] = useState<string[]>(initialValues?.menus ?? []);
+  const [menuInput, setMenuInput] = useState("");
   const [companion, setCompanion] = useState(initialValues?.companion ?? "");
   const [weather, setWeather] = useState(initialValues?.weather ?? "");
   const [memo, setMemo] = useState(initialValues?.memo ?? "");
@@ -164,6 +177,20 @@ function RestaurantForm({
 
   const isPastVisit = visitDate < todayDateInputValue();
   const requiresReceipt = isPastVisit && !receiptImage;
+  const hasNoMenu = menus.length === 0;
+
+  const addMenu = () => {
+    const trimmed = menuInput.trim();
+    if (!trimmed) {
+      return;
+    }
+    setMenus((prev) => [...prev, trimmed]);
+    setMenuInput("");
+  };
+
+  const removeMenu = (index: number) => {
+    setMenus((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleReceiptChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -177,13 +204,14 @@ function RestaurantForm({
   };
 
   const handleSubmit = () => {
-    if (!name.trim() || requiresReceipt) {
+    if (!name.trim() || requiresReceipt || hasNoMenu) {
       return;
     }
 
     onSubmit({
       name: name.trim(),
       category,
+      menus,
       companion: companion.trim(),
       weather: weather.trim(),
       memo: memo.trim(),
@@ -297,6 +325,71 @@ function RestaurantForm({
           ))}
         </SegmentedControl>
       </div>
+      <div>
+        <div style={{ marginBottom: "8px", color: "#6b7684", fontSize: "14px" }}>
+          먹은 메뉴
+        </div>
+        <div style={{ display: "flex", gap: "8px" }}>
+          <TextField
+            variant="box"
+            placeholder="예) 짜장면"
+            value={menuInput}
+            onChange={(e) => setMenuInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                addMenu();
+              }
+            }}
+            style={{ flex: 1 }}
+          />
+          <Button variant="weak" color="dark" onClick={addMenu}>
+            추가
+          </Button>
+        </div>
+        {menus.length > 0 && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "12px" }}>
+            {menus.map((menu, index) => (
+              <div
+                key={`${menu}-${index}`}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "6px 10px",
+                  borderRadius: "16px",
+                  backgroundColor: "#f2f4f6",
+                  fontSize: "14px",
+                  color: "#191f28",
+                }}
+              >
+                <span>{menu}</span>
+                <button
+                  type="button"
+                  onClick={() => removeMenu(index)}
+                  aria-label={`${menu} 삭제`}
+                  style={{
+                    border: "none",
+                    background: "none",
+                    padding: 0,
+                    cursor: "pointer",
+                    color: "#8b95a1",
+                    fontSize: "14px",
+                    lineHeight: 1,
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        {hasNoMenu && (
+          <div style={{ marginTop: "8px", color: "#f04452", fontSize: "13px" }}>
+            메뉴를 1개 이상 등록해야 저장할 수 있어요.
+          </div>
+        )}
+      </div>
       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
         <QuickPickChips options={COMPANION_QUICK_OPTIONS} onSelect={setCompanion} />
         <TextField
@@ -347,7 +440,7 @@ function RestaurantForm({
         <Button
           style={{ flex: 1 }}
           variant="fill"
-          disabled={requiresReceipt}
+          disabled={requiresReceipt || hasNoMenu}
           onClick={handleSubmit}
         >
           {submitLabel}
@@ -552,6 +645,7 @@ function App() {
           initialValues={{
             name: restaurant.name,
             category: restaurant.category,
+            menus: restaurant.menus,
             companion: restaurant.companion,
             weather: restaurant.weather,
             memo: restaurant.memo,
@@ -648,7 +742,13 @@ function App() {
                   <ListRow.Texts
                     type="2RowTypeA"
                     top={restaurant.name}
-                    bottom={`${restaurant.category} · ${formatDisplayDate(restaurant.visitDate)}`}
+                    bottom={[
+                      restaurant.category,
+                      summarizeMenus(restaurant.menus),
+                      formatDisplayDate(restaurant.visitDate),
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
                   />
                 }
                 right={
