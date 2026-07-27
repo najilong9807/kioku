@@ -19,22 +19,66 @@ function isCategory(value: unknown): value is Category {
   return typeof value === "string" && (CATEGORIES as readonly string[]).includes(value);
 }
 
+// <input type="date">의 value/max 형식("YYYY-MM-DD")과 맞춰서 문자열 비교만으로도
+// 날짜 순 정렬·비교가 가능하도록 이 형식으로 저장해요.
+export function toDateInputValue(date: Date): string {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+export function todayDateInputValue(): string {
+  return toDateInputValue(new Date());
+}
+
+// 화면에 보여줄 때는 기존처럼 "YYYY.MM.DD" 형태로 표시해요.
+export function formatDisplayDate(value: string): string {
+  return value.replaceAll("-", ".");
+}
+
 export interface Restaurant {
   id: string;
   name: string;
   category: Category;
+  companion: string;
+  weather: string;
   memo: string;
   rating: number;
-  visitedAt: string;
+  visitDate: string; // "YYYY-MM-DD"
+  receiptImage?: string; // base64 데이터 URL
 }
 
-// 예전에 자유 텍스트로 저장된 음식 종류는 고정 목록에 없을 수 있어요.
-// 그런 값은 "기타"로 취급해서 항상 정해진 카테고리 중 하나가 되도록 해요.
+// 예전 데이터 호환:
+// - 자유 텍스트로 저장된 음식 종류가 고정 목록에 없으면 "기타"로 취급해요.
+// - companion/weather 필드가 없으면 빈 문자열로 채워요.
+// - visitDate 이전에는 visitedAt("YYYY.MM.DD")이라는 이름으로 저장했어서, 있으면 변환해서 사용해요.
 function parseRestaurants(value: string): Restaurant[] {
-  const parsed = JSON.parse(value) as Array<Omit<Restaurant, "category"> & { category: unknown }>;
+  const parsed = JSON.parse(value) as Array<{
+    id: string;
+    name: string;
+    category: unknown;
+    companion?: string;
+    weather?: string;
+    memo: string;
+    rating: number;
+    visitDate?: string;
+    visitedAt?: string;
+    receiptImage?: string;
+  }>;
+
   return parsed.map((item) => ({
-    ...item,
+    id: item.id,
+    name: item.name,
     category: isCategory(item.category) ? item.category : "기타",
+    companion: item.companion ?? "",
+    weather: item.weather ?? "",
+    memo: item.memo,
+    rating: item.rating,
+    visitDate:
+      item.visitDate ??
+      (item.visitedAt ? item.visitedAt.replaceAll(".", "-") : todayDateInputValue()),
+    receiptImage: item.receiptImage,
   }));
 }
 
