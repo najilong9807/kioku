@@ -13,7 +13,7 @@ import {
   useBottomSheet,
   useDialog,
 } from "@toss/tds-mobile";
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties } from "react";
 import "./App.css";
 import {
   CATEGORIES,
@@ -34,6 +34,12 @@ function summarizeMenus(menus: string[]): string {
   const remaining = menus.length - 2;
   return remaining > 0 ? `${shown} +${remaining}` : shown;
 }
+
+// 브랜드 색(노란색)이 밝아서 흰 글씨는 가독성이 떨어져요.
+// variant="fill" + color="primary"(기본값) 버튼은 이 스타일로 글자색을 진하게 덮어써요.
+const PRIMARY_FILL_BUTTON_TEXT_STYLE = {
+  "--button-color": "#000000",
+} as CSSProperties;
 
 const ALL_CATEGORY = "전체";
 const FILTER_CATEGORIES = [ALL_CATEGORY, ...CATEGORIES] as const;
@@ -438,7 +444,7 @@ function RestaurantForm({
           취소
         </Button>
         <Button
-          style={{ flex: 1 }}
+          style={{ flex: 1, ...PRIMARY_FILL_BUTTON_TEXT_STYLE }}
           variant="fill"
           disabled={requiresReceipt || hasNoMenu}
           onClick={handleSubmit}
@@ -682,7 +688,12 @@ function App() {
       />
 
       <div style={{ padding: "0 24px 16px" }}>
-        <Button display="block" variant="fill" onClick={openAddSheet}>
+        <Button
+          display="block"
+          variant="fill"
+          style={PRIMARY_FILL_BUTTON_TEXT_STYLE}
+          onClick={openAddSheet}
+        >
           맛집 기록하기
         </Button>
       </div>
