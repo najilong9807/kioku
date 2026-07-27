@@ -7,6 +7,7 @@ import {
   TextField,
   Top,
   useBottomSheet,
+  useDialog,
 } from "@toss/tds-mobile";
 import { useEffect, useState } from "react";
 import "./App.css";
@@ -110,6 +111,7 @@ function App() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   const { open, close } = useBottomSheet();
+  const { openConfirm } = useDialog();
 
   // 기기에 저장된 기록을 앱 시작 시 한 번 불러와요.
   useEffect(() => {
@@ -136,6 +138,21 @@ function App() {
     }
     saveRestaurants(restaurants);
   }, [restaurants, isLoaded]);
+
+  const handleDelete = async (restaurant: Restaurant) => {
+    const confirmed = await openConfirm({
+      title: `${restaurant.name}을(를) 삭제할까요?`,
+      description: "삭제한 기록은 다시 되돌릴 수 없어요.",
+      confirmButton: "삭제",
+      cancelButton: "취소",
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    setRestaurants((prev) => prev.filter((item) => item.id !== restaurant.id));
+  };
 
   const openAddSheet = () => {
     open({
@@ -200,13 +217,30 @@ function App() {
                 />
               }
               right={
-                <Rating
-                  readOnly
-                  value={restaurant.rating}
-                  max={5}
-                  size="small"
-                  variant="iconOnly"
-                />
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-end",
+                    gap: "8px",
+                  }}
+                >
+                  <Rating
+                    readOnly
+                    value={restaurant.rating}
+                    max={5}
+                    size="small"
+                    variant="iconOnly"
+                  />
+                  <Button
+                    size="small"
+                    variant="weak"
+                    color="danger"
+                    onClick={() => handleDelete(restaurant)}
+                  >
+                    삭제
+                  </Button>
+                </div>
               }
             />
           ))}
