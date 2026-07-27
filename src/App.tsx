@@ -4,14 +4,25 @@ import {
   ListRow,
   Rating,
   Result,
+  SearchField,
+  SegmentedControl,
   TextField,
   Top,
   useBottomSheet,
   useDialog,
 } from "@toss/tds-mobile";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./App.css";
-import { loadRestaurants, saveRestaurants, type Restaurant } from "./restaurantStorage";
+import {
+  CATEGORIES,
+  loadRestaurants,
+  saveRestaurants,
+  type Category,
+  type Restaurant,
+} from "./restaurantStorage";
+
+const ALL_CATEGORY = "전체";
+const FILTER_CATEGORIES = [ALL_CATEGORY, ...CATEGORIES] as const;
 
 function formatToday() {
   const now = new Date();
@@ -23,7 +34,7 @@ function formatToday() {
 
 interface AddRestaurantFormValues {
   name: string;
-  category: string;
+  category: Category;
   memo: string;
   rating: number;
 }
@@ -44,7 +55,7 @@ function RestaurantForm({
   onCancel: () => void;
 }) {
   const [name, setName] = useState(initialValues?.name ?? "");
-  const [category, setCategory] = useState(initialValues?.category ?? "");
+  const [category, setCategory] = useState<Category>(initialValues?.category ?? CATEGORIES[0]);
   const [memo, setMemo] = useState(initialValues?.memo ?? "");
   const [rating, setRating] = useState(initialValues?.rating ?? 5);
 
@@ -55,7 +66,7 @@ function RestaurantForm({
 
     onSubmit({
       name: name.trim(),
-      category: category.trim() || "기타",
+      category,
       memo: memo.trim(),
       rating,
     });
@@ -78,14 +89,23 @@ function RestaurantForm({
         value={name}
         onChange={(e) => setName(e.target.value)}
       />
-      <TextField
-        variant="box"
-        label="음식 종류"
-        labelOption="sustain"
-        placeholder="예) 냉면, 한식"
-        value={category}
-        onChange={(e) => setCategory(e.target.value)}
-      />
+      <div>
+        <div style={{ marginBottom: "8px", color: "#6b7684", fontSize: "14px" }}>
+          음식 종류
+        </div>
+        <SegmentedControl
+          alignment="fluid"
+          size="small"
+          value={category}
+          onChange={(value) => setCategory(value as Category)}
+        >
+          {CATEGORIES.map((item) => (
+            <SegmentedControl.Item key={item} value={item}>
+              {item}
+            </SegmentedControl.Item>
+          ))}
+        </SegmentedControl>
+      </div>
       <TextField
         variant="box"
         label="메모"
@@ -121,9 +141,23 @@ function RestaurantForm({
 function App() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] =
+    useState<(typeof FILTER_CATEGORIES)[number]>(ALL_CATEGORY);
 
   const { open, close } = useBottomSheet();
   const { openConfirm } = useDialog();
+
+  const filteredRestaurants = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return restaurants.filter((restaurant) => {
+      const matchesCategory =
+        selectedCategory === ALL_CATEGORY || restaurant.category === selectedCategory;
+      const matchesQuery =
+        query.length === 0 || restaurant.name.toLowerCase().includes(query);
+      return matchesCategory && matchesQuery;
+    });
+  }, [restaurants, selectedCategory, searchQuery]);
 
   // 기기에 저장된 기록을 앱 시작 시 한 번 불러와요.
   useEffect(() => {
@@ -189,6 +223,44 @@ function App() {
     });
   };
 
+  const openCategoryFilterSheet = () => {
+    open({
+      header: "음식 종류 선택",
+      children: (
+        <List>
+          {FILTER_CATEGORIES.map((category) => {
+            const isSelected = category === selectedCategory;
+            return (
+              <div
+                key={category}
+                onClick={() => {
+                  setSelectedCategory(category);
+                  close();
+                }}
+                style={{ cursor: "pointer" }}
+              >
+                <ListRow
+                  withTouchEffect
+                  contents={
+                    <ListRow.Texts
+                      type="1RowTypeA"
+                      top={
+                        <span style={{ fontWeight: isSelected ? 700 : 400 }}>
+                          {category}
+                        </span>
+                      }
+                    />
+                  }
+                  right={isSelected ? "✓" : undefined}
+                />
+              </div>
+            );
+          })}
+        </List>
+      ),
+    });
+  };
+
   const openEditSheet = (restaurant: Restaurant) => {
     open({
       header: "맛집 수정하기",
@@ -234,14 +306,42 @@ function App() {
         </Button>
       </div>
 
+      {isLoaded && restaurants.length > 0 && (
+        <>
+          <div style={{ padding: "0 24px 16px" }}>
+            <SearchField
+              placeholder="맛집 이름으로 검색"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onDeleteClick={() => setSearchQuery("")}
+            />
+          </div>
+          <div style={{ padding: "0 24px 16px" }}>
+            <Button
+              size="medium"
+              variant="weak"
+              color="dark"
+              onClick={openCategoryFilterSheet}
+            >
+              {selectedCategory} ▾
+            </Button>
+          </div>
+        </>
+      )}
+
       {!isLoaded ? null : restaurants.length === 0 ? (
         <Result
           title="아직 기록된 맛집이 없어요"
           description={"다녀온 맛집을 기록하면\n여기에 모아서 볼 수 있어요."}
         />
+      ) : filteredRestaurants.length === 0 ? (
+        <Result
+          title="검색 결과가 없어요"
+          description={"다른 이름으로 검색하거나\n다른 음식 종류를 선택해 보세요."}
+        />
       ) : (
         <List>
-          {restaurants.map((restaurant) => (
+          {filteredRestaurants.map((restaurant) => (
             <div
               key={restaurant.id}
               onClick={() => openEditSheet(restaurant)}
