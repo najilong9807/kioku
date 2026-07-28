@@ -1,6 +1,7 @@
 import { supabase } from "./supabase";
 
 export interface Profile {
+  id: string;
   user_hash: string;
   nickname: string;
 }
@@ -8,6 +9,7 @@ export interface Profile {
 // user_hash로 저장된 프로필(닉네임)을 조회해요. 아직 등록되지 않았다면 null을 반환해요.
 // Supabase가 설정되어 있지 않거나 조회에 실패해도 조용히 null을 반환해서, 앱의 다른
 // 기능(로컬에 저장된 맛집 목록 등)이 이 조회 실패로 영향받지 않도록 해요.
+// id는 anon_profiles의 PK로, 다른 테이블(thread_posts 등)에서 작성자를 가리킬 때 사용해요.
 export async function fetchProfile(userHash: string): Promise<Profile | null> {
   if (!supabase) {
     return null;
@@ -16,7 +18,7 @@ export async function fetchProfile(userHash: string): Promise<Profile | null> {
   try {
     const { data, error } = await supabase
       .from("anon_profiles")
-      .select("user_hash, nickname")
+      .select("id, user_hash, nickname")
       .eq("user_hash", userHash)
       .maybeSingle();
 

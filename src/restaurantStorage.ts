@@ -43,6 +43,7 @@ export interface Restaurant {
   category: Category;
   companion: string;
   weather: string;
+  neighborhood: string;
   menus: string[];
   memo: string;
   rating: number;
@@ -53,7 +54,7 @@ export interface Restaurant {
 
 // 예전 데이터 호환:
 // - 자유 텍스트로 저장된 음식 종류가 고정 목록에 없으면 "기타"로 취급해요.
-// - companion/weather 필드가 없으면 빈 문자열로 채워요.
+// - companion/weather/neighborhood 필드가 없으면 빈 문자열로 채워요.
 // - menus 필드가 없던 예전 데이터는 빈 배열로 채워요.
 // - visitDate 이전에는 visitedAt("YYYY.MM.DD")이라는 이름으로 저장했어서, 있으면 변환해서 사용해요.
 function parseRestaurants(value: string): Restaurant[] {
@@ -63,6 +64,7 @@ function parseRestaurants(value: string): Restaurant[] {
     category: unknown;
     companion?: string;
     weather?: string;
+    neighborhood?: string;
     menus?: string[];
     memo: string;
     rating: number;
@@ -78,6 +80,7 @@ function parseRestaurants(value: string): Restaurant[] {
     category: isCategory(item.category) ? item.category : "기타",
     companion: item.companion ?? "",
     weather: item.weather ?? "",
+    neighborhood: item.neighborhood ?? "",
     menus: Array.isArray(item.menus) ? item.menus : [],
     memo: item.memo,
     rating: item.rating,

@@ -8,6 +8,7 @@ import {
   Result,
   SearchField,
   SegmentedControl,
+  Tab,
   TextArea,
   TextField,
   Top,
@@ -24,7 +25,12 @@ import {
 } from "react";
 import "./App.css";
 import { fetchProfile, saveProfile } from "./lib/profile";
+import {
+  addRecentNeighborhood,
+  getRecentNeighborhoods,
+} from "./lib/recentNeighborhoods";
 import { getUserIdentityHash } from "./lib/userIdentity";
+import { NeighborhoodInput } from "./NeighborhoodInput";
 import {
   CATEGORIES,
   formatDisplayDate,
@@ -34,6 +40,7 @@ import {
   type Category,
   type Restaurant,
 } from "./restaurantStorage";
+import TodayMealBoard from "./TodayMealBoard";
 
 // 목록에서 메뉴가 많으면 2개까지만 보여주고 나머지는 "+N"으로 축약해요.
 function summarizeMenus(menus: string[]): string {
@@ -58,6 +65,7 @@ const FORM_CARD_BACKGROUND_COLOR = "#f9fafb";
 
 const ALL_CATEGORY = "전체";
 const FILTER_CATEGORIES = [ALL_CATEGORY, ...CATEGORIES] as const;
+const ALL_NEIGHBORHOOD = "전체";
 
 type SortOption = "latest" | "oldest" | "ratingDesc" | "ratingAsc" | "name";
 
@@ -74,8 +82,8 @@ interface QuickPickOption {
   label: string;
 }
 
-// 아이콘은 이모지만 보여주지만, 눌렀을 때는 각 아이콘에 대응하는 감성 문장이
-// 입력창에 채워져요. 이후 자유롭게 고쳐 쓸 수 있어요.
+// label은 입력창 placeholder 예시 문장으로만 쓰이고, 아이콘을 눌렀을 때는
+// emoji만 입력창에 채워져요.
 const WEATHER_QUICK_OPTIONS: QuickPickOption[] = [
   { emoji: "☀️", label: "햇살이 유난히 따스했던 날" },
   { emoji: "☁️", label: "구름이 낮게 드리운 하루" },
@@ -90,9 +98,9 @@ const WEATHER_PLACEHOLDER_EXAMPLES = WEATHER_QUICK_OPTIONS.map(
   (option) => option.label,
 );
 
-// 날씨 입력창 위에 나열되는 아이콘 칩이에요. 이모지만 보이지만 눌렀을 때는
-// 대응하는 문장으로 입력창을 채워줘요.
-function WeatherMoodIcons({ onSelect }: { onSelect: (label: string) => void }) {
+// 날씨 입력창 위에 나열되는 아이콘 칩이에요. 눌렀을 때 보이는 이모지 그대로
+// 입력창에 채워줘요.
+function WeatherMoodIcons({ onSelect }: { onSelect: (emoji: string) => void }) {
   return (
     <div
       style={{
@@ -107,7 +115,7 @@ function WeatherMoodIcons({ onSelect }: { onSelect: (label: string) => void }) {
           key={option.label}
           variant="weak"
           color="dark"
-          onClick={() => onSelect(option.label)}
+          onClick={() => onSelect(option.emoji)}
           style={{
             flexShrink: 0,
             width: "40px",
@@ -173,6 +181,7 @@ interface AddRestaurantFormValues {
   menus: string[];
   companion: string;
   weather: string;
+  neighborhood: string;
   memo: string;
   rating: number;
   visitDate: string;
@@ -189,11 +198,13 @@ const MAX_PHOTOS = 4;
 // 새 맛집을 등록할 때와 기존 맛집을 수정할 때 모두 사용해요.
 function RestaurantForm({
   initialValues,
+  neighborhoodSuggestions,
   submitLabel = "기록하기",
   onSubmit,
   onCancel,
 }: {
   initialValues?: AddRestaurantFormValues;
+  neighborhoodSuggestions: string[];
   submitLabel?: string;
   onSubmit: (values: AddRestaurantFormValues) => void;
   onCancel: () => void;
@@ -206,6 +217,9 @@ function RestaurantForm({
   const [menuInput, setMenuInput] = useState("");
   const [companion, setCompanion] = useState(initialValues?.companion ?? "");
   const [weather, setWeather] = useState(initialValues?.weather ?? "");
+  const [neighborhood, setNeighborhood] = useState(
+    initialValues?.neighborhood ?? "",
+  );
   const [memo, setMemo] = useState(initialValues?.memo ?? "");
   const [rating, setRating] = useState(initialValues?.rating ?? 5);
   const [visitDate, setVisitDate] = useState(
@@ -242,10 +256,10 @@ function RestaurantForm({
     setMenus((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // 날씨 아이콘을 누르면 기존에 입력해 둔 문장은 지우지 않고, label 문구를
-  // 맨 앞에 붙여줘요. 여러 아이콘을 연달아 누르면 최신 선택이 계속 맨 앞으로 와요.
-  const handleWeatherIconSelect = (label: string) => {
-    setWeather((prev) => (prev ? `${label} ${prev}` : label));
+  // 날씨 아이콘을 누르면 기존에 입력해 둔 텍스트는 지우지 않고, emoji만 맨 앞에
+  // 붙여줘요. 여러 아이콘을 연달아 누르면 최신 선택이 계속 맨 앞으로 와요.
+  const handleWeatherIconSelect = (emoji: string) => {
+    setWeather((prev) => (prev ? `${emoji} ${prev}` : emoji));
   };
 
   const handleReceiptChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -292,6 +306,7 @@ function RestaurantForm({
       menus,
       companion: companion.trim(),
       weather: weather.trim(),
+      neighborhood: neighborhood.trim(),
       memo: memo.trim(),
       rating,
       visitDate,
@@ -664,6 +679,26 @@ function RestaurantForm({
           <div
             style={{ color: "#6b7684", fontSize: "14px", textAlign: "center" }}
           >
+            동네 (선택)
+          </div>
+          <NeighborhoodInput
+            value={neighborhood}
+            onChange={setNeighborhood}
+            suggestions={neighborhoodSuggestions}
+          />
+        </div>
+        <Border />
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "8px",
+            padding: FORM_SECTION_PADDING,
+          }}
+        >
+          <div
+            style={{ color: "#6b7684", fontSize: "14px", textAlign: "center" }}
+          >
             날씨
           </div>
           <WeatherMoodIcons onSelect={handleWeatherIconSelect} />
@@ -785,16 +820,46 @@ function NicknameForm({ onSubmit }: { onSubmit: (nickname: string) => void }) {
   );
 }
 
+const MAIN_TABS = ["맛집 기록", "오늘뭐먹"] as const;
+
 function App() {
+  const [selectedTab, setSelectedTab] = useState(0);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] =
     useState<(typeof FILTER_CATEGORIES)[number]>(ALL_CATEGORY);
+  const [selectedNeighborhood, setSelectedNeighborhood] =
+    useState(ALL_NEIGHBORHOOD);
   const [sortOption, setSortOption] = useState<SortOption>("latest");
 
   const { open, close } = useBottomSheet();
   const { openConfirm } = useDialog();
+
+  // 기록에 실제로 등장한 동네들이에요. 필터 목록과 글쓰기 폼의 추천 칩에도 함께 써요.
+  const neighborhoodsInRestaurants = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          restaurants
+            .map((restaurant) => restaurant.neighborhood)
+            .filter((value): value is string => Boolean(value)),
+        ),
+      ),
+    [restaurants],
+  );
+
+  const neighborhoodFilterOptions = useMemo(
+    () => [ALL_NEIGHBORHOOD, ...neighborhoodsInRestaurants],
+    [neighborhoodsInRestaurants],
+  );
+
+  const neighborhoodSuggestions = useMemo(() => {
+    const recent = getRecentNeighborhoods();
+    return Array.from(
+      new Set([...recent, ...neighborhoodsInRestaurants]),
+    ).slice(0, 12);
+  }, [neighborhoodsInRestaurants]);
 
   // 최신/오래된순은 사용자가 고른 방문일(visitDate) 기준이고, 방문일이 같으면
   // 등록 시각(id, Date.now() 기반)을 기준으로 순서를 정해요.
@@ -804,9 +869,12 @@ function App() {
       const matchesCategory =
         selectedCategory === ALL_CATEGORY ||
         restaurant.category === selectedCategory;
+      const matchesNeighborhood =
+        selectedNeighborhood === ALL_NEIGHBORHOOD ||
+        restaurant.neighborhood === selectedNeighborhood;
       const matchesQuery =
         query.length === 0 || restaurant.name.toLowerCase().includes(query);
-      return matchesCategory && matchesQuery;
+      return matchesCategory && matchesNeighborhood && matchesQuery;
     });
 
     const sorted = [...filtered];
@@ -836,7 +904,13 @@ function App() {
         break;
     }
     return sorted;
-  }, [restaurants, selectedCategory, searchQuery, sortOption]);
+  }, [
+    restaurants,
+    selectedCategory,
+    selectedNeighborhood,
+    searchQuery,
+    sortOption,
+  ]);
 
   // 기기에 저장된 기록을 앱 시작 시 한 번 불러와요.
   useEffect(() => {
@@ -923,9 +997,13 @@ function App() {
       header: "맛집 기록하기",
       children: (
         <RestaurantForm
+          neighborhoodSuggestions={neighborhoodSuggestions}
           submitLabel="기록하기"
           onCancel={close}
           onSubmit={(values) => {
+            if (values.neighborhood) {
+              addRecentNeighborhood(values.neighborhood);
+            }
             setRestaurants((prev) => [
               {
                 id: `${Date.now()}`,
@@ -1016,6 +1094,44 @@ function App() {
     });
   };
 
+  const openNeighborhoodFilterSheet = () => {
+    open({
+      header: "동네 선택",
+      children: (
+        <List>
+          {neighborhoodFilterOptions.map((neighborhood) => {
+            const isSelected = neighborhood === selectedNeighborhood;
+            return (
+              <div
+                key={neighborhood}
+                onClick={() => {
+                  setSelectedNeighborhood(neighborhood);
+                  close();
+                }}
+                style={{ cursor: "pointer" }}
+              >
+                <ListRow
+                  withTouchEffect
+                  contents={
+                    <ListRow.Texts
+                      type="1RowTypeA"
+                      top={
+                        <span style={{ fontWeight: isSelected ? 700 : 400 }}>
+                          {neighborhood}
+                        </span>
+                      }
+                    />
+                  }
+                  right={isSelected ? "✓" : undefined}
+                />
+              </div>
+            );
+          })}
+        </List>
+      ),
+    });
+  };
+
   const openEditSheet = (restaurant: Restaurant) => {
     open({
       header: "맛집 수정하기",
@@ -1027,15 +1143,20 @@ function App() {
             menus: restaurant.menus,
             companion: restaurant.companion,
             weather: restaurant.weather,
+            neighborhood: restaurant.neighborhood,
             memo: restaurant.memo,
             rating: restaurant.rating,
             visitDate: restaurant.visitDate,
             receiptImage: restaurant.receiptImage,
             photos: restaurant.photos ?? [],
           }}
+          neighborhoodSuggestions={neighborhoodSuggestions}
           submitLabel="수정하기"
           onCancel={close}
           onSubmit={(values) => {
+            if (values.neighborhood) {
+              addRecentNeighborhood(values.neighborhood);
+            }
             setRestaurants((prev) =>
               prev.map((item) =>
                 item.id === restaurant.id ? { ...item, ...values } : item,
@@ -1054,140 +1175,171 @@ function App() {
         title={<Top.TitleParagraph size={22}>이게맛다</Top.TitleParagraph>}
         subtitleBottom={
           <Top.SubtitleParagraph size={17}>
-            {restaurants.length > 0
-              ? `지금까지 ${restaurants.length}곳의 맛집을 기록했어요.`
-              : "다녀온 맛집을 기록하고 모아보세요."}
+            {selectedTab === 0
+              ? restaurants.length > 0
+                ? `지금까지 ${restaurants.length}곳의 맛집을 기록했어요.`
+                : "다녀온 맛집을 기록하고 모아보세요."
+              : "오늘 먹은 메뉴를 자유롭게 나눠보세요."}
           </Top.SubtitleParagraph>
         }
       />
 
       <div style={{ padding: "0 24px 16px" }}>
-        <Button
-          display="block"
-          variant="fill"
-          style={PRIMARY_FILL_BUTTON_TEXT_STYLE}
-          onClick={openAddSheet}
-        >
-          맛집 기록하기
-        </Button>
+        <Tab onChange={(index) => setSelectedTab(index)}>
+          {MAIN_TABS.map((label, index) => (
+            <Tab.Item key={label} selected={selectedTab === index}>
+              {label}
+            </Tab.Item>
+          ))}
+        </Tab>
       </div>
 
-      {isLoaded && restaurants.length > 0 && (
+      {selectedTab === 0 ? (
         <>
           <div style={{ padding: "0 24px 16px" }}>
-            <SearchField
-              placeholder="맛집 이름으로 검색"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onDeleteClick={() => setSearchQuery("")}
-            />
-          </div>
-          <div style={{ display: "flex", gap: "8px", padding: "0 24px 16px" }}>
             <Button
-              size="medium"
-              variant="weak"
-              color="dark"
-              onClick={openCategoryFilterSheet}
+              display="block"
+              variant="fill"
+              style={PRIMARY_FILL_BUTTON_TEXT_STYLE}
+              onClick={openAddSheet}
             >
-              {selectedCategory} ▾
-            </Button>
-            <Button
-              size="medium"
-              variant="weak"
-              color="dark"
-              onClick={openSortSheet}
-            >
-              {
-                SORT_OPTIONS.find((option) => option.value === sortOption)
-                  ?.label
-              }{" "}
-              ▾
+              맛집 기록하기
             </Button>
           </div>
-        </>
-      )}
 
-      {!isLoaded ? null : restaurants.length === 0 ? (
-        <Result
-          title="아직 기록된 맛집이 없어요"
-          description={"다녀온 맛집을 기록하면\n여기에 모아서 볼 수 있어요."}
-        />
-      ) : visibleRestaurants.length === 0 ? (
-        <Result
-          title="검색 결과가 없어요"
-          description={
-            "다른 이름으로 검색하거나\n다른 음식 종류를 선택해 보세요."
-          }
-        />
-      ) : (
-        <List>
-          {visibleRestaurants.map((restaurant) => (
-            <div
-              key={restaurant.id}
-              onClick={() => openEditSheet(restaurant)}
-              style={{ cursor: "pointer" }}
-            >
-              <ListRow
-                withTouchEffect
-                left={
-                  restaurant.photos && restaurant.photos.length > 0 ? (
-                    <ListRow.AssetImage
-                      src={restaurant.photos[0]}
-                      shape="squircle"
-                      size="medium"
-                    />
-                  ) : (
-                    <ListRow.AssetText shape="squircle" size="medium">
-                      {restaurant.name.slice(0, 1)}
-                    </ListRow.AssetText>
-                  )
-                }
-                contents={
-                  <ListRow.Texts
-                    type="2RowTypeA"
-                    top={restaurant.name}
-                    bottom={[
-                      restaurant.category,
-                      summarizeMenus(restaurant.menus),
-                      formatDisplayDate(restaurant.visitDate),
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  />
-                }
-                right={
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "flex-end",
-                      gap: "8px",
-                    }}
+          {isLoaded && restaurants.length > 0 && (
+            <>
+              <div style={{ padding: "0 24px 16px" }}>
+                <SearchField
+                  placeholder="맛집 이름으로 검색"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onDeleteClick={() => setSearchQuery("")}
+                />
+              </div>
+              <div
+                style={{ display: "flex", gap: "8px", padding: "0 24px 16px" }}
+              >
+                <Button
+                  size="medium"
+                  variant="weak"
+                  color="dark"
+                  onClick={openCategoryFilterSheet}
+                >
+                  {selectedCategory} ▾
+                </Button>
+                <Button
+                  size="medium"
+                  variant="weak"
+                  color="dark"
+                  onClick={openSortSheet}
+                >
+                  {
+                    SORT_OPTIONS.find((option) => option.value === sortOption)
+                      ?.label
+                  }{" "}
+                  ▾
+                </Button>
+                {neighborhoodsInRestaurants.length > 0 && (
+                  <Button
+                    size="medium"
+                    variant="weak"
+                    color="dark"
+                    onClick={openNeighborhoodFilterSheet}
                   >
-                    <Rating
-                      readOnly
-                      value={restaurant.rating}
-                      max={5}
-                      size="small"
-                      variant="iconOnly"
-                    />
-                    <Button
-                      size="small"
-                      variant="weak"
-                      color="danger"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        handleDelete(restaurant);
-                      }}
-                    >
-                      삭제
-                    </Button>
-                  </div>
-                }
-              />
-            </div>
-          ))}
-        </List>
+                    {selectedNeighborhood} ▾
+                  </Button>
+                )}
+              </div>
+            </>
+          )}
+
+          {!isLoaded ? null : restaurants.length === 0 ? (
+            <Result
+              title="아직 기록된 맛집이 없어요"
+              description={"다녀온 맛집을 기록하면\n여기에 모아서 볼 수 있어요."}
+            />
+          ) : visibleRestaurants.length === 0 ? (
+            <Result
+              title="검색 결과가 없어요"
+              description={
+                "다른 이름으로 검색하거나\n다른 음식 종류를 선택해 보세요."
+              }
+            />
+          ) : (
+            <List>
+              {visibleRestaurants.map((restaurant) => (
+                <div
+                  key={restaurant.id}
+                  onClick={() => openEditSheet(restaurant)}
+                  style={{ cursor: "pointer" }}
+                >
+                  <ListRow
+                    withTouchEffect
+                    left={
+                      restaurant.photos && restaurant.photos.length > 0 ? (
+                        <ListRow.AssetImage
+                          src={restaurant.photos[0]}
+                          shape="squircle"
+                          size="medium"
+                        />
+                      ) : (
+                        <ListRow.AssetText shape="squircle" size="medium">
+                          {restaurant.name.slice(0, 1)}
+                        </ListRow.AssetText>
+                      )
+                    }
+                    contents={
+                      <ListRow.Texts
+                        type="2RowTypeA"
+                        top={restaurant.name}
+                        bottom={[
+                          restaurant.category,
+                          summarizeMenus(restaurant.menus),
+                          formatDisplayDate(restaurant.visitDate),
+                          restaurant.neighborhood,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      />
+                    }
+                    right={
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "flex-end",
+                          gap: "8px",
+                        }}
+                      >
+                        <Rating
+                          readOnly
+                          value={restaurant.rating}
+                          max={5}
+                          size="small"
+                          variant="iconOnly"
+                        />
+                        <Button
+                          size="small"
+                          variant="weak"
+                          color="danger"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleDelete(restaurant);
+                          }}
+                        >
+                          삭제
+                        </Button>
+                      </div>
+                    }
+                  />
+                </div>
+              ))}
+            </List>
+          )}
+        </>
+      ) : (
+        <TodayMealBoard />
       )}
     </>
   );
