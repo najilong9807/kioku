@@ -48,6 +48,7 @@ export interface Restaurant {
   rating: number;
   visitDate: string; // "YYYY-MM-DD"
   receiptImage?: string; // base64 데이터 URL
+  photos?: string[]; // 음식/가게 사진, base64 데이터 URL 배열 (최대 4장)
 }
 
 // 예전 데이터 호환:
@@ -68,6 +69,7 @@ function parseRestaurants(value: string): Restaurant[] {
     visitDate?: string;
     visitedAt?: string;
     receiptImage?: string;
+    photos?: string[];
   }>;
 
   return parsed.map((item) => ({
@@ -83,6 +85,7 @@ function parseRestaurants(value: string): Restaurant[] {
       item.visitDate ??
       (item.visitedAt ? item.visitedAt.replaceAll(".", "-") : todayDateInputValue()),
     receiptImage: item.receiptImage,
+    photos: Array.isArray(item.photos) ? item.photos : [],
   }));
 }
 

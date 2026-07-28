@@ -146,7 +146,11 @@ interface AddRestaurantFormValues {
   rating: number;
   visitDate: string;
   receiptImage?: string;
+  photos: string[];
 }
+
+// 음식/가게 사진은 최대 이만큼만 첨부할 수 있어요.
+const MAX_PHOTOS = 4;
 
 // 바텀시트에 넘기는 children은 open() 호출 시점에 한 번 고정돼요.
 // 그래서 입력 상태는 바깥 App이 아니라 이 컴포넌트 자신이 들고 있어야
@@ -174,6 +178,8 @@ function RestaurantForm({
   const [visitDate, setVisitDate] = useState(initialValues?.visitDate ?? todayDateInputValue());
   const [receiptImage, setReceiptImage] = useState(initialValues?.receiptImage);
   const receiptInputRef = useRef<HTMLInputElement>(null);
+  const [photos, setPhotos] = useState<string[]>(initialValues?.photos ?? []);
+  const photosInputRef = useRef<HTMLInputElement>(null);
 
   // 폼이 열릴 때 한 번만 예시 문장을 골라서, 타이핑 중에 placeholder가 바뀌지 않게 해요.
   const weatherPlaceholder = useMemo(() => {
@@ -212,6 +218,26 @@ function RestaurantForm({
     reader.readAsDataURL(file);
   };
 
+  const handlePhotosChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    // 같은 파일을 연달아 선택해도 매번 onChange가 발생하도록 값을 비워둬요.
+    event.target.value = "";
+    if (!file) {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      setPhotos((prev) => (prev.length >= MAX_PHOTOS ? prev : [...prev, dataUrl]));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removePhoto = (index: number) => {
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = () => {
     if (!name.trim() || requiresReceipt || hasNoMenu) {
       return;
@@ -227,6 +253,7 @@ function RestaurantForm({
       rating,
       visitDate,
       receiptImage,
+      photos,
     });
   };
 
@@ -318,6 +345,72 @@ function RestaurantForm({
             과거 날짜로 기록하려면 영수증 사진을 첨부해야 해요.
           </div>
         )}
+      </div>
+      <div>
+        <div style={{ marginBottom: "8px", color: "#6b7684", fontSize: "14px" }}>
+          음식/가게 사진 (선택)
+        </div>
+        <input
+          ref={photosInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          style={{ display: "none" }}
+          onChange={handlePhotosChange}
+        />
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
+          {photos.map((photo, index) => (
+            <div key={index} style={{ position: "relative", width: "64px", height: "64px" }}>
+              <Asset.Image
+                src={photo}
+                alt={`음식/가게 사진 ${index + 1}`}
+                scaleType="crop"
+                frameShape={{ width: 64, height: 64, radius: 12 }}
+              />
+              <button
+                type="button"
+                onClick={() => removePhoto(index)}
+                aria-label={`음식/가게 사진 ${index + 1} 삭제`}
+                style={{
+                  position: "absolute",
+                  top: "-6px",
+                  right: "-6px",
+                  width: "20px",
+                  height: "20px",
+                  borderRadius: "10px",
+                  border: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: "rgba(25, 31, 40, 0.7)",
+                  color: "#ffffff",
+                  fontSize: "12px",
+                  lineHeight: 1,
+                  cursor: "pointer",
+                }}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+          {photos.length < MAX_PHOTOS && (
+            <Button
+              variant="weak"
+              color="dark"
+              onClick={() => photosInputRef.current?.click()}
+              style={{
+                width: "64px",
+                height: "64px",
+                minWidth: "64px",
+                padding: 0,
+                borderRadius: "12px",
+                fontSize: "20px",
+              }}
+            >
+              📷
+            </Button>
+          )}
+        </div>
       </div>
       <div>
         <div style={{ marginBottom: "8px", color: "#6b7684", fontSize: "14px" }}>
@@ -663,6 +756,7 @@ function App() {
             rating: restaurant.rating,
             visitDate: restaurant.visitDate,
             receiptImage: restaurant.receiptImage,
+            photos: restaurant.photos ?? [],
           }}
           submitLabel="수정하기"
           onCancel={close}
@@ -750,9 +844,17 @@ function App() {
               <ListRow
                 withTouchEffect
                 left={
-                  <ListRow.AssetText shape="squircle" size="medium">
-                    {restaurant.name.slice(0, 1)}
-                  </ListRow.AssetText>
+                  restaurant.photos && restaurant.photos.length > 0 ? (
+                    <ListRow.AssetImage
+                      src={restaurant.photos[0]}
+                      shape="squircle"
+                      size="medium"
+                    />
+                  ) : (
+                    <ListRow.AssetText shape="squircle" size="medium">
+                      {restaurant.name.slice(0, 1)}
+                    </ListRow.AssetText>
+                  )
                 }
                 contents={
                   <ListRow.Texts
