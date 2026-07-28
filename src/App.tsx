@@ -23,6 +23,8 @@ import {
   type CSSProperties,
 } from "react";
 import "./App.css";
+import { fetchProfile, saveProfile } from "./lib/profile";
+import { getUserIdentityHash } from "./lib/userIdentity";
 import {
   CATEGORIES,
   formatDisplayDate,
@@ -737,6 +739,52 @@ function RestaurantForm({
   );
 }
 
+// 앱 최초 실행 시 닉네임이 없는 사용자에게 한 번 띄우는 간단한 입력 폼이에요.
+function NicknameForm({ onSubmit }: { onSubmit: (nickname: string) => void }) {
+  const [nickname, setNickname] = useState("");
+
+  const handleSubmit = () => {
+    const trimmed = nickname.trim();
+    if (!trimmed) {
+      return;
+    }
+    onSubmit(trimmed);
+  };
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "20px",
+        padding: "0 24px 24px",
+      }}
+    >
+      <TextField
+        variant="box"
+        placeholder="예) 맛있는하마"
+        value={nickname}
+        onChange={(e) => setNickname(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            handleSubmit();
+          }
+        }}
+      />
+      <Button
+        display="block"
+        variant="fill"
+        style={PRIMARY_FILL_BUTTON_TEXT_STYLE}
+        disabled={!nickname.trim()}
+        onClick={handleSubmit}
+      >
+        시작하기
+      </Button>
+    </div>
+  );
+}
+
 function App() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -815,6 +863,45 @@ function App() {
     }
     saveRestaurants(restaurants);
   }, [restaurants, isLoaded]);
+
+  // 앱 최초 실행 시 사용자 식별 해시로 Supabase profiles 테이블에 닉네임이
+  // 등록되어 있는지 확인해요. 없으면 닉네임 입력 바텀시트를 한 번 띄우고,
+  // 이미 있으면 바텀시트 없이 그대로 홈 화면을 사용할 수 있어요.
+  useEffect(() => {
+    let isMounted = true;
+
+    (async () => {
+      const userHash = await getUserIdentityHash();
+      const profile = await fetchProfile(userHash);
+
+      if (!isMounted) {
+        return;
+      }
+
+      if (!profile?.nickname) {
+        openNicknameSheet(userHash);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const openNicknameSheet = (userHash: string) => {
+    open({
+      header: "닉네임을 알려주세요",
+      children: (
+        <NicknameForm
+          onSubmit={async (nickname) => {
+            await saveProfile(userHash, nickname);
+            close();
+          }}
+        />
+      ),
+    });
+  };
 
   const handleDelete = async (restaurant: Restaurant) => {
     const confirmed = await openConfirm({
