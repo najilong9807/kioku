@@ -1,5 +1,6 @@
 import {
   Asset,
+  Border,
   Button,
   List,
   ListRow,
@@ -13,7 +14,14 @@ import {
   useBottomSheet,
   useDialog,
 } from "@toss/tds-mobile";
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type CSSProperties,
+} from "react";
 import "./App.css";
 import {
   CATEGORIES,
@@ -40,6 +48,11 @@ function summarizeMenus(menus: string[]): string {
 const PRIMARY_FILL_BUTTON_TEXT_STYLE = {
   "--button-color": "#000000",
 } as CSSProperties;
+
+// 폼의 각 섹션(라벨 + 입력)이 공통으로 사용하는 안팎 여백과 카드 배경이에요.
+// 여기서만 값을 바꾸면 모든 섹션의 여백이 동일하게 유지돼요.
+const FORM_SECTION_PADDING = "20px 20px";
+const FORM_CARD_BACKGROUND_COLOR = "#f9fafb";
 
 const ALL_CATEGORY = "전체";
 const FILTER_CATEGORIES = [ALL_CATEGORY, ...CATEGORIES] as const;
@@ -71,13 +84,22 @@ const WEATHER_QUICK_OPTIONS: QuickPickOption[] = [
 ];
 
 // 날씨 입력창 placeholder로 번갈아 보여줄 감성 문장 예시예요. 실제로 입력되지는 않아요.
-const WEATHER_PLACEHOLDER_EXAMPLES = WEATHER_QUICK_OPTIONS.map((option) => option.label);
+const WEATHER_PLACEHOLDER_EXAMPLES = WEATHER_QUICK_OPTIONS.map(
+  (option) => option.label,
+);
 
 // 날씨 입력창 위에 나열되는 아이콘 칩이에요. 이모지만 보이지만 눌렀을 때는
 // 대응하는 문장으로 입력창을 채워줘요.
 function WeatherMoodIcons({ onSelect }: { onSelect: (label: string) => void }) {
   return (
-    <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "4px" }}>
+    <div
+      style={{
+        display: "flex",
+        gap: "8px",
+        overflowX: "auto",
+        paddingBottom: "4px",
+      }}
+    >
       {WEATHER_QUICK_OPTIONS.map((option) => (
         <Button
           key={option.label}
@@ -119,7 +141,14 @@ function QuickPickChips({
   onSelect: (label: string) => void;
 }) {
   return (
-    <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "4px" }}>
+    <div
+      style={{
+        display: "flex",
+        gap: "8px",
+        overflowX: "auto",
+        paddingBottom: "4px",
+      }}
+    >
       {options.map((option) => (
         <Button
           key={option.label}
@@ -168,14 +197,18 @@ function RestaurantForm({
   onCancel: () => void;
 }) {
   const [name, setName] = useState(initialValues?.name ?? "");
-  const [category, setCategory] = useState<Category>(initialValues?.category ?? CATEGORIES[0]);
+  const [category, setCategory] = useState<Category>(
+    initialValues?.category ?? CATEGORIES[0],
+  );
   const [menus, setMenus] = useState<string[]>(initialValues?.menus ?? []);
   const [menuInput, setMenuInput] = useState("");
   const [companion, setCompanion] = useState(initialValues?.companion ?? "");
   const [weather, setWeather] = useState(initialValues?.weather ?? "");
   const [memo, setMemo] = useState(initialValues?.memo ?? "");
   const [rating, setRating] = useState(initialValues?.rating ?? 5);
-  const [visitDate, setVisitDate] = useState(initialValues?.visitDate ?? todayDateInputValue());
+  const [visitDate, setVisitDate] = useState(
+    initialValues?.visitDate ?? todayDateInputValue(),
+  );
   const [receiptImage, setReceiptImage] = useState(initialValues?.receiptImage);
   const receiptInputRef = useRef<HTMLInputElement>(null);
   const [photos, setPhotos] = useState<string[]>(initialValues?.photos ?? []);
@@ -235,7 +268,9 @@ function RestaurantForm({
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = reader.result as string;
-      setPhotos((prev) => (prev.length >= MAX_PHOTOS ? prev : [...prev, dataUrl]));
+      setPhotos((prev) =>
+        prev.length >= MAX_PHOTOS ? prev : [...prev, dataUrl],
+      );
     };
     reader.readAsDataURL(file);
   };
@@ -272,343 +307,421 @@ function RestaurantForm({
         padding: "0 24px 24px",
       }}
     >
-      <div>
-        <div
-          style={{
-            marginBottom: "8px",
-            color: "#6b7684",
-            fontSize: "14px",
-            textAlign: "center",
-          }}
-        >
-          가게 이름
+      <div
+        style={{
+          backgroundColor: FORM_CARD_BACKGROUND_COLOR,
+          borderRadius: "20px",
+          overflow: "hidden",
+        }}
+      >
+        <div style={{ padding: FORM_SECTION_PADDING }}>
+          <div
+            style={{
+              marginBottom: "8px",
+              color: "#6b7684",
+              fontSize: "14px",
+              textAlign: "center",
+            }}
+          >
+            가게 이름
+          </div>
+          <TextField
+            variant="box"
+            placeholder="예) 우래옥"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
         </div>
-        <TextField
-          variant="box"
-          placeholder="예) 우래옥"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-      </div>
-      <div>
-        <div
-          style={{
-            marginBottom: "8px",
-            color: "#6b7684",
-            fontSize: "14px",
-            textAlign: "center",
-          }}
-        >
-          방문일
+        <Border />
+        <div style={{ padding: FORM_SECTION_PADDING }}>
+          <div
+            style={{
+              marginBottom: "8px",
+              color: "#6b7684",
+              fontSize: "14px",
+              textAlign: "center",
+            }}
+          >
+            방문일
+          </div>
+          <input
+            type="date"
+            value={visitDate}
+            max={todayDateInputValue()}
+            onChange={(e) => setVisitDate(e.target.value)}
+            style={{
+              width: "100%",
+              boxSizing: "border-box",
+              padding: "14px 16px",
+              borderRadius: "12px",
+              border: "none",
+              backgroundColor: "#f2f4f6",
+              fontSize: "16px",
+              fontFamily: "inherit",
+              color: "#191f28",
+            }}
+          />
         </div>
-        <input
-          type="date"
-          value={visitDate}
-          max={todayDateInputValue()}
-          onChange={(e) => setVisitDate(e.target.value)}
-          style={{
-            width: "100%",
-            boxSizing: "border-box",
-            padding: "14px 16px",
-            borderRadius: "12px",
-            border: "none",
-            backgroundColor: "#f2f4f6",
-            fontSize: "16px",
-            fontFamily: "inherit",
-            color: "#191f28",
-          }}
-        />
-      </div>
-      <div>
-        <div
-          style={{
-            marginBottom: "8px",
-            color: "#6b7684",
-            fontSize: "14px",
-            textAlign: "center",
-          }}
-        >
-          영수증 사진{isPastVisit ? " (필수)" : " (선택)"}
-        </div>
-        <input
-          ref={receiptInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          style={{ display: "none" }}
-          onChange={handleReceiptChange}
-        />
-        {receiptImage ? (
-          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "12px" }}>
-            <Asset.Image
-              src={receiptImage}
-              alt="영수증 사진"
-              scaleType="crop"
-              frameShape={{ width: 64, height: 64, radius: 12 }}
-            />
-            <Button
-              size="small"
-              variant="weak"
-              color="dark"
-              onClick={() => receiptInputRef.current?.click()}
+        <Border />
+        <div style={{ padding: FORM_SECTION_PADDING }}>
+          <div
+            style={{
+              marginBottom: "8px",
+              color: "#6b7684",
+              fontSize: "14px",
+              textAlign: "center",
+            }}
+          >
+            영수증 사진{isPastVisit ? " (필수)" : " (선택)"}
+          </div>
+          <input
+            ref={receiptInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            style={{ display: "none" }}
+            onChange={handleReceiptChange}
+          />
+          {receiptImage ? (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: "12px",
+              }}
             >
-              다시 선택
-            </Button>
-            <Button
-              size="small"
-              variant="weak"
-              color="danger"
-              onClick={() => setReceiptImage(undefined)}
-            >
-              삭제
-            </Button>
-          </div>
-        ) : (
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <Button variant="weak" color="dark" onClick={() => receiptInputRef.current?.click()}>
-              📷 영수증 사진 첨부
-            </Button>
-          </div>
-        )}
-        {requiresReceipt && (
-          <div style={{ marginTop: "8px", color: "#f04452", fontSize: "13px" }}>
-            과거 날짜로 기록하려면 영수증 사진을 첨부해야 해요.
-          </div>
-        )}
-      </div>
-      <div>
-        <div
-          style={{
-            marginBottom: "8px",
-            color: "#6b7684",
-            fontSize: "14px",
-            textAlign: "center",
-          }}
-        >
-          음식/가게 사진 (선택)
-        </div>
-        <input
-          ref={photosInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          style={{ display: "none" }}
-          onChange={handlePhotosChange}
-        />
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
-          {photos.map((photo, index) => (
-            <div key={index} style={{ position: "relative", width: "64px", height: "64px" }}>
               <Asset.Image
-                src={photo}
-                alt={`음식/가게 사진 ${index + 1}`}
+                src={receiptImage}
+                alt="영수증 사진"
                 scaleType="crop"
                 frameShape={{ width: 64, height: 64, radius: 12 }}
               />
-              <button
-                type="button"
-                onClick={() => removePhoto(index)}
-                aria-label={`음식/가게 사진 ${index + 1} 삭제`}
-                style={{
-                  position: "absolute",
-                  top: "-6px",
-                  right: "-6px",
-                  width: "20px",
-                  height: "20px",
-                  borderRadius: "10px",
-                  border: "none",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: "rgba(25, 31, 40, 0.7)",
-                  color: "#ffffff",
-                  fontSize: "12px",
-                  lineHeight: 1,
-                  cursor: "pointer",
-                }}
+              <Button
+                size="small"
+                variant="weak"
+                color="dark"
+                onClick={() => receiptInputRef.current?.click()}
               >
-                ×
-              </button>
+                다시 선택
+              </Button>
+              <Button
+                size="small"
+                variant="weak"
+                color="danger"
+                onClick={() => setReceiptImage(undefined)}
+              >
+                삭제
+              </Button>
             </div>
-          ))}
-          {photos.length < MAX_PHOTOS && (
-            <Button
-              variant="weak"
-              color="dark"
-              onClick={() => photosInputRef.current?.click()}
-              style={{
-                width: "64px",
-                height: "64px",
-                minWidth: "64px",
-                padding: 0,
-                borderRadius: "12px",
-                fontSize: "20px",
-              }}
+          ) : (
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <Button
+                variant="weak"
+                color="dark"
+                onClick={() => receiptInputRef.current?.click()}
+              >
+                📷 영수증 사진 첨부
+              </Button>
+            </div>
+          )}
+          {requiresReceipt && (
+            <div
+              style={{ marginTop: "8px", color: "#f04452", fontSize: "13px" }}
             >
-              📷
-            </Button>
+              과거 날짜로 기록하려면 영수증 사진을 첨부해야 해요.
+            </div>
           )}
         </div>
-      </div>
-      <div>
-        <div
-          style={{
-            marginBottom: "8px",
-            color: "#6b7684",
-            fontSize: "14px",
-            textAlign: "center",
-          }}
-        >
-          음식 종류
-        </div>
-        <SegmentedControl
-          alignment="fluid"
-          size="small"
-          value={category}
-          onChange={(value) => setCategory(value as Category)}
-        >
-          {CATEGORIES.map((item) => (
-            <SegmentedControl.Item key={item} value={item}>
-              {item}
-            </SegmentedControl.Item>
-          ))}
-        </SegmentedControl>
-      </div>
-      <div>
-        <div
-          style={{
-            marginBottom: "8px",
-            color: "#6b7684",
-            fontSize: "14px",
-            textAlign: "center",
-          }}
-        >
-          먹은 메뉴
-        </div>
-        <div style={{ display: "flex", gap: "8px" }}>
-          <TextField
-            variant="box"
-            placeholder="예) 짜장면"
-            value={menuInput}
-            onChange={(e) => setMenuInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                addMenu();
-              }
+        <Border />
+        <div style={{ padding: FORM_SECTION_PADDING }}>
+          <div
+            style={{
+              marginBottom: "8px",
+              color: "#6b7684",
+              fontSize: "14px",
+              textAlign: "center",
             }}
-            style={{ flex: 1 }}
+          >
+            음식/가게 사진 (선택)
+          </div>
+          <input
+            ref={photosInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            style={{ display: "none" }}
+            onChange={handlePhotosChange}
           />
-          <Button variant="weak" color="dark" onClick={addMenu}>
-            추가
-          </Button>
-        </div>
-        {menus.length > 0 && (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "12px" }}>
-            {menus.map((menu, index) => (
-              <div
-                key={`${menu}-${index}`}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "6px 10px",
-                  borderRadius: "16px",
-                  backgroundColor: "#f2f4f6",
-                  fontSize: "14px",
-                  color: "#191f28",
-                }}
-              >
-                <span>{menu}</span>
-                <button
-                  type="button"
-                  onClick={() => removeMenu(index)}
-                  aria-label={`${menu} 삭제`}
+          {photos.length > 0 && (
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "center",
+                gap: "12px",
+                marginBottom: "12px",
+              }}
+            >
+              {photos.map((photo, index) => (
+                <div
+                  key={index}
                   style={{
-                    border: "none",
-                    background: "none",
-                    padding: 0,
-                    cursor: "pointer",
-                    color: "#8b95a1",
-                    fontSize: "14px",
-                    lineHeight: 1,
+                    position: "relative",
+                    width: "64px",
+                    height: "64px",
                   }}
                 >
-                  ×
-                </button>
-              </div>
+                  <Asset.Image
+                    src={photo}
+                    alt={`음식/가게 사진 ${index + 1}`}
+                    scaleType="crop"
+                    frameShape={{ width: 64, height: 64, radius: 12 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removePhoto(index)}
+                    aria-label={`음식/가게 사진 ${index + 1} 삭제`}
+                    style={{
+                      position: "absolute",
+                      top: "-6px",
+                      right: "-6px",
+                      width: "20px",
+                      height: "20px",
+                      borderRadius: "10px",
+                      border: "none",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: "rgba(25, 31, 40, 0.7)",
+                      color: "#ffffff",
+                      fontSize: "12px",
+                      lineHeight: 1,
+                      cursor: "pointer",
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          {photos.length < MAX_PHOTOS && (
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <Button
+                variant="weak"
+                color="dark"
+                onClick={() => photosInputRef.current?.click()}
+              >
+                📷 음식/가게 사진 추가
+              </Button>
+            </div>
+          )}
+        </div>
+        <Border />
+        <div style={{ padding: FORM_SECTION_PADDING }}>
+          <div
+            style={{
+              marginBottom: "8px",
+              color: "#6b7684",
+              fontSize: "14px",
+              textAlign: "center",
+            }}
+          >
+            음식 종류
+          </div>
+          <SegmentedControl
+            alignment="fluid"
+            size="small"
+            value={category}
+            onChange={(value) => setCategory(value as Category)}
+          >
+            {CATEGORIES.map((item) => (
+              <SegmentedControl.Item key={item} value={item}>
+                {item}
+              </SegmentedControl.Item>
             ))}
-          </div>
-        )}
-        {hasNoMenu && (
-          <div style={{ marginTop: "8px", color: "#f04452", fontSize: "13px" }}>
-            메뉴를 1개 이상 등록해야 저장할 수 있어요.
-          </div>
-        )}
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        <div style={{ color: "#6b7684", fontSize: "14px", textAlign: "center" }}>
-          같이 간 사람
+          </SegmentedControl>
         </div>
-        <QuickPickChips options={COMPANION_QUICK_OPTIONS} onSelect={setCompanion} />
-        <TextField
-          variant="box"
-          placeholder="예) 민수, 지영"
-          value={companion}
-          onChange={(e) => setCompanion(e.target.value)}
-        />
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        <div style={{ color: "#6b7684", fontSize: "14px", textAlign: "center" }}>
-          날씨
+        <Border />
+        <div style={{ padding: FORM_SECTION_PADDING }}>
+          <div
+            style={{
+              marginBottom: "8px",
+              color: "#6b7684",
+              fontSize: "14px",
+              textAlign: "center",
+            }}
+          >
+            먹은 메뉴
+          </div>
+          <div style={{ display: "flex", gap: "8px" }}>
+            <TextField
+              variant="box"
+              placeholder="예) 짜장면"
+              value={menuInput}
+              onChange={(e) => setMenuInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addMenu();
+                }
+              }}
+              style={{ flex: 1 }}
+            />
+            <Button variant="weak" color="dark" onClick={addMenu}>
+              추가
+            </Button>
+          </div>
+          {menus.length > 0 && (
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "8px",
+                marginTop: "12px",
+              }}
+            >
+              {menus.map((menu, index) => (
+                <div
+                  key={`${menu}-${index}`}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "6px 10px",
+                    borderRadius: "16px",
+                    backgroundColor: "#f2f4f6",
+                    fontSize: "14px",
+                    color: "#191f28",
+                  }}
+                >
+                  <span>{menu}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeMenu(index)}
+                    aria-label={`${menu} 삭제`}
+                    style={{
+                      border: "none",
+                      background: "none",
+                      padding: 0,
+                      cursor: "pointer",
+                      color: "#8b95a1",
+                      fontSize: "14px",
+                      lineHeight: 1,
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          {hasNoMenu && (
+            <div
+              style={{ marginTop: "8px", color: "#f04452", fontSize: "13px" }}
+            >
+              메뉴를 1개 이상 등록해야 저장할 수 있어요.
+            </div>
+          )}
         </div>
-        <WeatherMoodIcons onSelect={handleWeatherIconSelect} />
-        <TextField
-          variant="box"
-          placeholder={weatherPlaceholder}
-          value={weather}
-          onChange={(e) => setWeather(e.target.value)}
-        />
-      </div>
-      <div>
+        <Border />
         <div
           style={{
-            marginBottom: "8px",
-            color: "#6b7684",
-            fontSize: "14px",
-            textAlign: "center",
+            display: "flex",
+            flexDirection: "column",
+            gap: "8px",
+            padding: FORM_SECTION_PADDING,
           }}
         >
-          이 곳에서의 기억
+          <div
+            style={{ color: "#6b7684", fontSize: "14px", textAlign: "center" }}
+          >
+            같이 간 사람
+          </div>
+          <QuickPickChips
+            options={COMPANION_QUICK_OPTIONS}
+            onSelect={setCompanion}
+          />
+          <TextField
+            variant="box"
+            placeholder="예) 민수, 지영"
+            value={companion}
+            onChange={(e) => setCompanion(e.target.value)}
+          />
         </div>
-        <TextArea
-          variant="box"
-          placeholder="오늘 이 곳에서의 기억을 자유롭게 남겨보세요"
-          minHeight={96}
-          value={memo}
-          onChange={(e) => setMemo(e.target.value)}
-        />
-      </div>
-      <div>
+        <Border />
         <div
           style={{
-            marginBottom: "8px",
-            color: "#6b7684",
-            fontSize: "14px",
-            textAlign: "center",
+            display: "flex",
+            flexDirection: "column",
+            gap: "8px",
+            padding: FORM_SECTION_PADDING,
           }}
         >
-          별점
+          <div
+            style={{ color: "#6b7684", fontSize: "14px", textAlign: "center" }}
+          >
+            날씨
+          </div>
+          <WeatherMoodIcons onSelect={handleWeatherIconSelect} />
+          <TextField
+            variant="box"
+            placeholder={weatherPlaceholder}
+            value={weather}
+            onChange={(e) => setWeather(e.target.value)}
+          />
         </div>
-        <Rating
-          readOnly={false}
-          value={rating}
-          max={5}
-          size="large"
-          onValueChange={setRating}
-        />
+        <Border />
+        <div style={{ padding: FORM_SECTION_PADDING }}>
+          <div
+            style={{
+              marginBottom: "8px",
+              color: "#6b7684",
+              fontSize: "14px",
+              textAlign: "center",
+            }}
+          >
+            이 곳에서의 기억
+          </div>
+          <TextArea
+            variant="box"
+            placeholder="오늘 이 곳에서의 기억을 자유롭게 남겨보세요"
+            minHeight={96}
+            value={memo}
+            onChange={(e) => setMemo(e.target.value)}
+          />
+        </div>
+        <Border />
+        <div style={{ padding: FORM_SECTION_PADDING }}>
+          <div
+            style={{
+              marginBottom: "8px",
+              color: "#6b7684",
+              fontSize: "14px",
+              textAlign: "center",
+            }}
+          >
+            별점
+          </div>
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <Rating
+              readOnly={false}
+              value={rating}
+              max={5}
+              size="large"
+              onValueChange={setRating}
+            />
+          </div>
+        </div>
       </div>
       <div style={{ display: "flex", gap: "8px" }}>
-        <Button style={{ flex: 1 }} variant="weak" color="dark" onClick={onCancel}>
+        <Button
+          style={{ flex: 1 }}
+          variant="weak"
+          color="dark"
+          onClick={onCancel}
+        >
           취소
         </Button>
         <Button
@@ -641,7 +754,8 @@ function App() {
     const query = searchQuery.trim().toLowerCase();
     const filtered = restaurants.filter((restaurant) => {
       const matchesCategory =
-        selectedCategory === ALL_CATEGORY || restaurant.category === selectedCategory;
+        selectedCategory === ALL_CATEGORY ||
+        restaurant.category === selectedCategory;
       const matchesQuery =
         query.length === 0 || restaurant.name.toLowerCase().includes(query);
       return matchesCategory && matchesQuery;
@@ -651,12 +765,16 @@ function App() {
     switch (sortOption) {
       case "latest":
         sorted.sort(
-          (a, b) => b.visitDate.localeCompare(a.visitDate) || Number(b.id) - Number(a.id),
+          (a, b) =>
+            b.visitDate.localeCompare(a.visitDate) ||
+            Number(b.id) - Number(a.id),
         );
         break;
       case "oldest":
         sorted.sort(
-          (a, b) => a.visitDate.localeCompare(b.visitDate) || Number(a.id) - Number(b.id),
+          (a, b) =>
+            a.visitDate.localeCompare(b.visitDate) ||
+            Number(a.id) - Number(b.id),
         );
         break;
       case "ratingDesc":
@@ -886,8 +1004,17 @@ function App() {
             >
               {selectedCategory} ▾
             </Button>
-            <Button size="medium" variant="weak" color="dark" onClick={openSortSheet}>
-              {SORT_OPTIONS.find((option) => option.value === sortOption)?.label} ▾
+            <Button
+              size="medium"
+              variant="weak"
+              color="dark"
+              onClick={openSortSheet}
+            >
+              {
+                SORT_OPTIONS.find((option) => option.value === sortOption)
+                  ?.label
+              }{" "}
+              ▾
             </Button>
           </div>
         </>
@@ -901,7 +1028,9 @@ function App() {
       ) : visibleRestaurants.length === 0 ? (
         <Result
           title="검색 결과가 없어요"
-          description={"다른 이름으로 검색하거나\n다른 음식 종류를 선택해 보세요."}
+          description={
+            "다른 이름으로 검색하거나\n다른 음식 종류를 선택해 보세요."
+          }
         />
       ) : (
         <List>
