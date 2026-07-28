@@ -59,40 +59,43 @@ interface QuickPickOption {
   label: string;
 }
 
-// 날씨 아이콘은 이제 텍스트를 채워주지 않는 순수 장식용이라, 이모지만 나열해요.
-const WEATHER_MOOD_ICONS = ["☀️", "☁️", "🌧️", "❄️", "🍂", "🌬️"];
-
-// 날씨 입력창 placeholder로 번갈아 보여줄 감성 문장 예시예요. 실제로 입력되지는 않아요.
-const WEATHER_PLACEHOLDER_EXAMPLES = [
-  "햇살이 유난히 따스했던 날",
-  "구름이 낮게 드리운 하루",
-  "빗소리가 창밖을 두드리던 날",
-  "하얀 눈이 소복이 내려앉은 날",
-  "가을바람이 살랑하니 내 콧등을 간지럽혔다",
+// 아이콘은 이모지만 보여주지만, 눌렀을 때는 각 아이콘에 대응하는 감성 문장이
+// 입력창에 채워져요. 이후 자유롭게 고쳐 쓸 수 있어요.
+const WEATHER_QUICK_OPTIONS: QuickPickOption[] = [
+  { emoji: "☀️", label: "햇살이 유난히 따스했던 날" },
+  { emoji: "☁️", label: "구름이 낮게 드리운 하루" },
+  { emoji: "🌧️", label: "빗소리가 창밖을 두드리던 날" },
+  { emoji: "❄️", label: "하얀 눈이 소복이 내려앉은 날" },
+  { emoji: "🍂", label: "가을바람이 살랑하니 내 콧등을 간지럽혔다" },
+  { emoji: "🌬️", label: "선선한 바람이 옷깃을 스치던 날" },
 ];
 
-// 날씨 입력창 위에 나열되는 장식용 아이콘이에요. 눌러도 아무 동작도 하지 않고,
-// 그저 날씨를 문장으로 적어보라는 분위기만 환기시켜줘요.
-function WeatherMoodIcons() {
+// 날씨 입력창 placeholder로 번갈아 보여줄 감성 문장 예시예요. 실제로 입력되지는 않아요.
+const WEATHER_PLACEHOLDER_EXAMPLES = WEATHER_QUICK_OPTIONS.map((option) => option.label);
+
+// 날씨 입력창 위에 나열되는 아이콘 칩이에요. 이모지만 보이지만 눌렀을 때는
+// 대응하는 문장으로 입력창을 채워줘요.
+function WeatherMoodIcons({ onSelect }: { onSelect: (label: string) => void }) {
   return (
     <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "4px" }}>
-      {WEATHER_MOOD_ICONS.map((emoji, index) => (
-        <div
-          key={`${emoji}-${index}`}
+      {WEATHER_QUICK_OPTIONS.map((option) => (
+        <Button
+          key={option.label}
+          variant="weak"
+          color="dark"
+          onClick={() => onSelect(option.label)}
           style={{
             flexShrink: 0,
             width: "40px",
             height: "40px",
+            minWidth: "40px",
+            padding: 0,
             borderRadius: "20px",
-            backgroundColor: "#f2f4f6",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
             fontSize: "18px",
           }}
         >
-          {emoji}
-        </div>
+          {option.emoji}
+        </Button>
       ))}
     </div>
   );
@@ -279,7 +282,7 @@ function RestaurantForm({
           onChange={handleReceiptChange}
         />
         {receiptImage ? (
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "12px" }}>
             <Asset.Image
               src={receiptImage}
               alt="영수증 사진"
@@ -304,9 +307,11 @@ function RestaurantForm({
             </Button>
           </div>
         ) : (
-          <Button variant="weak" color="dark" onClick={() => receiptInputRef.current?.click()}>
-            📷 영수증 사진 첨부
-          </Button>
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <Button variant="weak" color="dark" onClick={() => receiptInputRef.current?.click()}>
+              📷 영수증 사진 첨부
+            </Button>
+          </div>
         )}
         {requiresReceipt && (
           <div style={{ marginTop: "8px", color: "#f04452", fontSize: "13px" }}>
