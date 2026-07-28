@@ -207,6 +207,12 @@ function RestaurantForm({
     setMenus((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // 날씨 아이콘을 누르면 기존에 입력해 둔 문장은 지우지 않고, label 문구를
+  // 맨 앞에 붙여줘요. 여러 아이콘을 연달아 누르면 최신 선택이 계속 맨 앞으로 와요.
+  const handleWeatherIconSelect = (label: string) => {
+    setWeather((prev) => (prev ? `${label} ${prev}` : label));
+  };
+
   const handleReceiptChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) {
@@ -266,16 +272,33 @@ function RestaurantForm({
         padding: "0 24px 24px",
       }}
     >
-      <TextField
-        variant="box"
-        label="가게 이름"
-        labelOption="sustain"
-        placeholder="예) 우래옥"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
       <div>
-        <div style={{ marginBottom: "8px", color: "#6b7684", fontSize: "14px" }}>
+        <div
+          style={{
+            marginBottom: "8px",
+            color: "#6b7684",
+            fontSize: "14px",
+            textAlign: "center",
+          }}
+        >
+          가게 이름
+        </div>
+        <TextField
+          variant="box"
+          placeholder="예) 우래옥"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+      </div>
+      <div>
+        <div
+          style={{
+            marginBottom: "8px",
+            color: "#6b7684",
+            fontSize: "14px",
+            textAlign: "center",
+          }}
+        >
           방문일
         </div>
         <input
@@ -297,7 +320,14 @@ function RestaurantForm({
         />
       </div>
       <div>
-        <div style={{ marginBottom: "8px", color: "#6b7684", fontSize: "14px" }}>
+        <div
+          style={{
+            marginBottom: "8px",
+            color: "#6b7684",
+            fontSize: "14px",
+            textAlign: "center",
+          }}
+        >
           영수증 사진{isPastVisit ? " (필수)" : " (선택)"}
         </div>
         <input
@@ -347,7 +377,14 @@ function RestaurantForm({
         )}
       </div>
       <div>
-        <div style={{ marginBottom: "8px", color: "#6b7684", fontSize: "14px" }}>
+        <div
+          style={{
+            marginBottom: "8px",
+            color: "#6b7684",
+            fontSize: "14px",
+            textAlign: "center",
+          }}
+        >
           음식/가게 사진 (선택)
         </div>
         <input
@@ -413,7 +450,14 @@ function RestaurantForm({
         </div>
       </div>
       <div>
-        <div style={{ marginBottom: "8px", color: "#6b7684", fontSize: "14px" }}>
+        <div
+          style={{
+            marginBottom: "8px",
+            color: "#6b7684",
+            fontSize: "14px",
+            textAlign: "center",
+          }}
+        >
           음식 종류
         </div>
         <SegmentedControl
@@ -430,7 +474,14 @@ function RestaurantForm({
         </SegmentedControl>
       </div>
       <div>
-        <div style={{ marginBottom: "8px", color: "#6b7684", fontSize: "14px" }}>
+        <div
+          style={{
+            marginBottom: "8px",
+            color: "#6b7684",
+            fontSize: "14px",
+            textAlign: "center",
+          }}
+        >
           먹은 메뉴
         </div>
         <div style={{ display: "flex", gap: "8px" }}>
@@ -495,38 +546,57 @@ function RestaurantForm({
         )}
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        <div style={{ color: "#6b7684", fontSize: "14px", textAlign: "center" }}>
+          같이 간 사람
+        </div>
         <QuickPickChips options={COMPANION_QUICK_OPTIONS} onSelect={setCompanion} />
         <TextField
           variant="box"
-          label="같이 간 사람"
-          labelOption="sustain"
           placeholder="예) 민수, 지영"
           value={companion}
           onChange={(e) => setCompanion(e.target.value)}
         />
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        <WeatherMoodIcons />
+        <div style={{ color: "#6b7684", fontSize: "14px", textAlign: "center" }}>
+          날씨
+        </div>
+        <WeatherMoodIcons onSelect={handleWeatherIconSelect} />
         <TextField
           variant="box"
-          label="날씨"
-          labelOption="sustain"
           placeholder={weatherPlaceholder}
           value={weather}
           onChange={(e) => setWeather(e.target.value)}
         />
       </div>
-      <TextArea
-        variant="box"
-        label="이 곳에서의 기억"
-        labelOption="sustain"
-        placeholder="오늘 이 곳에서의 기억을 자유롭게 남겨보세요"
-        minHeight={96}
-        value={memo}
-        onChange={(e) => setMemo(e.target.value)}
-      />
       <div>
-        <div style={{ marginBottom: "8px", color: "#6b7684", fontSize: "14px" }}>
+        <div
+          style={{
+            marginBottom: "8px",
+            color: "#6b7684",
+            fontSize: "14px",
+            textAlign: "center",
+          }}
+        >
+          이 곳에서의 기억
+        </div>
+        <TextArea
+          variant="box"
+          placeholder="오늘 이 곳에서의 기억을 자유롭게 남겨보세요"
+          minHeight={96}
+          value={memo}
+          onChange={(e) => setMemo(e.target.value)}
+        />
+      </div>
+      <div>
+        <div
+          style={{
+            marginBottom: "8px",
+            color: "#6b7684",
+            fontSize: "14px",
+            textAlign: "center",
+          }}
+        >
           별점
         </div>
         <Rating
