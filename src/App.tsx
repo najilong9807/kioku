@@ -24,6 +24,7 @@ import {
   type CSSProperties,
 } from "react";
 import "./App.css";
+import HomeScreen from "./HomeScreen";
 import { fetchProfile, saveProfile } from "./lib/profile";
 import {
   addRecentNeighborhood,
@@ -820,10 +821,14 @@ function NicknameForm({ onSubmit }: { onSubmit: (nickname: string) => void }) {
   );
 }
 
-const MAIN_TABS = ["맛집 기록", "오늘뭐먹"] as const;
+const MAIN_TABS = ["홈", "맛집 기록", "오늘뭐먹"] as const;
+const HOME_TAB_INDEX = 0;
+const RESTAURANT_TAB_INDEX = 1;
+const TODAY_MEAL_TAB_INDEX = 2;
 
 function App() {
-  const [selectedTab, setSelectedTab] = useState(0);
+  const [selectedTab, setSelectedTab] = useState(HOME_TAB_INDEX);
+  const [nickname, setNickname] = useState<string | null>(null);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -954,6 +959,8 @@ function App() {
 
       if (!profile?.nickname) {
         openNicknameSheet(userHash);
+      } else {
+        setNickname(profile.nickname);
       }
     })();
 
@@ -970,6 +977,7 @@ function App() {
         <NicknameForm
           onSubmit={async (nickname) => {
             await saveProfile(userHash, nickname);
+            setNickname(nickname);
             close();
           }}
         />
@@ -1175,11 +1183,13 @@ function App() {
         title={<Top.TitleParagraph size={22}>이게맛다</Top.TitleParagraph>}
         subtitleBottom={
           <Top.SubtitleParagraph size={17}>
-            {selectedTab === 0
-              ? restaurants.length > 0
-                ? `지금까지 ${restaurants.length}곳의 맛집을 기록했어요.`
-                : "다녀온 맛집을 기록하고 모아보세요."
-              : "오늘 먹은 메뉴를 자유롭게 나눠보세요."}
+            {selectedTab === HOME_TAB_INDEX
+              ? "오늘도 맛있는 하루 보내세요."
+              : selectedTab === RESTAURANT_TAB_INDEX
+                ? restaurants.length > 0
+                  ? `지금까지 ${restaurants.length}곳의 맛집을 기록했어요.`
+                  : "다녀온 맛집을 기록하고 모아보세요."
+                : "오늘 먹은 메뉴를 자유롭게 나눠보세요."}
           </Top.SubtitleParagraph>
         }
       />
@@ -1194,7 +1204,18 @@ function App() {
         </Tab>
       </div>
 
-      {selectedTab === 0 ? (
+      {selectedTab === HOME_TAB_INDEX ? (
+        <HomeScreen
+          nickname={nickname}
+          restaurants={restaurants}
+          onWriteRestaurant={() => {
+            setSelectedTab(RESTAURANT_TAB_INDEX);
+            openAddSheet();
+          }}
+          onViewRestaurants={() => setSelectedTab(RESTAURANT_TAB_INDEX)}
+          onViewTodayMeal={() => setSelectedTab(TODAY_MEAL_TAB_INDEX)}
+        />
+      ) : selectedTab === RESTAURANT_TAB_INDEX ? (
         <>
           <div style={{ padding: "0 24px 16px" }}>
             <Button
