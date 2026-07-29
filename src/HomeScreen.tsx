@@ -1,4 +1,4 @@
-import { Border, Button, List, ListRow } from "@toss/tds-mobile";
+import { Border, Button, List, ListRow, Skeleton } from "@toss/tds-mobile";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { fetchTodayMealPosts, type ThreadPost } from "./lib/threadPosts";
 import type { Restaurant } from "./restaurantStorage";
@@ -62,14 +62,16 @@ function EmptyPreview({ children }: { children: string }) {
 export default function HomeScreen({
   nickname,
   restaurants,
+  isRestaurantsLoaded,
   onWriteRestaurant,
-  onViewRestaurants,
+  onSelectRestaurant,
   onViewTodayMeal,
 }: {
   nickname: string | null;
   restaurants: Restaurant[];
+  isRestaurantsLoaded: boolean;
   onWriteRestaurant: () => void;
-  onViewRestaurants: () => void;
+  onSelectRestaurant: (restaurant: Restaurant) => void;
   onViewTodayMeal: () => void;
 }) {
   const [recentPosts, setRecentPosts] = useState<ThreadPost[]>([]);
@@ -145,14 +147,21 @@ export default function HomeScreen({
 
       <div>
         <SectionLabel>최근 맛집 기록</SectionLabel>
-        {recentRestaurants.length === 0 ? (
+        {!isRestaurantsLoaded ? (
+          <div style={{ padding: "0 24px" }}>
+            <Skeleton
+              custom={["listWithIcon"]}
+              repeatLastItemCount={RECENT_RESTAURANT_LIMIT}
+            />
+          </div>
+        ) : recentRestaurants.length === 0 ? (
           <EmptyPreview>아직 기록이 없어요.</EmptyPreview>
         ) : (
           <List>
             {recentRestaurants.map((restaurant) => (
               <div
                 key={restaurant.id}
-                onClick={onViewRestaurants}
+                onClick={() => onSelectRestaurant(restaurant)}
                 style={{ cursor: "pointer" }}
               >
                 <ListRow
@@ -183,7 +192,14 @@ export default function HomeScreen({
 
       <div>
         <SectionLabel>최근 오늘뭐먹 글</SectionLabel>
-        {!isPostsLoaded ? null : recentPosts.length === 0 ? (
+        {!isPostsLoaded ? (
+          <div style={{ padding: "0 24px" }}>
+            <Skeleton
+              custom={["list"]}
+              repeatLastItemCount={RECENT_POST_LIMIT}
+            />
+          </div>
+        ) : recentPosts.length === 0 ? (
           <EmptyPreview>아직 올라온 글이 없어요.</EmptyPreview>
         ) : (
           <List>

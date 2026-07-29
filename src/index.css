@@ -1,5 +1,26 @@
+/* 감성 메모(맛집 기록 메모, 오늘뭐먹 글 등)에 쓰는 손글씨 폰트예요.
+   Ownglyph_ParkDaHyun(온글잎 박다현체) — 눈누(noonnu.cc)에서 배포하는 상업적 이용 가능한 무료 폰트예요.
+   https://noonnu.cc/font_page/1541 */
+@font-face {
+  font-family: "Ownglyph_ParkDaHyun";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/2411-3@1.0/Ownglyph_ParkDaHyun.woff2")
+    format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  font-family: sans-serif;
+  font-family:
+    "Pretendard",
+    -apple-system,
+    BlinkMacSystemFont,
+    system-ui,
+    Roboto,
+    "Apple SD Gothic Neo",
+    "Noto Sans KR",
+    "Malgun Gothic",
+    sans-serif;
 }
 
 * {

@@ -32,6 +32,8 @@ import {
 } from "./lib/recentNeighborhoods";
 import { getUserIdentityHash } from "./lib/userIdentity";
 import { NeighborhoodInput } from "./NeighborhoodInput";
+import RestaurantDetailView from "./RestaurantDetailView";
+import { HANDWRITING_TEXT_STYLE } from "./theme";
 import {
   CATEGORIES,
   formatDisplayDate,
@@ -728,6 +730,7 @@ function RestaurantForm({
             minHeight={96}
             value={memo}
             onChange={(e) => setMemo(e.target.value)}
+            style={HANDWRITING_TEXT_STYLE}
           />
         </div>
         <Border />
@@ -1177,6 +1180,24 @@ function App() {
     });
   };
 
+  // 목록/홈에서 항목을 클릭하면 우선 이 읽기 전용 상세보기를 열어요.
+  // 여기서 "수정하기"를 눌러야만 기존 수정 폼(openEditSheet)으로 넘어가요.
+  const openDetailSheet = (restaurant: Restaurant) => {
+    open({
+      header: restaurant.name,
+      children: (
+        <RestaurantDetailView
+          restaurant={restaurant}
+          onClose={close}
+          onEdit={() => {
+            close();
+            openEditSheet(restaurant);
+          }}
+        />
+      ),
+    });
+  };
+
   return (
     <>
       <Top
@@ -1208,11 +1229,15 @@ function App() {
         <HomeScreen
           nickname={nickname}
           restaurants={restaurants}
+          isRestaurantsLoaded={isLoaded}
           onWriteRestaurant={() => {
             setSelectedTab(RESTAURANT_TAB_INDEX);
             openAddSheet();
           }}
-          onViewRestaurants={() => setSelectedTab(RESTAURANT_TAB_INDEX)}
+          onSelectRestaurant={(restaurant) => {
+            setSelectedTab(RESTAURANT_TAB_INDEX);
+            openDetailSheet(restaurant);
+          }}
           onViewTodayMeal={() => setSelectedTab(TODAY_MEAL_TAB_INDEX)}
         />
       ) : selectedTab === RESTAURANT_TAB_INDEX ? (
@@ -1292,7 +1317,7 @@ function App() {
               {visibleRestaurants.map((restaurant) => (
                 <div
                   key={restaurant.id}
-                  onClick={() => openEditSheet(restaurant)}
+                  onClick={() => openDetailSheet(restaurant)}
                   style={{ cursor: "pointer" }}
                 >
                   <ListRow

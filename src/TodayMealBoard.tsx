@@ -36,6 +36,7 @@ import {
 } from "./lib/threadPosts";
 import { getUserIdentityHash } from "./lib/userIdentity";
 import { NeighborhoodInput } from "./NeighborhoodInput";
+import { HANDWRITING_TEXT_STYLE } from "./theme";
 
 // 첨부 사진은 가로 폭 기준 이 값 이하로 리사이즈해서 저장해요.
 const MAX_PHOTO_WIDTH = 800;
@@ -129,6 +130,7 @@ function PostForm({
         minHeight={120}
         value={content}
         onChange={(e) => setContent(e.target.value)}
+        style={HANDWRITING_TEXT_STYLE}
       />
 
       <NeighborhoodInput
@@ -689,9 +691,8 @@ function TodayMealBoard() {
                 )}
                 <div
                   style={{
-                    fontSize: "15px",
+                    ...HANDWRITING_TEXT_STYLE,
                     color: "#191f28",
-                    lineHeight: 1.5,
                     whiteSpace: "pre-wrap",
                     wordBreak: "break-word",
                   }}
