@@ -1,3 +1,4 @@
+import { fetchPostLikes } from "./postLikes";
 import { supabase } from "./supabase";
 
 // thread_posts 테이블은 board_type 컬럼에 CHECK 제약이 걸려 있어서
@@ -14,6 +15,7 @@ export interface ThreadPost {
   userId: string;
   authorNickname: string;
   commentCount: number;
+  likeCount: number;
 }
 
 export interface ThreadComment {
@@ -136,10 +138,12 @@ export async function fetchTodayMealPosts(): Promise<ThreadPost[]> {
     );
     const postIds = rawPosts.map((post) => post.id);
 
-    const [nicknameByUserId, commentCountByPostId] = await Promise.all([
-      fetchNicknamesByUserIds(userIds),
-      fetchCommentCounts(postIds),
-    ]);
+    const [nicknameByUserId, commentCountByPostId, likeCountByPostId] =
+      await Promise.all([
+        fetchNicknamesByUserIds(userIds),
+        fetchCommentCounts(postIds),
+        fetchPostLikes(postIds),
+      ]);
 
     return rawPosts.map((post) => ({
       id: post.id,
@@ -152,6 +156,7 @@ export async function fetchTodayMealPosts(): Promise<ThreadPost[]> {
         ? (nicknameByUserId.get(post.user_id) ?? "알 수 없음")
         : "알 수 없음",
       commentCount: commentCountByPostId.get(post.id) ?? 0,
+      likeCount: likeCountByPostId.get(post.id) ?? 0,
     }));
   } catch (error) {
     console.error("게시글 목록 조회 중 오류가 발생했어요.", error);

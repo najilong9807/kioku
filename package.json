@@ -17,6 +17,7 @@
     "@toss/tds-colors": "latest",
     "@toss/tds-mobile": "latest",
     "@toss/tds-mobile-ait": "latest",
+    "lucide-react": "^1.28.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
   },

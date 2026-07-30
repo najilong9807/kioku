@@ -25,6 +25,7 @@ import {
 } from "react";
 import "./App.css";
 import HomeScreen from "./HomeScreen";
+import { countUnreadNotifications } from "./lib/notifications";
 import { fetchProfile, saveProfile } from "./lib/profile";
 import {
   addRecentNeighborhood,
@@ -32,6 +33,7 @@ import {
 } from "./lib/recentNeighborhoods";
 import { getUserIdentityHash } from "./lib/userIdentity";
 import { NeighborhoodInput } from "./NeighborhoodInput";
+import { NotificationBellButton, NotificationsSheetContent } from "./NotificationsView";
 import RestaurantDetailView from "./RestaurantDetailView";
 import { HANDWRITING_TEXT_STYLE } from "./theme";
 import {
@@ -832,6 +834,8 @@ const TODAY_MEAL_TAB_INDEX = 2;
 function App() {
   const [selectedTab, setSelectedTab] = useState(HOME_TAB_INDEX);
   const [nickname, setNickname] = useState<string | null>(null);
+  const [userHash, setUserHash] = useState<string | null>(null);
+  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -960,10 +964,17 @@ function App() {
         return;
       }
 
+      setUserHash(userHash);
+
       if (!profile?.nickname) {
         openNicknameSheet(userHash);
       } else {
         setNickname(profile.nickname);
+      }
+
+      const unreadCount = await countUnreadNotifications(userHash);
+      if (isMounted) {
+        setHasUnreadNotifications(unreadCount > 0);
       }
     })();
 
@@ -983,6 +994,19 @@ function App() {
             setNickname(nickname);
             close();
           }}
+        />
+      ),
+    });
+  };
+
+  const openNotificationsSheet = () => {
+    open({
+      header: "알림",
+      children: (
+        <NotificationsSheetContent
+          userHash={userHash}
+          onRead={() => setHasUnreadNotifications(false)}
+          onClose={close}
         />
       ),
     });
@@ -1202,6 +1226,12 @@ function App() {
     <>
       <Top
         title={<Top.TitleParagraph size={22}>이게맛다</Top.TitleParagraph>}
+        right={
+          <NotificationBellButton
+            hasUnread={hasUnreadNotifications}
+            onClick={openNotificationsSheet}
+          />
+        }
         subtitleBottom={
           <Top.SubtitleParagraph size={17}>
             {selectedTab === HOME_TAB_INDEX

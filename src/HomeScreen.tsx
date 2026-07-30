@@ -1,17 +1,33 @@
-import { Border, Button, List, ListRow, Skeleton } from "@toss/tds-mobile";
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import {
+  Badge,
+  Border,
+  List,
+  ListRow,
+  Skeleton,
+  useBottomSheet,
+  useToast,
+} from "@toss/tds-mobile";
+import {
+  Bookmark,
+  Headphones,
+  MapPin,
+  MessageCircle,
+  UtensilsCrossed,
+} from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import CustomerSupportView from "./CustomerSupportView";
 import { fetchTodayMealPosts, type ThreadPost } from "./lib/threadPosts";
 import type { Restaurant } from "./restaurantStorage";
-
-// 브랜드 색(노란색)이 밝아서 흰 글씨는 가독성이 떨어져요.
-// variant="fill" + color="primary"(기본값) 버튼은 이 스타일로 글자색을 진하게 덮어써요.
-const PRIMARY_FILL_BUTTON_TEXT_STYLE = {
-  "--button-color": "#000000",
-} as CSSProperties;
 
 const RECENT_RESTAURANT_LIMIT = 2;
 const RECENT_POST_LIMIT = 2;
 const POST_PREVIEW_MAX_LENGTH = 40;
+
+// 퀵 액션 아이콘 타일의 공통 톤. 브랜드 색(#FFC107)을 은은하게 눌러 아이콘 배경/글자에 써요.
+const QUICK_ACTION_ACTIVE_BG = "#fff4cc";
+const QUICK_ACTION_ACTIVE_ICON_COLOR = "#9a6b00";
+const QUICK_ACTION_DISABLED_BG = "#f2f4f6";
+const QUICK_ACTION_DISABLED_ICON_COLOR = "#b0b8c1";
 
 function formatTodayGreetingDate(): string {
   return new Date().toLocaleDateString("ko-KR", {
@@ -59,6 +75,118 @@ function EmptyPreview({ children }: { children: string }) {
   );
 }
 
+// 총 기록 개수를 보여주는 작은 통계 카드예요. "맛집 기록" 탭 상단 문구(App.tsx)와
+// 같은 restaurants.length 값을 재사용하고, 문구만 홈 화면에 맞게 다듬었어요.
+function StatsCard({ isLoaded, count }: { isLoaded: boolean; count: number }) {
+  return (
+    <div style={{ padding: "0 24px" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          padding: "16px 20px",
+          borderRadius: "16px",
+          backgroundColor: "#fff8e1",
+        }}
+      >
+        <div
+          style={{
+            width: "36px",
+            height: "36px",
+            borderRadius: "12px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "#ffecb3",
+            flexShrink: 0,
+          }}
+        >
+          <UtensilsCrossed size={18} color="#946200" />
+        </div>
+        {!isLoaded ? (
+          <span style={{ fontSize: "14px", color: "#8b95a1" }}>
+            불러오는 중...
+          </span>
+        ) : count > 0 ? (
+          <span style={{ fontSize: "14px", fontWeight: 600, color: "#333d4b" }}>
+            지금까지 총 <span style={{ color: "#946200" }}>{count}곳</span>의
+            맛집을 기록했어요
+          </span>
+        ) : (
+          <span style={{ fontSize: "14px", fontWeight: 600, color: "#333d4b" }}>
+            첫 맛집 기록을 남겨볼까요?
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function QuickActionButton({
+  icon,
+  label,
+  comingSoon,
+  onClick,
+}: {
+  icon: ReactNode;
+  label: string;
+  comingSoon?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "8px",
+        padding: "4px 0 0",
+        border: "none",
+        background: "none",
+        WebkitTapHighlightColor: "transparent",
+        cursor: "pointer",
+      }}
+    >
+      <span style={{ position: "relative", display: "inline-flex" }}>
+        <span
+          style={{
+            width: "52px",
+            height: "52px",
+            borderRadius: "16px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: comingSoon
+              ? QUICK_ACTION_DISABLED_BG
+              : QUICK_ACTION_ACTIVE_BG,
+          }}
+        >
+          {icon}
+        </span>
+        {comingSoon ? (
+          <span style={{ position: "absolute", top: "-8px", right: "-16px" }}>
+            <Badge size="xsmall" color="elephant" variant="weak">
+              준비중
+            </Badge>
+          </span>
+        ) : null}
+      </span>
+      <span
+        style={{
+          fontSize: "13px",
+          fontWeight: 600,
+          color: comingSoon ? "#b0b8c1" : "#333d4b",
+        }}
+      >
+        {label}
+      </span>
+    </button>
+  );
+}
+
 export default function HomeScreen({
   nickname,
   restaurants,
@@ -76,6 +204,8 @@ export default function HomeScreen({
 }) {
   const [recentPosts, setRecentPosts] = useState<ThreadPost[]>([]);
   const [isPostsLoaded, setIsPostsLoaded] = useState(false);
+  const { openToast } = useToast();
+  const { open, close } = useBottomSheet();
 
   useEffect(() => {
     let isMounted = true;
@@ -106,6 +236,17 @@ export default function HomeScreen({
     [restaurants],
   );
 
+  const handleComingSoon = () => {
+    openToast("곧 만나요!");
+  };
+
+  const openCustomerSupportSheet = () => {
+    open({
+      header: "고객센터",
+      children: <CustomerSupportView onClose={close} />,
+    });
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       <div style={{ padding: "0 24px" }}>
@@ -119,30 +260,42 @@ export default function HomeScreen({
         </div>
       </div>
 
+      <StatsCard isLoaded={isRestaurantsLoaded} count={restaurants.length} />
+
       <div
         style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "12px",
+          display: "grid",
+          gridTemplateColumns: "repeat(4, 1fr)",
+          columnGap: "8px",
           padding: "0 24px",
         }}
       >
-        <Button
-          display="block"
-          variant="fill"
-          style={PRIMARY_FILL_BUTTON_TEXT_STYLE}
+        <QuickActionButton
+          icon={
+            <UtensilsCrossed size={24} color={QUICK_ACTION_ACTIVE_ICON_COLOR} />
+          }
+          label="맛집 기록하기"
           onClick={onWriteRestaurant}
-        >
-          맛집 기록하기
-        </Button>
-        <Button
-          display="block"
-          variant="weak"
-          color="dark"
+        />
+        <QuickActionButton
+          icon={
+            <MessageCircle size={24} color={QUICK_ACTION_ACTIVE_ICON_COLOR} />
+          }
+          label="오늘뭐먹 보기"
           onClick={onViewTodayMeal}
-        >
-          오늘뭐먹 보기
-        </Button>
+        />
+        <QuickActionButton
+          icon={<MapPin size={24} color={QUICK_ACTION_DISABLED_ICON_COLOR} />}
+          label="지도"
+          comingSoon
+          onClick={handleComingSoon}
+        />
+        <QuickActionButton
+          icon={<Bookmark size={24} color={QUICK_ACTION_DISABLED_ICON_COLOR} />}
+          label="스크랩"
+          comingSoon
+          onClick={handleComingSoon}
+        />
       </div>
 
       <div>
@@ -167,9 +320,17 @@ export default function HomeScreen({
                 <ListRow
                   withTouchEffect
                   left={
-                    <ListRow.AssetText shape="squircle" size="medium">
-                      {restaurant.name.slice(0, 1)}
-                    </ListRow.AssetText>
+                    restaurant.photos && restaurant.photos.length > 0 ? (
+                      <ListRow.AssetImage
+                        src={restaurant.photos[0]}
+                        shape="squircle"
+                        size="medium"
+                      />
+                    ) : (
+                      <ListRow.AssetText shape="squircle" size="medium">
+                        {restaurant.name.slice(0, 1)}
+                      </ListRow.AssetText>
+                    )
                   }
                   contents={
                     <ListRow.Texts
@@ -195,7 +356,7 @@ export default function HomeScreen({
         {!isPostsLoaded ? (
           <div style={{ padding: "0 24px" }}>
             <Skeleton
-              custom={["list"]}
+              custom={["listWithIcon"]}
               repeatLastItemCount={RECENT_POST_LIMIT}
             />
           </div>
@@ -211,6 +372,15 @@ export default function HomeScreen({
               >
                 <ListRow
                   withTouchEffect
+                  left={
+                    post.photoUrl ? (
+                      <ListRow.AssetImage
+                        src={post.photoUrl}
+                        shape="squircle"
+                        size="medium"
+                      />
+                    ) : undefined
+                  }
                   contents={
                     <ListRow.Texts
                       type="2RowTypeA"
@@ -231,6 +401,32 @@ export default function HomeScreen({
       </div>
 
       <Border />
+
+      <div
+        onClick={openCustomerSupportSheet}
+        style={{ cursor: "pointer" }}
+      >
+        <ListRow
+          withTouchEffect
+          withArrow
+          left={
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "36px",
+                height: "36px",
+                borderRadius: "12px",
+                backgroundColor: "#f2f4f6",
+              }}
+            >
+              <Headphones size={18} color="#6b7684" />
+            </span>
+          }
+          contents={<ListRow.Texts type="1RowTypeA" top="고객센터" />}
+        />
+      </div>
     </div>
   );
 }

@@ -10,6 +10,7 @@ import {
   useBottomSheet,
   useDialog,
 } from "@toss/tds-mobile";
+import { Heart } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -20,6 +21,11 @@ import {
   type CSSProperties,
 } from "react";
 import { resizeImageFile } from "./lib/imageResize";
+import {
+  createNotification,
+  fetchUserHashByProfileId,
+} from "./lib/notifications";
+import { fetchLikedPostIds, toggleLike } from "./lib/postLikes";
 import { fetchProfile } from "./lib/profile";
 import {
   addRecentNeighborhood,
@@ -214,12 +220,16 @@ function PostForm({
 // 달라졌을 때 바깥 게시글 목록(댓글 수 표시)을 새로고침하기 위한 콜백이에요.
 function CommentsSheetContent({
   postId,
+  postAuthorId,
   currentUserId,
+  currentUserNickname,
   onChanged,
   onClose,
 }: {
   postId: string;
+  postAuthorId: string;
   currentUserId: string | null;
+  currentUserNickname: string | null;
   onChanged: () => void;
   onClose: () => void;
 }) {
@@ -263,6 +273,19 @@ function CommentsSheetContent({
       setCommentInput("");
       await loadComments();
       onChanged();
+
+      // 본인 글에 본인이 단 댓글이 아닐 때만 글 작성자에게 알림을 남겨요.
+      if (postAuthorId !== currentUserId) {
+        const recipientHash = await fetchUserHashByProfileId(postAuthorId);
+        if (recipientHash) {
+          await createNotification(
+            recipientHash,
+            currentUserNickname ?? "알 수 없음",
+            "comment",
+            postId,
+          );
+        }
+      }
     } else {
       await openAlert({
         title: "댓글 작성에 실패했어요",
@@ -420,6 +443,11 @@ function TodayMealBoard() {
   const [posts, setPosts] = useState<ThreadPost[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserHash, setCurrentUserHash] = useState<string | null>(null);
+  const [currentUserNickname, setCurrentUserNickname] = useState<
+    string | null
+  >(null);
+  const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set());
   const [selectedNeighborhood, setSelectedNeighborhood] =
     useState(ALL_NEIGHBORHOODS);
 
@@ -480,13 +508,39 @@ function TodayMealBoard() {
       if (!isMounted) {
         return;
       }
+      setCurrentUserHash(userHash);
       setCurrentUserId(profile?.id ?? null);
+      setCurrentUserNickname(profile?.nickname ?? null);
     })();
 
     return () => {
       isMounted = false;
     };
   }, [loadPosts]);
+
+  // 글 목록이나 현재 사용자가 바뀔 때마다, 그중 내가 좋아요를 누른 글 id 집합을
+  // 다시 계산해요. 하트 아이콘을 채워서 보여줄지 판단하는 데 써요.
+  useEffect(() => {
+    if (!currentUserHash || posts.length === 0) {
+      setLikedPostIds(new Set());
+      return;
+    }
+
+    let isMounted = true;
+
+    fetchLikedPostIds(
+      posts.map((post) => post.id),
+      currentUserHash,
+    ).then((liked) => {
+      if (isMounted) {
+        setLikedPostIds(liked);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [posts, currentUserHash]);
 
   const openWriteSheet = () => {
     open({
@@ -599,12 +653,65 @@ function TodayMealBoard() {
       children: (
         <CommentsSheetContent
           postId={post.id}
+          postAuthorId={post.userId}
           currentUserId={currentUserId}
+          currentUserNickname={currentUserNickname}
           onChanged={loadPosts}
           onClose={close}
         />
       ),
     });
+  };
+
+  const handleToggleLike = async (post: ThreadPost) => {
+    if (!currentUserHash) {
+      await openAlert({
+        title: "닉네임 설정이 필요해요",
+        description: "닉네임을 먼저 설정한 뒤에 좋아요를 누를 수 있어요.",
+        alertButton: "확인",
+      });
+      return;
+    }
+
+    const result = await toggleLike(post.id, currentUserHash);
+    if (result === null) {
+      await openAlert({
+        title: "요청에 실패했어요",
+        description: "잠시 후 다시 시도해 주세요.",
+        alertButton: "확인",
+      });
+      return;
+    }
+
+    setLikedPostIds((prev) => {
+      const next = new Set(prev);
+      if (result) {
+        next.add(post.id);
+      } else {
+        next.delete(post.id);
+      }
+      return next;
+    });
+    setPosts((prev) =>
+      prev.map((item) =>
+        item.id === post.id
+          ? { ...item, likeCount: item.likeCount + (result ? 1 : -1) }
+          : item,
+      ),
+    );
+
+    // 좋아요를 새로 눌렀고(취소가 아니고) 본인 글이 아니면 알림을 남겨요.
+    if (result && post.userId !== currentUserId) {
+      const recipientHash = await fetchUserHashByProfileId(post.userId);
+      if (recipientHash) {
+        await createNotification(
+          recipientHash,
+          currentUserNickname ?? "알 수 없음",
+          "like",
+          post.id,
+        );
+      }
+    }
   };
 
   return (
@@ -706,14 +813,54 @@ function TodayMealBoard() {
                     alignItems: "center",
                   }}
                 >
-                  <Button
-                    size="small"
-                    variant="weak"
-                    color="dark"
-                    onClick={() => openCommentsSheet(post)}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px",
+                    }}
                   >
-                    댓글{post.commentCount > 0 ? ` ${post.commentCount}` : ""}
-                  </Button>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleLike(post)}
+                      aria-label={
+                        likedPostIds.has(post.id) ? "좋아요 취소" : "좋아요"
+                      }
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                        border: "none",
+                        background: "none",
+                        padding: "6px 10px",
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                        color: likedPostIds.has(post.id)
+                          ? "#f04452"
+                          : "#6b7684",
+                        fontSize: "13px",
+                        fontWeight: 600,
+                        WebkitTapHighlightColor: "transparent",
+                      }}
+                    >
+                      <Heart
+                        size={16}
+                        color={
+                          likedPostIds.has(post.id) ? "#f04452" : "#6b7684"
+                        }
+                        fill={likedPostIds.has(post.id) ? "#f04452" : "none"}
+                      />
+                      {post.likeCount > 0 ? post.likeCount : ""}
+                    </button>
+                    <Button
+                      size="small"
+                      variant="weak"
+                      color="dark"
+                      onClick={() => openCommentsSheet(post)}
+                    >
+                      댓글{post.commentCount > 0 ? ` ${post.commentCount}` : ""}
+                    </Button>
+                  </div>
                   {post.userId === currentUserId && (
                     <Button
                       size="small"
