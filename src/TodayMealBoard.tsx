@@ -2,15 +2,14 @@ import {
   Asset,
   Border,
   Button,
-  List,
-  ListRow,
   Result,
+  SegmentedControl,
   TextArea,
   TextField,
   useBottomSheet,
   useDialog,
 } from "@toss/tds-mobile";
-import { Heart } from "lucide-react";
+import { Heart, Search } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -22,15 +21,16 @@ import {
 } from "react";
 import { resizeImageFile } from "./lib/imageResize";
 import {
+  buildRegionFilterOptions,
+  formatRegionLabel,
+  matchesRegion,
+} from "./lib/koreanRegions";
+import {
   createNotification,
   fetchUserHashByProfileId,
 } from "./lib/notifications";
 import { fetchLikedPostIds, toggleLike } from "./lib/postLikes";
 import { fetchProfile } from "./lib/profile";
-import {
-  addRecentNeighborhood,
-  getRecentNeighborhoods,
-} from "./lib/recentNeighborhoods";
 import {
   createComment,
   createTodayMealPost,
@@ -41,13 +41,13 @@ import {
   type ThreadPost,
 } from "./lib/threadPosts";
 import { getUserIdentityHash } from "./lib/userIdentity";
-import { NeighborhoodInput } from "./NeighborhoodInput";
+import { RegionFilterSheetContent, RegionPicker } from "./RegionPicker";
 import { HANDWRITING_TEXT_STYLE } from "./theme";
 
 // 첨부 사진은 가로 폭 기준 이 값 이하로 리사이즈해서 저장해요.
 const MAX_PHOTO_WIDTH = 800;
 
-const ALL_NEIGHBORHOODS = "전체";
+type PostSortOption = "latest" | "popular";
 
 // 브랜드 색(노란색)이 밝아서 흰 글씨는 가독성이 떨어져요.
 // variant="fill" + color="primary"(기본값) 버튼은 이 스타일로 글자색을 진하게 덮어써요.
@@ -83,11 +83,9 @@ function formatPostTime(createdAt: string): string {
 // 그래서 입력 상태는 바깥 컴포넌트가 아니라 이 컴포넌트 자신이 들고 있어야
 // 타이핑마다 이 컴포넌트만 다시 렌더링되어 반영돼요.
 function PostForm({
-  neighborhoodSuggestions,
   onCancel,
   onSubmit,
 }: {
-  neighborhoodSuggestions: string[];
   onCancel: () => void;
   onSubmit: (
     content: string,
@@ -139,11 +137,7 @@ function PostForm({
         style={HANDWRITING_TEXT_STYLE}
       />
 
-      <NeighborhoodInput
-        value={neighborhood}
-        onChange={setNeighborhood}
-        suggestions={neighborhoodSuggestions}
-      />
+      <RegionPicker value={neighborhood} onChange={setNeighborhood} />
 
       <input
         ref={photoInputRef}
@@ -439,7 +433,11 @@ function CommentsSheetContent({
   );
 }
 
-function TodayMealBoard() {
+function TodayMealBoard({
+  onOpenRestaurantSearch,
+}: {
+  onOpenRestaurantSearch: () => void;
+}) {
   const [posts, setPosts] = useState<ThreadPost[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -448,8 +446,10 @@ function TodayMealBoard() {
     string | null
   >(null);
   const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set());
-  const [selectedNeighborhood, setSelectedNeighborhood] =
-    useState(ALL_NEIGHBORHOODS);
+  // null이면 "전체"예요.
+  const [filterProvince, setFilterProvince] = useState<string | null>(null);
+  const [filterDistrict, setFilterDistrict] = useState<string | null>(null);
+  const [sortOption, setSortOption] = useState<PostSortOption>("latest");
 
   const { open, close } = useBottomSheet();
   const { openConfirm, openAlert } = useDialog();
@@ -460,40 +460,28 @@ function TodayMealBoard() {
     setIsLoaded(true);
   }, []);
 
-  // 글 목록에 실제로 등장한 동네들이에요. 필터 목록과, 글쓰기 폼의 추천 칩에도 함께 써요.
-  const neighborhoodsInPosts = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          posts
-            .map((post) => post.neighborhood)
-            .filter((value): value is string => Boolean(value)),
-        ),
-      ),
+  // 글 목록에 실제로 등장한 동네들 중, 전국 시/도-시/군/구에 매칭되는 것만 추려서
+  // 필터 옵션(시/도 -> 시/군/구 목록)을 만들어요. 예전에 자유 텍스트로 저장된 값도
+  // matchesRegion의 느슨한 매칭 덕분에 이 목록에 포함돼요.
+  const regionFilterOptions = useMemo(
+    () => buildRegionFilterOptions(posts.map((post) => post.neighborhood)),
     [posts],
   );
 
-  const neighborhoodFilterOptions = useMemo(
-    () => [ALL_NEIGHBORHOODS, ...neighborhoodsInPosts],
-    [neighborhoodsInPosts],
-  );
-
-  // 글쓰기 폼에 보여줄 추천 동네예요. 내가 최근에 직접 입력했던 동네를 먼저 보여주고,
-  // 그동안 이 게시판에 올라온 동네들도 이어서 보여줘요.
-  const neighborhoodSuggestions = useMemo(() => {
-    const recent = getRecentNeighborhoods();
-    return Array.from(new Set([...recent, ...neighborhoodsInPosts])).slice(
-      0,
-      12,
-    );
-  }, [neighborhoodsInPosts]);
-
+  // 기본은 최신순(fetchTodayMealPosts가 이미 created_at 최신순으로 가져와요)이고,
+  // 인기순을 고르면 좋아요 개수 기준으로 다시 정렬해요.
   const visiblePosts = useMemo(() => {
-    if (selectedNeighborhood === ALL_NEIGHBORHOODS) {
-      return posts;
+    const filtered = posts.filter(
+      (post) =>
+        !filterProvince ||
+        matchesRegion(post.neighborhood, filterProvince, filterDistrict ?? ""),
+    );
+
+    if (sortOption === "popular") {
+      return [...filtered].sort((a, b) => b.likeCount - a.likeCount);
     }
-    return posts.filter((post) => post.neighborhood === selectedNeighborhood);
-  }, [posts, selectedNeighborhood]);
+    return filtered;
+  }, [posts, filterProvince, filterDistrict, sortOption]);
 
   // 게시글 목록을 불러오고, 삭제 버튼 노출 여부를 판단할 현재 사용자의
   // anon_profiles.id를 함께 조회해요.
@@ -547,7 +535,6 @@ function TodayMealBoard() {
       header: "오늘 뭐 드셨나요?",
       children: (
         <PostForm
-          neighborhoodSuggestions={neighborhoodSuggestions}
           onCancel={close}
           onSubmit={async (content, photoUrl, neighborhood) => {
             close();
@@ -568,9 +555,6 @@ function TodayMealBoard() {
               neighborhood || null,
             );
             if (success) {
-              if (neighborhood) {
-                addRecentNeighborhood(neighborhood);
-              }
               await loadPosts();
             } else {
               await openAlert({
@@ -589,36 +573,16 @@ function TodayMealBoard() {
     open({
       header: "동네 선택",
       children: (
-        <List>
-          {neighborhoodFilterOptions.map((neighborhood) => {
-            const isSelected = neighborhood === selectedNeighborhood;
-            return (
-              <div
-                key={neighborhood}
-                onClick={() => {
-                  setSelectedNeighborhood(neighborhood);
-                  close();
-                }}
-                style={{ cursor: "pointer" }}
-              >
-                <ListRow
-                  withTouchEffect
-                  contents={
-                    <ListRow.Texts
-                      type="1RowTypeA"
-                      top={
-                        <span style={{ fontWeight: isSelected ? 700 : 400 }}>
-                          {neighborhood}
-                        </span>
-                      }
-                    />
-                  }
-                  right={isSelected ? "✓" : undefined}
-                />
-              </div>
-            );
-          })}
-        </List>
+        <RegionFilterSheetContent
+          regionOptions={regionFilterOptions}
+          selectedProvince={filterProvince}
+          selectedDistrict={filterDistrict}
+          onSelect={(province, district) => {
+            setFilterProvince(province);
+            setFilterDistrict(district);
+            close();
+          }}
+        />
       ),
     });
   };
@@ -716,6 +680,31 @@ function TodayMealBoard() {
 
   return (
     <>
+      <div style={{ padding: "0 24px 12px" }}>
+        <button
+          type="button"
+          onClick={onOpenRestaurantSearch}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            width: "100%",
+            padding: "12px 16px",
+            borderRadius: "12px",
+            border: "none",
+            backgroundColor: "#f2f4f6",
+            color: "#8b95a1",
+            fontSize: "15px",
+            textAlign: "left",
+            cursor: "pointer",
+            WebkitTapHighlightColor: "transparent",
+          }}
+        >
+          <Search size={18} color="#8b95a1" />
+          관심 있는 맛집 검색
+        </button>
+      </div>
+
       <div style={{ padding: "0 24px 16px" }}>
         <Button
           display="block"
@@ -727,7 +716,18 @@ function TodayMealBoard() {
         </Button>
       </div>
 
-      {neighborhoodsInPosts.length > 0 && (
+      <div style={{ padding: "0 24px 16px" }}>
+        <SegmentedControl
+          size="small"
+          value={sortOption}
+          onChange={(value) => setSortOption(value as PostSortOption)}
+        >
+          <SegmentedControl.Item value="latest">최신순</SegmentedControl.Item>
+          <SegmentedControl.Item value="popular">인기순</SegmentedControl.Item>
+        </SegmentedControl>
+      </div>
+
+      {regionFilterOptions.size > 0 && (
         <div style={{ padding: "0 24px 16px" }}>
           <Button
             size="medium"
@@ -735,7 +735,10 @@ function TodayMealBoard() {
             color="dark"
             onClick={openNeighborhoodFilterSheet}
           >
-            {selectedNeighborhood} ▾
+            {filterProvince
+              ? formatRegionLabel(filterProvince, filterDistrict)
+              : "전체"}{" "}
+            ▾
           </Button>
         </div>
       )}

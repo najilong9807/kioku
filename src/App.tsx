@@ -25,16 +25,18 @@ import {
 } from "react";
 import "./App.css";
 import HomeScreen from "./HomeScreen";
+import {
+  buildRegionFilterOptions,
+  formatRegionLabel,
+  matchesRegion,
+} from "./lib/koreanRegions";
 import { countUnreadNotifications } from "./lib/notifications";
 import { fetchProfile, saveProfile } from "./lib/profile";
-import {
-  addRecentNeighborhood,
-  getRecentNeighborhoods,
-} from "./lib/recentNeighborhoods";
 import { getUserIdentityHash } from "./lib/userIdentity";
-import { NeighborhoodInput } from "./NeighborhoodInput";
 import { NotificationBellButton, NotificationsSheetContent } from "./NotificationsView";
+import { RegionFilterSheetContent, RegionPicker } from "./RegionPicker";
 import RestaurantDetailView from "./RestaurantDetailView";
+import { RestaurantSearchSheetContent } from "./RestaurantSearchOverlay";
 import { HANDWRITING_TEXT_STYLE } from "./theme";
 import {
   CATEGORIES,
@@ -70,7 +72,6 @@ const FORM_CARD_BACKGROUND_COLOR = "#f9fafb";
 
 const ALL_CATEGORY = "전체";
 const FILTER_CATEGORIES = [ALL_CATEGORY, ...CATEGORIES] as const;
-const ALL_NEIGHBORHOOD = "전체";
 
 type SortOption = "latest" | "oldest" | "ratingDesc" | "ratingAsc" | "name";
 
@@ -203,13 +204,11 @@ const MAX_PHOTOS = 4;
 // 새 맛집을 등록할 때와 기존 맛집을 수정할 때 모두 사용해요.
 function RestaurantForm({
   initialValues,
-  neighborhoodSuggestions,
   submitLabel = "기록하기",
   onSubmit,
   onCancel,
 }: {
   initialValues?: AddRestaurantFormValues;
-  neighborhoodSuggestions: string[];
   submitLabel?: string;
   onSubmit: (values: AddRestaurantFormValues) => void;
   onCancel: () => void;
@@ -686,11 +685,7 @@ function RestaurantForm({
           >
             동네 (선택)
           </div>
-          <NeighborhoodInput
-            value={neighborhood}
-            onChange={setNeighborhood}
-            suggestions={neighborhoodSuggestions}
-          />
+          <RegionPicker value={neighborhood} onChange={setNeighborhood} />
         </div>
         <Border />
         <div
@@ -841,37 +836,22 @@ function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] =
     useState<(typeof FILTER_CATEGORIES)[number]>(ALL_CATEGORY);
-  const [selectedNeighborhood, setSelectedNeighborhood] =
-    useState(ALL_NEIGHBORHOOD);
+  // null이면 "전체"예요. 필터는 시/도만 고르거나(시/군/구 없는 세종특별자치시 등),
+  // 시/도+시/군/구까지 고른 상태 두 가지가 있어요.
+  const [filterProvince, setFilterProvince] = useState<string | null>(null);
+  const [filterDistrict, setFilterDistrict] = useState<string | null>(null);
   const [sortOption, setSortOption] = useState<SortOption>("latest");
 
   const { open, close } = useBottomSheet();
   const { openConfirm } = useDialog();
 
-  // 기록에 실제로 등장한 동네들이에요. 필터 목록과 글쓰기 폼의 추천 칩에도 함께 써요.
-  const neighborhoodsInRestaurants = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          restaurants
-            .map((restaurant) => restaurant.neighborhood)
-            .filter((value): value is string => Boolean(value)),
-        ),
-      ),
+  // 기록에 실제로 등장한 동네들 중, 전국 시/도-시/군/구에 매칭되는 것만 추려서
+  // 필터 옵션(시/도 -> 시/군/구 목록)을 만들어요. 예전에 자유 텍스트로 저장된 값도
+  // matchesRegion의 느슨한 매칭 덕분에 이 목록에 포함돼요.
+  const regionFilterOptions = useMemo(
+    () => buildRegionFilterOptions(restaurants.map((r) => r.neighborhood)),
     [restaurants],
   );
-
-  const neighborhoodFilterOptions = useMemo(
-    () => [ALL_NEIGHBORHOOD, ...neighborhoodsInRestaurants],
-    [neighborhoodsInRestaurants],
-  );
-
-  const neighborhoodSuggestions = useMemo(() => {
-    const recent = getRecentNeighborhoods();
-    return Array.from(
-      new Set([...recent, ...neighborhoodsInRestaurants]),
-    ).slice(0, 12);
-  }, [neighborhoodsInRestaurants]);
 
   // 최신/오래된순은 사용자가 고른 방문일(visitDate) 기준이고, 방문일이 같으면
   // 등록 시각(id, Date.now() 기반)을 기준으로 순서를 정해요.
@@ -882,8 +862,8 @@ function App() {
         selectedCategory === ALL_CATEGORY ||
         restaurant.category === selectedCategory;
       const matchesNeighborhood =
-        selectedNeighborhood === ALL_NEIGHBORHOOD ||
-        restaurant.neighborhood === selectedNeighborhood;
+        !filterProvince ||
+        matchesRegion(restaurant.neighborhood, filterProvince, filterDistrict ?? "");
       const matchesQuery =
         query.length === 0 || restaurant.name.toLowerCase().includes(query);
       return matchesCategory && matchesNeighborhood && matchesQuery;
@@ -919,7 +899,8 @@ function App() {
   }, [
     restaurants,
     selectedCategory,
-    selectedNeighborhood,
+    filterProvince,
+    filterDistrict,
     searchQuery,
     sortOption,
   ]);
@@ -1032,13 +1013,9 @@ function App() {
       header: "맛집 기록하기",
       children: (
         <RestaurantForm
-          neighborhoodSuggestions={neighborhoodSuggestions}
           submitLabel="기록하기"
           onCancel={close}
           onSubmit={(values) => {
-            if (values.neighborhood) {
-              addRecentNeighborhood(values.neighborhood);
-            }
             setRestaurants((prev) => [
               {
                 id: `${Date.now()}`,
@@ -1133,36 +1110,16 @@ function App() {
     open({
       header: "동네 선택",
       children: (
-        <List>
-          {neighborhoodFilterOptions.map((neighborhood) => {
-            const isSelected = neighborhood === selectedNeighborhood;
-            return (
-              <div
-                key={neighborhood}
-                onClick={() => {
-                  setSelectedNeighborhood(neighborhood);
-                  close();
-                }}
-                style={{ cursor: "pointer" }}
-              >
-                <ListRow
-                  withTouchEffect
-                  contents={
-                    <ListRow.Texts
-                      type="1RowTypeA"
-                      top={
-                        <span style={{ fontWeight: isSelected ? 700 : 400 }}>
-                          {neighborhood}
-                        </span>
-                      }
-                    />
-                  }
-                  right={isSelected ? "✓" : undefined}
-                />
-              </div>
-            );
-          })}
-        </List>
+        <RegionFilterSheetContent
+          regionOptions={regionFilterOptions}
+          selectedProvince={filterProvince}
+          selectedDistrict={filterDistrict}
+          onSelect={(province, district) => {
+            setFilterProvince(province);
+            setFilterDistrict(district);
+            close();
+          }}
+        />
       ),
     });
   };
@@ -1185,13 +1142,9 @@ function App() {
             receiptImage: restaurant.receiptImage,
             photos: restaurant.photos ?? [],
           }}
-          neighborhoodSuggestions={neighborhoodSuggestions}
           submitLabel="수정하기"
           onCancel={close}
           onSubmit={(values) => {
-            if (values.neighborhood) {
-              addRecentNeighborhood(values.neighborhood);
-            }
             setRestaurants((prev) =>
               prev.map((item) =>
                 item.id === restaurant.id ? { ...item, ...values } : item,
@@ -1222,28 +1175,55 @@ function App() {
     });
   };
 
+  const openSearchSheet = () => {
+    open({
+      header: "검색",
+      children: (
+        <RestaurantSearchSheetContent
+          restaurants={restaurants}
+          onSelectRestaurant={(restaurant) => {
+            close();
+            setSelectedTab(RESTAURANT_TAB_INDEX);
+            openDetailSheet(restaurant);
+          }}
+          onClose={close}
+        />
+      ),
+    });
+  };
+
   return (
     <>
-      <Top
-        title={<Top.TitleParagraph size={22}>이게맛다</Top.TitleParagraph>}
-        right={
-          <NotificationBellButton
-            hasUnread={hasUnreadNotifications}
-            onClick={openNotificationsSheet}
-          />
-        }
-        subtitleBottom={
-          <Top.SubtitleParagraph size={17}>
-            {selectedTab === HOME_TAB_INDEX
-              ? "오늘도 맛있는 하루 보내세요."
-              : selectedTab === RESTAURANT_TAB_INDEX
-                ? restaurants.length > 0
-                  ? `지금까지 ${restaurants.length}곳의 맛집을 기록했어요.`
-                  : "다녀온 맛집을 기록하고 모아보세요."
-                : "오늘 먹은 메뉴를 자유롭게 나눠보세요."}
-          </Top.SubtitleParagraph>
-        }
-      />
+      {/* 탭을 전환해도 항상 보이는 전역 상단바예요. 스크롤해도 화면 위에 고정돼요. */}
+      <div
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
+          backgroundColor: "#ffffff",
+        }}
+      >
+        <Top
+          title={<Top.TitleParagraph size={22}>이게맛다</Top.TitleParagraph>}
+          right={
+            <NotificationBellButton
+              hasUnread={hasUnreadNotifications}
+              onClick={openNotificationsSheet}
+            />
+          }
+          subtitleBottom={
+            <Top.SubtitleParagraph size={17}>
+              {selectedTab === HOME_TAB_INDEX
+                ? "오늘도 맛있는 하루 보내세요."
+                : selectedTab === RESTAURANT_TAB_INDEX
+                  ? restaurants.length > 0
+                    ? `지금까지 ${restaurants.length}곳의 맛집을 기록했어요.`
+                    : "다녀온 맛집을 기록하고 모아보세요."
+                  : "오늘 먹은 메뉴를 자유롭게 나눠보세요."}
+            </Top.SubtitleParagraph>
+          }
+        />
+      </div>
 
       <div style={{ padding: "0 24px 16px" }}>
         <Tab onChange={(index) => setSelectedTab(index)}>
@@ -1316,14 +1296,17 @@ function App() {
                   }{" "}
                   ▾
                 </Button>
-                {neighborhoodsInRestaurants.length > 0 && (
+                {regionFilterOptions.size > 0 && (
                   <Button
                     size="medium"
                     variant="weak"
                     color="dark"
                     onClick={openNeighborhoodFilterSheet}
                   >
-                    {selectedNeighborhood} ▾
+                    {filterProvince
+                      ? formatRegionLabel(filterProvince, filterDistrict)
+                      : "전체"}{" "}
+                    ▾
                   </Button>
                 )}
               </div>
@@ -1415,7 +1398,7 @@ function App() {
           )}
         </>
       ) : (
-        <TodayMealBoard />
+        <TodayMealBoard onOpenRestaurantSearch={openSearchSheet} />
       )}
     </>
   );
