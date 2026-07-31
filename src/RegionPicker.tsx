@@ -79,12 +79,7 @@ export function RegionPicker({
             </Menu.Dropdown>
           }
         >
-          <Button
-            size="small"
-            variant="weak"
-            color="dark"
-            style={{ flex: 1 }}
-          >
+          <Button size="small" variant="weak" color="dark" style={{ flex: 1 }}>
             {selectedProvince ?? "시/도"} ▾
           </Button>
         </Menu.Trigger>
@@ -138,75 +133,105 @@ export function RegionFilterSheetContent({
   selectedProvince,
   selectedDistrict,
   onSelect,
+  onClose,
 }: {
   regionOptions: Map<string, string[]>;
   selectedProvince: string | null;
   selectedDistrict: string | null;
   onSelect: (province: string | null, district: string | null) => void;
+  onClose: () => void;
 }) {
   const [draftProvince, setDraftProvince] = useState<string | null>(null);
   const provinces = Array.from(regionOptions.keys());
 
   if (!draftProvince) {
     return (
-      <List>
-        <div onClick={() => onSelect(null, null)} style={{ cursor: "pointer" }}>
-          <ListRow
-            withTouchEffect
-            contents={
-              <ListRow.Texts
-                type="1RowTypeA"
-                top={
-                  <span
-                    style={{ fontWeight: !selectedProvince ? 700 : 400 }}
-                  >
-                    전체
-                  </span>
-                }
-              />
-            }
-            right={!selectedProvince ? "✓" : undefined}
-          />
+      <div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            padding: "0 24px 12px",
+          }}
+        >
+          <Button size="small" variant="weak" color="dark" onClick={onClose}>
+            닫기
+          </Button>
         </div>
-        {provinces.map((province) => {
-          const districts = regionOptions.get(province) ?? [];
-          const isSelected = province === selectedProvince && !selectedDistrict;
-          return (
-            <div
-              key={province}
-              onClick={() => {
-                if (districts.length === 0) {
-                  onSelect(province, null);
-                } else {
-                  setDraftProvince(province);
-                }
-              }}
-              style={{ cursor: "pointer" }}
-            >
-              <ListRow
-                withTouchEffect
-                contents={
-                  <ListRow.Texts
-                    type="1RowTypeA"
-                    top={
-                      <span style={{ fontWeight: isSelected ? 700 : 400 }}>
-                        {province}
-                      </span>
-                    }
-                  />
-                }
-                right={isSelected ? "✓" : districts.length > 0 ? "›" : undefined}
-              />
-            </div>
-          );
-        })}
-      </List>
+        <List>
+          <div
+            onClick={() => onSelect(null, null)}
+            style={{ cursor: "pointer" }}
+          >
+            <ListRow
+              withTouchEffect
+              contents={
+                <ListRow.Texts
+                  type="1RowTypeA"
+                  top={
+                    <span style={{ fontWeight: !selectedProvince ? 700 : 400 }}>
+                      전체
+                    </span>
+                  }
+                />
+              }
+              right={!selectedProvince ? "✓" : undefined}
+            />
+          </div>
+          {provinces.map((province) => {
+            const districts = regionOptions.get(province) ?? [];
+            const isSelected =
+              province === selectedProvince && !selectedDistrict;
+            return (
+              <div
+                key={province}
+                onClick={() => {
+                  if (districts.length === 0) {
+                    onSelect(province, null);
+                  } else {
+                    setDraftProvince(province);
+                  }
+                }}
+                style={{ cursor: "pointer" }}
+              >
+                <ListRow
+                  withTouchEffect
+                  contents={
+                    <ListRow.Texts
+                      type="1RowTypeA"
+                      top={
+                        <span style={{ fontWeight: isSelected ? 700 : 400 }}>
+                          {province}
+                        </span>
+                      }
+                    />
+                  }
+                  right={
+                    isSelected ? "✓" : districts.length > 0 ? "›" : undefined
+                  }
+                />
+              </div>
+            );
+          })}
+        </List>
+      </div>
     );
   }
 
   const districts = regionOptions.get(draftProvince) ?? [];
   return (
     <div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          padding: "0 24px 12px",
+        }}
+      >
+        <Button size="small" variant="weak" color="dark" onClick={onClose}>
+          닫기
+        </Button>
+      </div>
       <div
         onClick={() => setDraftProvince(null)}
         style={{

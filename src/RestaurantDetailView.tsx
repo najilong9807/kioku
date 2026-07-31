@@ -108,10 +108,20 @@ export default function RestaurantDetailView({
       )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        <div>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <Badge size="small" variant="weak" color="blue">
             {restaurant.category}
           </Badge>
+          {restaurant.isReservation && (
+            <Badge size="small" variant="weak" color="green">
+              예약
+            </Badge>
+          )}
+          {restaurant.isSpecialDay && (
+            <Badge size="small" variant="weak" color="yellow">
+              ⭐ 특별한 날
+            </Badge>
+          )}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <Rating

@@ -141,3 +141,11 @@ export function buildRegionFilterOptions(
 
   return result;
 }
+
+// 실제로 글/기록이 있는지와 무관하게, 전국 시/도-시/군/구 전체를 필터 옵션으로 써요.
+// 아직 아무 글도 없는 지역이라도 선택할 수 있게 하고 싶을 때(예: 오늘뭐먹 동네
+// 필터) buildRegionFilterOptions 대신 이걸 사용해요. 반환되는 Map은
+// PROVINCES/DISTRICTS_BY_PROVINCE 순서를 그대로 따라요.
+export function buildFullRegionOptions(): Map<string, string[]> {
+  return new Map(PROVINCES.map((province) => [province, DISTRICTS_BY_PROVINCE[province]]));
+}

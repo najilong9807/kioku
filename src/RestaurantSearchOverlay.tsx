@@ -1,4 +1,11 @@
-import { Button, List, ListRow, Rating, SearchField } from "@toss/tds-mobile";
+import {
+  Badge,
+  Button,
+  List,
+  ListRow,
+  Rating,
+  SearchField,
+} from "@toss/tds-mobile";
 import { useMemo, useState } from "react";
 import { formatDisplayDate, type Restaurant } from "./restaurantStorage";
 
@@ -96,7 +103,27 @@ export function RestaurantSearchSheetContent({
                 contents={
                   <ListRow.Texts
                     type="2RowTypeA"
-                    top={restaurant.name}
+                    top={
+                      <span
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                        }}
+                      >
+                        <span>{restaurant.name}</span>
+                        {restaurant.isReservation && (
+                          <Badge size="xsmall" variant="weak" color="green">
+                            예약
+                          </Badge>
+                        )}
+                        {restaurant.isSpecialDay && (
+                          <Badge size="xsmall" variant="weak" color="yellow">
+                            ⭐ 특별한 날
+                          </Badge>
+                        )}
+                      </span>
+                    }
                     bottom={[
                       restaurant.category,
                       formatDisplayDate(restaurant.visitDate),

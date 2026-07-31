@@ -1,0 +1,142 @@
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  /* TDS Mobile의 BottomSheet(zIndex 30000) 등 다른 오버레이보다도 위에 있어야
+     인트로가 끝나기 전에 그 아래에서 준비 중인 화면(닉네임 시트 등)이 비치지 않아요. */
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 다이어리가 놓인 책상을 은은하게 표현한 배경이에요: 위쪽이 살짝 밝은 크림색
+     그라데이션(스탠드 조명이 비치는 느낌) 위에, 아주 옅은 종이 질감(노이즈)을
+     한 겹 더 얹었어요. 이미지 파일 없이 SVG feTurbulence로만 만들었어요. */
+  background-color: #f3e6cd;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    radial-gradient(130% 95% at 50% 12%, #fffaf1 0%, #f8ecd6 55%, #ecdbba 100%);
+  background-repeat: repeat, no-repeat;
+  transition:
+    opacity 0.35s ease,
+    transform 0.35s ease;
+}
+
+/* 인트로가 끝날 때 살짝 커지면서 옅어지는 방식으로 사라져요. */
+.splash-screen--exiting {
+  opacity: 0;
+  transform: scale(1.04);
+  pointer-events: none;
+}
+
+/* 책 전체(정적인 SVG 일러스트 + 오른쪽 페이지 레이어)를 감싸는 컨테이너예요.
+   화면에 나타날 때 살짝 커지면서 떠오르듯 등장해요.
+   화면 폭 대비 훨씬 크게 키워서(94vw까지) 존재감 있게 보이도록 했어요. */
+.splash-book-wrap {
+  position: relative;
+  width: min(94vw, 520px);
+  aspect-ratio: 260 / 188;
+  animation: splash-book-appear 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes splash-book-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.splash-book__art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* 오른쪽 페이지가 놓이는 자리예요. SVG의 오른쪽 페이지 영역(viewBox 기준
+   x:130~245, y:16~170 / 260x188)과 같은 비율의 퍼센트 위치로 맞춰뒀어요.
+   splash-page--flip이 이 안에서 입체적으로 보이도록 perspective를 줘요. */
+.splash-book__right-slot {
+  position: absolute;
+  left: 50%;
+  top: 8.51%;
+  width: 44.23%;
+  height: 81.91%;
+  perspective: 900px;
+  -webkit-perspective: 900px;
+}
+
+.splash-page {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fffef7;
+  border: 2.5px solid #191f28;
+  /* 책등(왼쪽)에 붙는 변은 각지게, 바깥쪽(오른쪽)만 둥글게 둬서 왼쪽 페이지와
+     자연스럽게 이어져 보이게 해요. */
+  border-radius: 0 10px 10px 0;
+}
+
+.splash-page__text {
+  font-weight: 400;
+  font-size: clamp(30px, 10vw, 56px);
+  color: #191f28;
+  letter-spacing: 0.5px;
+}
+
+/* "맛다" - 항상 그 자리에 있지만, 넘어가는 장들(splash-page--flip)에 가려져
+   있다가 그 장들이 다 넘어가면서 자연스럽게 드러나요. */
+.splash-page--base {
+  z-index: 1;
+}
+
+/* 촤르르 넘어가는 낱장들이에요. 각 장의 실제 시작 시점(animation-delay)과
+   재생시간(animation-duration)은 컴포넌트에서 장마다 다르게 인라인으로
+   지정해요(순차적으로 360ms씩 시차를 두는 스태거 효과). backface-visibility로
+   뒷면을 숨겨서, 90deg를 넘어가는 순간부터는 그 장이 사라지고 아래 장이
+   자연스럽게 드러나 보여요.
+   회전 각도를 -180deg가 아니라 -92deg까지만 주는 이유: backface-visibility로
+   어차피 -90deg를 넘는 순간부터는 안 보이기 때문에, 그 뒤로도 계속 돌리는 건
+   낭비예요. 대신 그만큼 아낀 시간을 "실제로 눈에 보이는" 0~-90deg 구간에 더
+   써서, 지정한 재생시간 전체가 눈에 보이는 움직임이 되도록 했어요. easing도
+   오버슈트가 있는 back 계열 대신, 부드럽게 가속했다가 감속하는 표준
+   ease-in-out 계열(cubic-bezier(0.65, 0, 0.35, 1))을 썼어요. */
+.splash-page--flip {
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-shadow: 2px 0 10px rgba(25, 31, 40, 0.15);
+  animation-name: splash-page-flip;
+  animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+  animation-fill-mode: both;
+}
+
+/* 글씨가 없는 낱장에 옅은 줄무늬(가로줄)를 넣어서, 빈 다이어리 속지처럼
+   보이게 해요. 촤르르 넘어갈 때 이 장들도 함께 팔랑거려서 "여러 장"이
+   넘어가는 두께감을 줘요. */
+.splash-page--ruled {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 21px,
+    rgba(25, 31, 40, 0.1) 21px,
+    rgba(25, 31, 40, 0.1) 22px
+  );
+  background-position: 0 34%;
+}
+
+@keyframes splash-page-flip {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(-92deg);
+  }
+}

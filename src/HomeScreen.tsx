@@ -335,7 +335,27 @@ export default function HomeScreen({
                   contents={
                     <ListRow.Texts
                       type="2RowTypeA"
-                      top={restaurant.name}
+                      top={
+                        <span
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                          }}
+                        >
+                          <span>{restaurant.name}</span>
+                          {restaurant.isReservation && (
+                            <Badge size="xsmall" variant="weak" color="green">
+                              예약
+                            </Badge>
+                          )}
+                          {restaurant.isSpecialDay && (
+                            <Badge size="xsmall" variant="weak" color="yellow">
+                              ⭐ 특별한 날
+                            </Badge>
+                          )}
+                        </span>
+                      }
                       bottom={[
                         restaurant.neighborhood,
                         `★ ${restaurant.rating}`,
@@ -384,10 +404,27 @@ export default function HomeScreen({
                   contents={
                     <ListRow.Texts
                       type="2RowTypeA"
-                      top={truncateForPreview(
-                        post.content,
-                        POST_PREVIEW_MAX_LENGTH,
-                      )}
+                      top={
+                        <span
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                          }}
+                        >
+                          <span>
+                            {truncateForPreview(
+                              post.content,
+                              POST_PREVIEW_MAX_LENGTH,
+                            )}
+                          </span>
+                          {post.isReservation && (
+                            <Badge size="xsmall" variant="weak" color="green">
+                              예약
+                            </Badge>
+                          )}
+                        </span>
+                      }
                       bottom={[post.authorNickname, post.neighborhood]
                         .filter(Boolean)
                         .join(" · ")}

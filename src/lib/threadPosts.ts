@@ -16,6 +16,7 @@ export interface ThreadPost {
   authorNickname: string;
   commentCount: number;
   likeCount: number;
+  isReservation: boolean;
 }
 
 export interface ThreadComment {
@@ -33,6 +34,7 @@ interface RawThreadPost {
   neighborhood: string | null;
   created_at: string;
   user_id: string | null;
+  is_reservation: boolean | null;
 }
 
 interface RawThreadComment {
@@ -116,7 +118,9 @@ export async function fetchTodayMealPosts(): Promise<ThreadPost[]> {
   try {
     const { data: posts, error } = await supabase
       .from("thread_posts")
-      .select("id, content, photo_url, neighborhood, created_at, user_id")
+      .select(
+        "id, content, photo_url, neighborhood, created_at, user_id, is_reservation",
+      )
       .eq("board_type", TODAY_MEAL_BOARD_TYPE)
       .is("parent_post_id", null)
       .order("created_at", { ascending: false });
@@ -157,6 +161,7 @@ export async function fetchTodayMealPosts(): Promise<ThreadPost[]> {
         : "알 수 없음",
       commentCount: commentCountByPostId.get(post.id) ?? 0,
       likeCount: likeCountByPostId.get(post.id) ?? 0,
+      isReservation: post.is_reservation ?? false,
     }));
   } catch (error) {
     console.error("게시글 목록 조회 중 오류가 발생했어요.", error);
@@ -167,11 +172,13 @@ export async function fetchTodayMealPosts(): Promise<ThreadPost[]> {
 // userId는 anon_profiles.id예요. restaurant_id는 이 게시판에서 쓰지 않아서 insert에
 // 포함하지 않고 컬럼 기본값(null)에 맡겨요. photoUrl/neighborhood는 선택 입력이라
 // 없으면 null로 저장하고, 원글이라 parent_post_id는 넣지 않아요(null).
+// isReservation은 예약하고 갔는지 여부로, 기본값은 false예요.
 export async function createTodayMealPost(
   userId: string,
   content: string,
   photoUrl?: string | null,
   neighborhood?: string | null,
+  isReservation?: boolean,
 ): Promise<boolean> {
   if (!supabase) {
     return false;
@@ -184,6 +191,7 @@ export async function createTodayMealPost(
       content,
       photo_url: photoUrl ?? null,
       neighborhood: neighborhood ?? null,
+      is_reservation: isReservation ?? false,
     });
 
     if (error) {

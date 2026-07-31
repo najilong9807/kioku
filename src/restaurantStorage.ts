@@ -51,6 +51,8 @@ export interface Restaurant {
   visitDate: string; // "YYYY-MM-DD"
   receiptImage?: string; // base64 데이터 URL
   photos?: string[]; // 음식/가게 사진, base64 데이터 URL 배열 (최대 4장)
+  isReservation: boolean; // 예약하고 갔는지 여부, 기본값 false
+  isSpecialDay: boolean; // 특별한 날이었는지 여부, 기본값 false
 }
 
 // 예전 데이터 호환:
@@ -58,6 +60,8 @@ export interface Restaurant {
 // - companion/weather/neighborhood 필드가 없으면 빈 문자열로 채워요.
 // - menus 필드가 없던 예전 데이터는 빈 배열로 채워요.
 // - visitDate 이전에는 visitedAt("YYYY.MM.DD")이라는 이름으로 저장했어서, 있으면 변환해서 사용해요.
+// - isReservation 필드가 없던 예전 데이터는 예약 안 함(false)으로 채워요.
+// - isSpecialDay 필드가 없던 예전 데이터는 특별한 날 아님(false)으로 채워요.
 function parseRestaurants(value: string): Restaurant[] {
   const parsed = JSON.parse(value) as Array<{
     id: string;
@@ -73,6 +77,8 @@ function parseRestaurants(value: string): Restaurant[] {
     visitedAt?: string;
     receiptImage?: string;
     photos?: string[];
+    isReservation?: boolean;
+    isSpecialDay?: boolean;
   }>;
 
   return parsed.map((item) => ({
@@ -90,6 +96,8 @@ function parseRestaurants(value: string): Restaurant[] {
       (item.visitedAt ? item.visitedAt.replaceAll(".", "-") : todayDateInputValue()),
     receiptImage: item.receiptImage,
     photos: Array.isArray(item.photos) ? item.photos : [],
+    isReservation: item.isReservation ?? false,
+    isSpecialDay: item.isSpecialDay ?? false,
   }));
 }
 

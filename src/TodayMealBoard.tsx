@@ -1,5 +1,6 @@
 import {
   Asset,
+  Badge,
   Border,
   Button,
   Result,
@@ -21,7 +22,7 @@ import {
 } from "react";
 import { resizeImageFile } from "./lib/imageResize";
 import {
-  buildRegionFilterOptions,
+  buildFullRegionOptions,
   formatRegionLabel,
   matchesRegion,
 } from "./lib/koreanRegions";
@@ -91,12 +92,14 @@ function PostForm({
     content: string,
     photoUrl: string | null,
     neighborhood: string,
+    isReservation: boolean,
   ) => void;
 }) {
   const [content, setContent] = useState("");
   const [photo, setPhoto] = useState<string | null>(null);
   const [isResizing, setIsResizing] = useState(false);
   const [neighborhood, setNeighborhood] = useState("");
+  const [isReservation, setIsReservation] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const trimmed = content.trim();
 
@@ -138,6 +141,28 @@ function PostForm({
       />
 
       <RegionPicker value={neighborhood} onChange={setNeighborhood} />
+
+      <label
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "12px 16px",
+          borderRadius: "12px",
+          backgroundColor: "#f2f4f6",
+          cursor: "pointer",
+        }}
+      >
+        <span style={{ fontSize: "15px", color: "#191f28", fontWeight: 500 }}>
+          예약하고 갔어요
+        </span>
+        <input
+          type="checkbox"
+          checked={isReservation}
+          onChange={(e) => setIsReservation(e.target.checked)}
+          style={{ width: "22px", height: "22px" }}
+        />
+      </label>
 
       <input
         ref={photoInputRef}
@@ -200,7 +225,9 @@ function PostForm({
           style={{ flex: 1, ...PRIMARY_FILL_BUTTON_TEXT_STYLE }}
           variant="fill"
           disabled={!trimmed || isResizing}
-          onClick={() => onSubmit(trimmed, photo, neighborhood.trim())}
+          onClick={() =>
+            onSubmit(trimmed, photo, neighborhood.trim(), isReservation)
+          }
         >
           작성
         </Button>
@@ -460,13 +487,10 @@ function TodayMealBoard({
     setIsLoaded(true);
   }, []);
 
-  // 글 목록에 실제로 등장한 동네들 중, 전국 시/도-시/군/구에 매칭되는 것만 추려서
-  // 필터 옵션(시/도 -> 시/군/구 목록)을 만들어요. 예전에 자유 텍스트로 저장된 값도
-  // matchesRegion의 느슨한 매칭 덕분에 이 목록에 포함돼요.
-  const regionFilterOptions = useMemo(
-    () => buildRegionFilterOptions(posts.map((post) => post.neighborhood)),
-    [posts],
-  );
+  // 글이 아직 없는 지역도 미리 선택할 수 있도록, 실제 글 유무와 상관없이 전국
+  // 시/도-시/군/구 전체를 필터 옵션으로 써요. 글이 없는 지역을 고르면 아래
+  // visiblePosts가 자연히 비어서 "해당 동네의 글이 없어요" 빈 화면으로 이어져요.
+  const regionFilterOptions = useMemo(() => buildFullRegionOptions(), []);
 
   // 기본은 최신순(fetchTodayMealPosts가 이미 created_at 최신순으로 가져와요)이고,
   // 인기순을 고르면 좋아요 개수 기준으로 다시 정렬해요.
@@ -536,7 +560,7 @@ function TodayMealBoard({
       children: (
         <PostForm
           onCancel={close}
-          onSubmit={async (content, photoUrl, neighborhood) => {
+          onSubmit={async (content, photoUrl, neighborhood, isReservation) => {
             close();
 
             if (!currentUserId) {
@@ -553,6 +577,7 @@ function TodayMealBoard({
               content,
               photoUrl,
               neighborhood || null,
+              isReservation,
             );
             if (success) {
               await loadPosts();
@@ -582,6 +607,7 @@ function TodayMealBoard({
             setFilterDistrict(district);
             close();
           }}
+          onClose={close}
         />
       ),
     });
@@ -727,21 +753,19 @@ function TodayMealBoard({
         </SegmentedControl>
       </div>
 
-      {regionFilterOptions.size > 0 && (
-        <div style={{ padding: "0 24px 16px" }}>
-          <Button
-            size="medium"
-            variant="weak"
-            color="dark"
-            onClick={openNeighborhoodFilterSheet}
-          >
-            {filterProvince
-              ? formatRegionLabel(filterProvince, filterDistrict)
-              : "전체"}{" "}
-            ▾
-          </Button>
-        </div>
-      )}
+      <div style={{ padding: "0 24px 16px" }}>
+        <Button
+          size="medium"
+          variant="weak"
+          color="dark"
+          onClick={openNeighborhoodFilterSheet}
+        >
+          {filterProvince
+            ? formatRegionLabel(filterProvince, filterDistrict)
+            : "전체"}{" "}
+          ▾
+        </Button>
+      </div>
 
       {!isLoaded ? null : posts.length === 0 ? (
         <Result
@@ -787,8 +811,21 @@ function TodayMealBoard({
                       </span>
                     )}
                   </span>
-                  <span style={{ fontSize: "12px", color: "#8b95a1" }}>
-                    {formatPostTime(post.createdAt)}
+                  <span
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    {post.isReservation && (
+                      <Badge size="xsmall" variant="weak" color="green">
+                        예약
+                      </Badge>
+                    )}
+                    <span style={{ fontSize: "12px", color: "#8b95a1" }}>
+                      {formatPostTime(post.createdAt)}
+                    </span>
                   </span>
                 </div>
                 {post.photoUrl && (

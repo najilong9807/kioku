@@ -1,5 +1,6 @@
 import {
   Asset,
+  Badge,
   Border,
   Button,
   List,
@@ -34,9 +35,11 @@ import { countUnreadNotifications } from "./lib/notifications";
 import { fetchProfile, saveProfile } from "./lib/profile";
 import { getUserIdentityHash } from "./lib/userIdentity";
 import { NotificationBellButton, NotificationsSheetContent } from "./NotificationsView";
+import ProfileView, { ProfileIconButton } from "./ProfileView";
 import { RegionFilterSheetContent, RegionPicker } from "./RegionPicker";
 import RestaurantDetailView from "./RestaurantDetailView";
 import { RestaurantSearchSheetContent } from "./RestaurantSearchOverlay";
+import SplashScreen from "./SplashScreen";
 import { HANDWRITING_TEXT_STYLE } from "./theme";
 import {
   CATEGORIES,
@@ -193,6 +196,8 @@ interface AddRestaurantFormValues {
   visitDate: string;
   receiptImage?: string;
   photos: string[];
+  isReservation: boolean;
+  isSpecialDay: boolean;
 }
 
 // 음식/가게 사진은 최대 이만큼만 첨부할 수 있어요.
@@ -233,6 +238,12 @@ function RestaurantForm({
   const receiptInputRef = useRef<HTMLInputElement>(null);
   const [photos, setPhotos] = useState<string[]>(initialValues?.photos ?? []);
   const photosInputRef = useRef<HTMLInputElement>(null);
+  const [isReservation, setIsReservation] = useState(
+    initialValues?.isReservation ?? false,
+  );
+  const [isSpecialDay, setIsSpecialDay] = useState(
+    initialValues?.isSpecialDay ?? false,
+  );
 
   // 폼이 열릴 때 한 번만 예시 문장을 골라서, 타이핑 중에 placeholder가 바뀌지 않게 해요.
   const weatherPlaceholder = useMemo(() => {
@@ -316,6 +327,8 @@ function RestaurantForm({
       visitDate,
       receiptImage,
       photos,
+      isReservation,
+      isSpecialDay,
     });
   };
 
@@ -382,6 +395,48 @@ function RestaurantForm({
               color: "#191f28",
             }}
           />
+        </div>
+        <Border />
+        <div style={{ padding: FORM_SECTION_PADDING }}>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              cursor: "pointer",
+            }}
+          >
+            <span style={{ fontSize: "15px", color: "#191f28", fontWeight: 500 }}>
+              예약하고 갔어요
+            </span>
+            <input
+              type="checkbox"
+              checked={isReservation}
+              onChange={(e) => setIsReservation(e.target.checked)}
+              style={{ width: "22px", height: "22px" }}
+            />
+          </label>
+        </div>
+        <Border />
+        <div style={{ padding: FORM_SECTION_PADDING }}>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              cursor: "pointer",
+            }}
+          >
+            <span style={{ fontSize: "15px", color: "#191f28", fontWeight: 500 }}>
+              ⭐ 특별한 날이었어요
+            </span>
+            <input
+              type="checkbox"
+              checked={isSpecialDay}
+              onChange={(e) => setIsSpecialDay(e.target.checked)}
+              style={{ width: "22px", height: "22px" }}
+            />
+          </label>
         </div>
         <Border />
         <div style={{ padding: FORM_SECTION_PADDING }}>
@@ -826,9 +881,25 @@ const HOME_TAB_INDEX = 0;
 const RESTAURANT_TAB_INDEX = 1;
 const TODAY_MEAL_TAB_INDEX = 2;
 
+// 인트로를 봤는지는 세션에 저장해요. 완전히 종료했다가 다시 켤 때는 새 세션이라
+// 다시 보여주지만, 같은 세션 안에서(예: 미니앱이 백그라운드→포그라운드) 반복해서
+// 보이지 않도록 해요.
+const SPLASH_SESSION_STORAGE_KEY = "kioku:introShown";
+
+function hasSeenSplashThisSession(): boolean {
+  try {
+    return sessionStorage.getItem(SPLASH_SESSION_STORAGE_KEY) === "true";
+  } catch {
+    // sessionStorage를 사용할 수 없는 환경이면 매번 인트로를 보여줘요.
+    return false;
+  }
+}
+
 function App() {
+  const [showSplash, setShowSplash] = useState(() => !hasSeenSplashThisSession());
   const [selectedTab, setSelectedTab] = useState(HOME_TAB_INDEX);
   const [nickname, setNickname] = useState<string | null>(null);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
   const [userHash, setUserHash] = useState<string | null>(null);
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -841,6 +912,7 @@ function App() {
   const [filterProvince, setFilterProvince] = useState<string | null>(null);
   const [filterDistrict, setFilterDistrict] = useState<string | null>(null);
   const [sortOption, setSortOption] = useState<SortOption>("latest");
+  const [specialDayOnly, setSpecialDayOnly] = useState(false);
 
   const { open, close } = useBottomSheet();
   const { openConfirm } = useDialog();
@@ -866,7 +938,10 @@ function App() {
         matchesRegion(restaurant.neighborhood, filterProvince, filterDistrict ?? "");
       const matchesQuery =
         query.length === 0 || restaurant.name.toLowerCase().includes(query);
-      return matchesCategory && matchesNeighborhood && matchesQuery;
+      const matchesSpecialDay = !specialDayOnly || restaurant.isSpecialDay;
+      return (
+        matchesCategory && matchesNeighborhood && matchesQuery && matchesSpecialDay
+      );
     });
 
     const sorted = [...filtered];
@@ -903,6 +978,7 @@ function App() {
     filterDistrict,
     searchQuery,
     sortOption,
+    specialDayOnly,
   ]);
 
   // 기기에 저장된 기록을 앱 시작 시 한 번 불러와요.
@@ -951,6 +1027,7 @@ function App() {
         openNicknameSheet(userHash);
       } else {
         setNickname(profile.nickname);
+        setProfileImage(profile.profile_image);
       }
 
       const unreadCount = await countUnreadNotifications(userHash);
@@ -987,6 +1064,25 @@ function App() {
         <NotificationsSheetContent
           userHash={userHash}
           onRead={() => setHasUnreadNotifications(false)}
+          onClose={close}
+        />
+      ),
+    });
+  };
+
+  const openProfileSheet = () => {
+    open({
+      header: "내 프로필",
+      children: (
+        <ProfileView
+          userHash={userHash}
+          nickname={nickname ?? ""}
+          profileImage={profileImage}
+          restaurantCount={restaurants.length}
+          onSaved={(nextNickname, nextProfileImage) => {
+            setNickname(nextNickname);
+            setProfileImage(nextProfileImage);
+          }}
           onClose={close}
         />
       ),
@@ -1119,6 +1215,7 @@ function App() {
             setFilterDistrict(district);
             close();
           }}
+          onClose={close}
         />
       ),
     });
@@ -1141,6 +1238,8 @@ function App() {
             visitDate: restaurant.visitDate,
             receiptImage: restaurant.receiptImage,
             photos: restaurant.photos ?? [],
+            isReservation: restaurant.isReservation,
+            isSpecialDay: restaurant.isSpecialDay,
           }}
           submitLabel="수정하기"
           onCancel={close}
@@ -1175,6 +1274,15 @@ function App() {
     });
   };
 
+  const handleSplashFinish = () => {
+    try {
+      sessionStorage.setItem(SPLASH_SESSION_STORAGE_KEY, "true");
+    } catch {
+      // sessionStorage를 사용할 수 없는 환경이면 그냥 넘어가요.
+    }
+    setShowSplash(false);
+  };
+
   const openSearchSheet = () => {
     open({
       header: "검색",
@@ -1194,6 +1302,10 @@ function App() {
 
   return (
     <>
+      {/* 다른 화면들이 뒤에서 준비되는 동안 잠깐 덮어서 보여주는 인트로예요.
+          사라지고 나면 이미 로드된 홈 화면이 바로 보여요. */}
+      {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
+
       {/* 탭을 전환해도 항상 보이는 전역 상단바예요. 스크롤해도 화면 위에 고정돼요. */}
       <div
         style={{
@@ -1206,10 +1318,16 @@ function App() {
         <Top
           title={<Top.TitleParagraph size={22}>이게맛다</Top.TitleParagraph>}
           right={
-            <NotificationBellButton
-              hasUnread={hasUnreadNotifications}
-              onClick={openNotificationsSheet}
-            />
+            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              <ProfileIconButton
+                profileImage={profileImage}
+                onClick={openProfileSheet}
+              />
+              <NotificationBellButton
+                hasUnread={hasUnreadNotifications}
+                onClick={openNotificationsSheet}
+              />
+            </div>
           }
           subtitleBottom={
             <Top.SubtitleParagraph size={17}>
@@ -1274,12 +1392,18 @@ function App() {
                 />
               </div>
               <div
-                style={{ display: "flex", gap: "8px", padding: "0 24px 16px" }}
+                style={{
+                  display: "flex",
+                  gap: "8px",
+                  padding: "0 24px 16px",
+                  overflowX: "auto",
+                }}
               >
                 <Button
                   size="medium"
                   variant="weak"
                   color="dark"
+                  style={{ flexShrink: 0 }}
                   onClick={openCategoryFilterSheet}
                 >
                   {selectedCategory} ▾
@@ -1288,6 +1412,7 @@ function App() {
                   size="medium"
                   variant="weak"
                   color="dark"
+                  style={{ flexShrink: 0 }}
                   onClick={openSortSheet}
                 >
                   {
@@ -1301,6 +1426,7 @@ function App() {
                     size="medium"
                     variant="weak"
                     color="dark"
+                    style={{ flexShrink: 0 }}
                     onClick={openNeighborhoodFilterSheet}
                   >
                     {filterProvince
@@ -1309,6 +1435,18 @@ function App() {
                     ▾
                   </Button>
                 )}
+                <Button
+                  size="medium"
+                  variant={specialDayOnly ? "fill" : "weak"}
+                  color={specialDayOnly ? "primary" : "dark"}
+                  style={{
+                    flexShrink: 0,
+                    ...(specialDayOnly ? PRIMARY_FILL_BUTTON_TEXT_STYLE : {}),
+                  }}
+                  onClick={() => setSpecialDayOnly((prev) => !prev)}
+                >
+                  ⭐ 특별한 날만
+                </Button>
               </div>
             </>
           )}
@@ -1351,7 +1489,27 @@ function App() {
                     contents={
                       <ListRow.Texts
                         type="2RowTypeA"
-                        top={restaurant.name}
+                        top={
+                          <span
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "6px",
+                            }}
+                          >
+                            <span>{restaurant.name}</span>
+                            {restaurant.isReservation && (
+                              <Badge size="xsmall" variant="weak" color="green">
+                                예약
+                              </Badge>
+                            )}
+                            {restaurant.isSpecialDay && (
+                              <Badge size="xsmall" variant="weak" color="yellow">
+                                ⭐ 특별한 날
+                              </Badge>
+                            )}
+                          </span>
+                        }
                         bottom={[
                           restaurant.category,
                           summarizeMenus(restaurant.menus),
