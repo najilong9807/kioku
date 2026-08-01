@@ -111,21 +111,29 @@ async function fetchCommentCounts(
   return commentCountByPostId;
 }
 
-// parent_post_id가 null인, 즉 댓글이 아닌 원글만 최신순으로 가져와요.
-export async function fetchTodayMealPosts(): Promise<ThreadPost[]> {
+// parent_post_id가 null인, 즉 댓글이 아닌 원글만 최신순으로 가져와요. authorId를
+// 주면 그 작성자의 글만 걸러서 가져와요(닉네임 클릭 -> 모아보기 화면에서 사용).
+async function fetchThreadPosts(authorId?: string): Promise<ThreadPost[]> {
   if (!supabase) {
     return [];
   }
 
   try {
-    const { data: posts, error } = await supabase
+    let query = supabase
       .from("thread_posts")
       .select(
         "id, content, photo_url, neighborhood, created_at, user_id, is_reservation",
       )
       .eq("board_type", TODAY_MEAL_BOARD_TYPE)
-      .is("parent_post_id", null)
-      .order("created_at", { ascending: false });
+      .is("parent_post_id", null);
+
+    if (authorId) {
+      query = query.eq("user_id", authorId);
+    }
+
+    const { data: posts, error } = await query.order("created_at", {
+      ascending: false,
+    });
 
     if (error) {
       console.error("게시글 목록 조회에 실패했어요.", error);
@@ -169,6 +177,16 @@ export async function fetchTodayMealPosts(): Promise<ThreadPost[]> {
     console.error("게시글 목록 조회 중 오류가 발생했어요.", error);
     return [];
   }
+}
+
+export async function fetchTodayMealPosts(): Promise<ThreadPost[]> {
+  return fetchThreadPosts();
+}
+
+// 특정 작성자(userId=anon_profiles.id)가 쓴 오늘뭐먹 글만 모아서 가져와요.
+// 닉네임을 클릭해서 그 사람의 글을 모아보는 화면에서 사용해요.
+export async function fetchPostsByAuthor(authorId: string): Promise<ThreadPost[]> {
+  return fetchThreadPosts(authorId);
 }
 
 // userId는 anon_profiles.id예요. restaurant_id는 이 게시판에서 쓰지 않아서 insert에

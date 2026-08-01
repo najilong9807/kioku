@@ -38,6 +38,7 @@ import {
   createTodayMealPost,
   deleteThreadPost,
   fetchComments,
+  fetchPostsByAuthor,
   fetchTodayMealPosts,
   type ThreadComment,
   type ThreadPost,
@@ -80,6 +81,43 @@ function formatPostTime(createdAt: string): string {
     day: "2-digit",
   });
   return `${dateLabel} ${time}`;
+}
+
+// 글/댓글의 작성자 닉네임이에요. 클릭하면 그 사람이 쓴 글만 모아보는 화면으로
+// 이동해요. 작성자 id를 알 수 없는 경우("알 수 없음")엔 클릭할 수 없어요.
+function NicknameButton({
+  userId,
+  nickname,
+  onClick,
+  style,
+}: {
+  userId: string;
+  nickname: string;
+  onClick: (userId: string, nickname: string) => void;
+  style?: CSSProperties;
+}) {
+  if (!userId) {
+    return <span style={style}>{nickname}</span>;
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(userId, nickname)}
+      style={{
+        border: "none",
+        background: "none",
+        padding: 0,
+        margin: 0,
+        font: "inherit",
+        cursor: "pointer",
+        WebkitTapHighlightColor: "transparent",
+        ...style,
+      }}
+    >
+      {nickname}
+    </button>
+  );
 }
 
 // 바텀시트에 넘기는 children은 open() 호출 시점에 한 번 고정돼요.
@@ -238,6 +276,129 @@ function PostForm({
   );
 }
 
+// 닉네임을 클릭했을 때 열리는, 그 사람이 쓴 오늘뭐먹 글만 모아보는 화면이에요.
+// 팔로우 관계를 저장하지 않고 그때그때 훑어보는 가벼운 용도라, 좋아요/댓글 같은
+// 상호작용 없이 내용만 읽기 전용으로 보여줘요.
+function AuthorPostsSheetContent({
+  authorId,
+  authorNickname,
+  onClose,
+}: {
+  authorId: string;
+  authorNickname: string;
+  onClose: () => void;
+}) {
+  const [posts, setPosts] = useState<ThreadPost[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchPostsByAuthor(authorId).then((loaded) => {
+      if (isMounted) {
+        setPosts(loaded);
+        setIsLoaded(true);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [authorId]);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          padding: "0 24px 8px",
+        }}
+      >
+        <Button size="small" variant="weak" color="dark" onClick={onClose}>
+          닫기
+        </Button>
+      </div>
+
+      {!isLoaded ? null : posts.length === 0 ? (
+        <Result
+          title="아직 쓴 글이 없어요"
+          description={`${authorNickname}님이 오늘뭐먹에\n쓴 글이 아직 없어요.`}
+        />
+      ) : (
+        <div
+          style={{
+            maxHeight: "60vh",
+            overflowY: "auto",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          {posts.map((post) => (
+            <div
+              key={post.id}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+                padding: "12px 24px",
+                borderBottom: "1px solid #f2f4f6",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <span style={{ fontSize: "12px", color: "#8b95a1" }}>
+                  {post.neighborhood ?? ""}
+                </span>
+                <span
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                >
+                  {post.isReservation && (
+                    <Badge size="xsmall" variant="weak" color="green">
+                      예약
+                    </Badge>
+                  )}
+                  <span style={{ fontSize: "12px", color: "#8b95a1" }}>
+                    {formatPostTime(post.createdAt)}
+                  </span>
+                </span>
+              </div>
+              {post.photoUrl && (
+                <Asset.Image
+                  src={post.photoUrl}
+                  alt="게시글 사진"
+                  scaleType="crop"
+                  frameShape={{ width: 140, height: 140, radius: 14 }}
+                />
+              )}
+              <div
+                style={{
+                  ...HANDWRITING_TEXT_STYLE,
+                  color: "#191f28",
+                  whiteSpace: "pre-wrap",
+                  wordBreak: "break-word",
+                }}
+              >
+                {post.content}
+              </div>
+              <span style={{ fontSize: "12px", color: "#8b95a1" }}>
+                좋아요 {post.likeCount} · 댓글 {post.commentCount}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // 댓글 바텀시트의 내용이에요. 목록/입력 상태를 이 컴포넌트가 직접 들고 있어서
 // 댓글을 달거나 지울 때마다 이 부분만 다시 렌더링돼요. onChanged는 댓글 개수가
 // 달라졌을 때 바깥 게시글 목록(댓글 수 표시)을 새로고침하기 위한 콜백이에요.
@@ -249,6 +410,7 @@ function CommentsSheetContent({
   currentUserHash,
   onChanged,
   onClose,
+  onOpenAuthorPosts,
 }: {
   postId: string;
   postAuthorId: string;
@@ -257,6 +419,7 @@ function CommentsSheetContent({
   currentUserHash: string | null;
   onChanged: () => void;
   onClose: () => void;
+  onOpenAuthorPosts: (authorId: string, authorNickname: string) => void;
 }) {
   const [comments, setComments] = useState<ThreadComment[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -492,15 +655,16 @@ function CommentsSheetContent({
                   alignItems: "center",
                 }}
               >
-                <span
+                <NicknameButton
+                  userId={comment.userId}
+                  nickname={comment.authorNickname}
+                  onClick={onOpenAuthorPosts}
                   style={{
                     fontSize: "13px",
                     fontWeight: 700,
                     color: "#191f28",
                   }}
-                >
-                  {comment.authorNickname}
-                </span>
+                />
                 <span style={{ fontSize: "11px", color: "#8b95a1" }}>
                   {formatPostTime(comment.createdAt)}
                 </span>
@@ -783,6 +947,23 @@ function TodayMealBoard({
           currentUserHash={currentUserHash}
           onChanged={loadPosts}
           onClose={close}
+          onOpenAuthorPosts={openAuthorPostsSheet}
+        />
+      ),
+    });
+  };
+
+  // 닉네임을 클릭하면 그 사람이 쓴 오늘뭐먹 글만 모아보는 화면을 열어요. 팔로우
+  // 관계를 저장하지 않는 가벼운 방식이라, 바텀시트 내용을 그 사람의 글 목록으로
+  // 바꿔치기만 해요(댓글 시트 안에서 눌러도 자연스럽게 그 화면으로 넘어가요).
+  const openAuthorPostsSheet = (authorId: string, authorNickname: string) => {
+    open({
+      header: `${authorNickname}님의 글`,
+      children: (
+        <AuthorPostsSheetContent
+          authorId={authorId}
+          authorNickname={authorNickname}
+          onClose={close}
         />
       ),
     });
@@ -938,7 +1119,11 @@ function TodayMealBoard({
                       color: "#191f28",
                     }}
                   >
-                    {post.authorNickname}
+                    <NicknameButton
+                      userId={post.userId}
+                      nickname={post.authorNickname}
+                      onClick={openAuthorPostsSheet}
+                    />
                     {post.neighborhood && (
                       <span style={{ fontWeight: 400, color: "#8b95a1" }}>
                         {" "}
