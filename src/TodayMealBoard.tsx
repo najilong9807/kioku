@@ -20,6 +20,7 @@ import {
   type ChangeEvent,
   type CSSProperties,
 } from "react";
+import { fetchLikedCommentIds, toggleCommentLike } from "./lib/commentLikes";
 import { resizeImageFile } from "./lib/imageResize";
 import {
   buildFullRegionOptions,
@@ -49,6 +50,7 @@ import { HANDWRITING_TEXT_STYLE } from "./theme";
 const MAX_PHOTO_WIDTH = 800;
 
 type PostSortOption = "latest" | "popular";
+type CommentSortOption = "latest" | "popular";
 
 // 브랜드 색(노란색)이 밝아서 흰 글씨는 가독성이 떨어져요.
 // variant="fill" + color="primary"(기본값) 버튼은 이 스타일로 글자색을 진하게 덮어써요.
@@ -244,6 +246,7 @@ function CommentsSheetContent({
   postAuthorId,
   currentUserId,
   currentUserNickname,
+  currentUserHash,
   onChanged,
   onClose,
 }: {
@@ -251,6 +254,7 @@ function CommentsSheetContent({
   postAuthorId: string;
   currentUserId: string | null;
   currentUserNickname: string | null;
+  currentUserHash: string | null;
   onChanged: () => void;
   onClose: () => void;
 }) {
@@ -258,6 +262,11 @@ function CommentsSheetContent({
   const [isLoaded, setIsLoaded] = useState(false);
   const [commentInput, setCommentInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [likedCommentIds, setLikedCommentIds] = useState<Set<string>>(
+    new Set(),
+  );
+  const [commentSortOption, setCommentSortOption] =
+    useState<CommentSortOption>("latest");
 
   const { openConfirm, openAlert } = useDialog();
 
@@ -270,6 +279,84 @@ function CommentsSheetContent({
   useEffect(() => {
     loadComments();
   }, [loadComments]);
+
+  // 댓글 목록이나 현재 사용자가 바뀔 때마다, 그중 내가 좋아요를 누른 댓글 id 집합을
+  // 다시 계산해요. 게시글 좋아요와 같은 패턴이에요.
+  useEffect(() => {
+    if (!currentUserHash || comments.length === 0) {
+      setLikedCommentIds(new Set());
+      return;
+    }
+
+    let isMounted = true;
+
+    fetchLikedCommentIds(
+      comments.map((comment) => comment.id),
+      currentUserHash,
+    ).then((liked) => {
+      if (isMounted) {
+        setLikedCommentIds(liked);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [comments, currentUserHash]);
+
+  // 기본은 최신순(작성일 내림차순)이고, 인기순을 고르면 좋아요 개수 기준으로
+  // 다시 정렬해요. fetchComments는 항상 오래된순(대화 순서)으로 가져오기 때문에,
+  // 정렬은 화면에서 클라이언트 사이드로 처리해요.
+  const sortedComments = useMemo(() => {
+    if (commentSortOption === "popular") {
+      return [...comments].sort((a, b) => b.likeCount - a.likeCount);
+    }
+    return [...comments].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+  }, [comments, commentSortOption]);
+
+  const handleToggleCommentLike = async (comment: ThreadComment) => {
+    if (!currentUserHash) {
+      await openAlert({
+        title: "닉네임 설정이 필요해요",
+        description: "닉네임을 먼저 설정한 뒤에 좋아요를 누를 수 있어요.",
+        alertButton: "확인",
+      });
+      return;
+    }
+
+    const result = await toggleCommentLike(comment.id, currentUserHash);
+    if (result === null) {
+      await openAlert({
+        title: "요청에 실패했어요",
+        description: "잠시 후 다시 시도해 주세요.",
+        alertButton: "확인",
+      });
+      return;
+    }
+
+    setLikedCommentIds((prev) => {
+      const next = new Set(prev);
+      if (result) {
+        next.add(comment.id);
+      } else {
+        next.delete(comment.id);
+      }
+      return next;
+    });
+    setComments((prev) =>
+      prev.map((item) =>
+        item.id === comment.id
+          ? {
+              ...item,
+              likeCount: item.likeCount + (result ? 1 : -1),
+            }
+          : item,
+      ),
+    );
+  };
 
   const handleSubmit = async () => {
     const trimmed = commentInput.trim();
@@ -350,7 +437,21 @@ function CommentsSheetContent({
         padding: "0 24px 24px",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        {comments.length > 0 ? (
+          <SegmentedControl
+            size="small"
+            value={commentSortOption}
+            onChange={(value) =>
+              setCommentSortOption(value as CommentSortOption)
+            }
+          >
+            <SegmentedControl.Item value="latest">최신순</SegmentedControl.Item>
+            <SegmentedControl.Item value="popular">인기순</SegmentedControl.Item>
+          </SegmentedControl>
+        ) : (
+          <div />
+        )}
         <Button size="small" variant="weak" color="dark" onClick={onClose}>
           닫기
         </Button>
@@ -364,7 +465,7 @@ function CommentsSheetContent({
           flexDirection: "column",
         }}
       >
-        {!isLoaded ? null : comments.length === 0 ? (
+        {!isLoaded ? null : sortedComments.length === 0 ? (
           <div
             style={{
               padding: "24px 0",
@@ -376,7 +477,7 @@ function CommentsSheetContent({
             아직 댓글이 없어요. 첫 댓글을 남겨보세요.
           </div>
         ) : (
-          comments.map((comment) => (
+          sortedComments.map((comment) => (
             <div
               key={comment.id}
               style={{
@@ -416,14 +517,47 @@ function CommentsSheetContent({
               >
                 {comment.content}
               </div>
-              {comment.userId === currentUserId && (
-                <div
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginTop: "4px",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => handleToggleCommentLike(comment)}
+                  aria-label={
+                    likedCommentIds.has(comment.id) ? "좋아요 취소" : "좋아요"
+                  }
                   style={{
                     display: "flex",
-                    justifyContent: "flex-end",
-                    marginTop: "4px",
+                    alignItems: "center",
+                    gap: "4px",
+                    border: "none",
+                    background: "none",
+                    padding: "4px 6px",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    color: likedCommentIds.has(comment.id)
+                      ? "#f04452"
+                      : "#6b7684",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    WebkitTapHighlightColor: "transparent",
                   }}
                 >
+                  <Heart
+                    size={14}
+                    color={
+                      likedCommentIds.has(comment.id) ? "#f04452" : "#6b7684"
+                    }
+                    fill={likedCommentIds.has(comment.id) ? "#f04452" : "none"}
+                  />
+                  {comment.likeCount > 0 ? comment.likeCount : ""}
+                </button>
+                {comment.userId === currentUserId && (
                   <Button
                     size="small"
                     variant="weak"
@@ -432,8 +566,8 @@ function CommentsSheetContent({
                   >
                     삭제
                   </Button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           ))
         )}
@@ -646,6 +780,7 @@ function TodayMealBoard({
           postAuthorId={post.userId}
           currentUserId={currentUserId}
           currentUserNickname={currentUserNickname}
+          currentUserHash={currentUserHash}
           onChanged={loadPosts}
           onClose={close}
         />

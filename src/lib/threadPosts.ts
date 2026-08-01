@@ -1,3 +1,4 @@
+import { fetchCommentLikes } from "./commentLikes";
 import { fetchPostLikes } from "./postLikes";
 import { supabase } from "./supabase";
 
@@ -25,6 +26,7 @@ export interface ThreadComment {
   createdAt: string;
   userId: string;
   authorNickname: string;
+  likeCount: number;
 }
 
 interface RawThreadPost {
@@ -237,7 +239,11 @@ export async function fetchComments(postId: string): Promise<ThreadComment[]> {
           .filter((id): id is string => Boolean(id)),
       ),
     );
-    const nicknameByUserId = await fetchNicknamesByUserIds(userIds);
+    const commentIds = rawComments.map((comment) => comment.id);
+    const [nicknameByUserId, likeCountByCommentId] = await Promise.all([
+      fetchNicknamesByUserIds(userIds),
+      fetchCommentLikes(commentIds),
+    ]);
 
     return rawComments.map((comment) => ({
       id: comment.id,
@@ -247,6 +253,7 @@ export async function fetchComments(postId: string): Promise<ThreadComment[]> {
       authorNickname: comment.user_id
         ? (nicknameByUserId.get(comment.user_id) ?? "알 수 없음")
         : "알 수 없음",
+      likeCount: likeCountByCommentId.get(comment.id) ?? 0,
     }));
   } catch (error) {
     console.error("댓글 목록 조회 중 오류가 발생했어요.", error);
