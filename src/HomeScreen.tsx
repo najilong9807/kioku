@@ -188,7 +188,7 @@ function DDayCard({
           </span>
         ) : (
           <span style={{ fontSize: "14px", fontWeight: 600, color: "#333d4b" }}>
-            예정된 방문이 없어요. 달력에서 계획해보세요.
+            예정된 방문이 없어요. 다가올 한 입에서 계획해보세요.
           </span>
         )}
       </div>
@@ -366,7 +366,7 @@ export default function HomeScreen({
           icon={
             <MessageCircle size={24} color={QUICK_ACTION_ACTIVE_ICON_COLOR} />
           }
-          label="오늘뭐먹 보기"
+          label="오늘의 한 입 보기"
           onClick={onViewTodayMeal}
         />
         <QuickActionButton
@@ -457,7 +457,7 @@ export default function HomeScreen({
       </div>
 
       <div>
-        <SectionLabel>최근 오늘뭐먹 글</SectionLabel>
+        <SectionLabel>최근 오늘의 한 입</SectionLabel>
         {!isPostsLoaded ? (
           <div style={{ padding: "0 24px" }}>
             <Skeleton

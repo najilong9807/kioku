@@ -321,7 +321,7 @@ function AuthorPostsSheetContent({
       {!isLoaded ? null : posts.length === 0 ? (
         <Result
           title="아직 쓴 글이 없어요"
-          description={`${authorNickname}님이 오늘뭐먹에\n쓴 글이 아직 없어요.`}
+          description={`${authorNickname}님이 오늘의 한 입에\n쓴 글이 아직 없어요.`}
         />
       ) : (
         <div

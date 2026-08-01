@@ -931,7 +931,7 @@ function NicknameForm({ onSubmit }: { onSubmit: (nickname: string) => void }) {
   );
 }
 
-const MAIN_TABS = ["홈", "맛있는 하루", "오늘뭐먹", "달력"] as const;
+const MAIN_TABS = ["홈", "맛있는 하루", "오늘의 한 입", "다가올 한 입"] as const;
 const HOME_TAB_INDEX = 0;
 const RESTAURANT_TAB_INDEX = 1;
 const TODAY_MEAL_TAB_INDEX = 2;
@@ -1504,8 +1504,13 @@ function App() {
         />
       </div>
 
-      <div style={{ padding: "0 24px 16px" }}>
-        <Tab onChange={(index) => setSelectedTab(index)}>
+      <div style={{ padding: "0 16px 16px" }}>
+        <Tab
+          size="small"
+          fluid
+          itemGap={4}
+          onChange={(index) => setSelectedTab(index)}
+        >
           {MAIN_TABS.map((label, index) => (
             <Tab.Item key={label} selected={selectedTab === index}>
               {label}
@@ -1570,7 +1575,10 @@ function App() {
                   style={{ flexShrink: 0 }}
                   onClick={openCategoryFilterSheet}
                 >
-                  {selectedCategory} ▾
+                  {selectedCategory === ALL_CATEGORY
+                    ? "카테고리"
+                    : selectedCategory}{" "}
+                  ▾
                 </Button>
                 <Button
                   size="medium"
@@ -1595,7 +1603,7 @@ function App() {
                   >
                     {filterProvince
                       ? formatRegionLabel(filterProvince, filterDistrict)
-                      : "전체"}{" "}
+                      : "동네"}{" "}
                     ▾
                   </Button>
                 )}
