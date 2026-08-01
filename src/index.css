@@ -1,9 +1,11 @@
 /* 감성 메모(맛집 기록 메모, 오늘뭐먹 글 등)에 쓰는 손글씨 폰트예요.
-   Ownglyph_ParkDaHyun(온글잎 박다현체) — 눈누(noonnu.cc)에서 배포하는 상업적 이용 가능한 무료 폰트예요.
-   https://noonnu.cc/font_page/1541 */
+   그리운X국한박 다흘체 — 눈누(noonnu.cc)에서 배포하는 상업적 이용 가능한 무료 폰트로,
+   국립한글박물관 제5회 한글실험프로젝트 «글(자)감(각): 쓰기와 도구» 전시 연계로 제작됐어요.
+   Regular 굵기만 배포되어 있어서(bold 없음), 브라우저가 가짜로 굵게 그리지 않도록
+   font-weight를 항상 400으로 고정해서 써요. */
 @font-face {
-  font-family: "Ownglyph_ParkDaHyun";
-  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/2411-3@1.0/Ownglyph_ParkDaHyun.woff2")
+  font-family: "GriunXHangeul_DAHL";
+  src: url("https://cdn.jsdelivr.net/gh/Wheelman-v2/Corporation_Fonts/Griun/GriunXHangeul_DAHL.woff2")
     format("woff2");
   font-weight: 400;
   font-style: normal;

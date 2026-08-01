@@ -7,14 +7,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  /* 다이어리가 놓인 책상을 은은하게 표현한 배경이에요: 위쪽이 살짝 밝은 크림색
-     그라데이션(스탠드 조명이 비치는 느낌) 위에, 아주 옅은 종이 질감(노이즈)을
-     한 겹 더 얹었어요. 이미지 파일 없이 SVG feTurbulence로만 만들었어요. */
-  background-color: #f3e6cd;
-  background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
-    radial-gradient(130% 95% at 50% 12%, #fffaf1 0%, #f8ecd6 55%, #ecdbba 100%);
-  background-repeat: repeat, no-repeat;
+  /* 은은한 회색 배경이에요. 완전히 평평한 단색 대신, 중앙이 아주 살짝 밝은
+     라디얼 그라데이션을 얹어서 노트가 놓인 자리에 은은하게 힘이 실리도록 했어요. */
+  background-color: #dcdad3;
+  background-image: radial-gradient(
+    130% 95% at 50% 14%,
+    #e6e4dd 0%,
+    #dcdad3 55%,
+    #cfcdc5 100%
+  );
   transition:
     opacity 0.35s ease,
     transform 0.35s ease;
@@ -33,7 +34,7 @@
 .splash-book-wrap {
   position: relative;
   width: min(94vw, 520px);
-  aspect-ratio: 260 / 188;
+  aspect-ratio: 260 / 206;
   animation: splash-book-appear 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -57,14 +58,14 @@
 }
 
 /* 오른쪽 페이지가 놓이는 자리예요. SVG의 오른쪽 페이지 영역(viewBox 기준
-   x:130~245, y:16~170 / 260x188)과 같은 비율의 퍼센트 위치로 맞춰뒀어요.
-   splash-page--flip이 이 안에서 입체적으로 보이도록 perspective를 줘요. */
+   x:130~245, y:20~174 / 260x206)과 같은 비율의 퍼센트 위치로 맞춰뒀어요.
+   splash-cover가 이 안에서 입체적으로 보이도록 perspective를 줘요. */
 .splash-book__right-slot {
   position: absolute;
   left: 50%;
-  top: 8.51%;
+  top: 9.71%;
   width: 44.23%;
-  height: 81.91%;
+  height: 74.76%;
   perspective: 900px;
   -webkit-perspective: 900px;
 }
@@ -82,45 +83,14 @@
   border-radius: 0 10px 10px 0;
 }
 
-.splash-page__text {
-  font-weight: 400;
-  font-size: clamp(30px, 10vw, 56px);
-  color: #191f28;
-  letter-spacing: 0.5px;
-}
-
-/* "맛다" - 항상 그 자리에 있지만, 넘어가는 장들(splash-page--flip)에 가려져
-   있다가 그 장들이 다 넘어가면서 자연스럽게 드러나요. */
+/* 오른쪽 안쪽 페이지예요. 표지가 열려 있을 때 그대로 드러나 보이는, 항상 그
+   자리에 있는 정적인 페이지예요. */
 .splash-page--base {
   z-index: 1;
 }
 
-/* 촤르르 넘어가는 낱장들이에요. 각 장의 실제 시작 시점(animation-delay)과
-   재생시간(animation-duration)은 컴포넌트에서 장마다 다르게 인라인으로
-   지정해요(순차적으로 360ms씩 시차를 두는 스태거 효과). backface-visibility로
-   뒷면을 숨겨서, 90deg를 넘어가는 순간부터는 그 장이 사라지고 아래 장이
-   자연스럽게 드러나 보여요.
-   회전 각도를 -180deg가 아니라 -92deg까지만 주는 이유: backface-visibility로
-   어차피 -90deg를 넘는 순간부터는 안 보이기 때문에, 그 뒤로도 계속 돌리는 건
-   낭비예요. 대신 그만큼 아낀 시간을 "실제로 눈에 보이는" 0~-90deg 구간에 더
-   써서, 지정한 재생시간 전체가 눈에 보이는 움직임이 되도록 했어요. easing도
-   오버슈트가 있는 back 계열 대신, 부드럽게 가속했다가 감속하는 표준
-   ease-in-out 계열(cubic-bezier(0.65, 0, 0.35, 1))을 썼어요. */
-.splash-page--flip {
-  transform-origin: left center;
-  transform-style: preserve-3d;
-  -webkit-transform-style: preserve-3d;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  box-shadow: 2px 0 10px rgba(25, 31, 40, 0.15);
-  animation-name: splash-page-flip;
-  animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
-  animation-fill-mode: both;
-}
-
-/* 글씨가 없는 낱장에 옅은 줄무늬(가로줄)를 넣어서, 빈 다이어리 속지처럼
-   보이게 해요. 촤르르 넘어갈 때 이 장들도 함께 팔랑거려서 "여러 장"이
-   넘어가는 두께감을 줘요. */
+/* 글씨가 없는 빈 페이지에 옅은 줄무늬(가로줄)를 넣어서, 빈 다이어리 속지처럼
+   보이게 해요. */
 .splash-page--ruled {
   background-image: repeating-linear-gradient(
     to bottom,
@@ -132,11 +102,68 @@
   background-position: 0 34%;
 }
 
-@keyframes splash-page-flip {
+/* 표지예요. 책등(왼쪽)을 축으로 -118deg(활짝 젖혀진 상태)에서 0deg(완전히 닫혀
+   정면을 보이는 상태)까지 회전해요. animation-delay/duration은 컴포넌트에서
+   인라인으로 지정해서 JS 타이머(HOLD_DURATION_MS 등)와 항상 맞도록 해요.
+   opacity는 전혀 쓰지 않고 transform(rotateY)만 움직여요 — 지난 시행착오에서
+   opacity 애니메이션이 회전과 타이밍이 어긋나 "안 보이다가 갑자기 나타나는"
+   문제를 겪은 적이 있어서, 아예 opacity를 쓰지 않는 backface-visibility 방식만
+   쓰기로 했어요. easing도 오버슈트가 있는 back 계열 대신 부드러운 표준
+   ease-in-out(cubic-bezier(0.65, 0, 0.35, 1))을 써서 전체 재생시간에 걸쳐
+   고르게 움직이도록 했어요. */
+.splash-cover {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  box-shadow: 2px 0 10px rgba(25, 31, 40, 0.15);
+  animation-name: splash-cover-close;
+  animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+  animation-fill-mode: both;
+}
+
+@keyframes splash-cover-close {
   from {
-    transform: rotateY(0deg);
+    transform: rotateY(-118deg);
   }
   to {
-    transform: rotateY(-92deg);
+    transform: rotateY(0deg);
   }
+}
+
+/* 표지의 앞/뒷면이에요. 둘 다 같은 자리에 겹쳐 있고, backface-visibility로
+   회전 각도에 따라 정면을 보이는 쪽만 보여요(카드 뒤집기와 같은 원리). 뒷면은
+   앞면 기준으로 180deg 더 돌려놔서, 표지가 -118deg~-90deg 사이(활짝 열린
+   상태)일 때는 뒷면이, -90deg~0deg 사이(닫히는 중~다 닫힘)일 때는 앞면이
+   보이게 돼요. */
+.splash-cover__face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #2e6f4c;
+  border: 2.5px solid #191f28;
+  border-radius: 0 10px 10px 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.splash-cover__face--back {
+  transform: rotateY(180deg);
+}
+
+.splash-cover__face--front {
+  flex-direction: column;
+  gap: 2px;
+}
+
+.splash-cover__char {
+  font-weight: 400;
+  font-size: clamp(20px, 7vw, 38px);
+  line-height: 1.15;
+  color: #ffc107;
+  letter-spacing: 0.5px;
 }
