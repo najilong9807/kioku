@@ -38,9 +38,17 @@ export function formatDisplayDate(value: string): string {
   return value.replaceAll("-", ".");
 }
 
+// 상세보기 헤더에 쓰는 "2026년 7월 31일" 형태예요. "YYYY-MM-DD" 문자열을 직접
+// 쪼개서 만들기 때문에 Date 파싱에 따른 타임존 오차가 없어요.
+export function formatFullKoreanDate(value: string): string {
+  const [year, month, day] = value.split("-").map(Number);
+  return `${year}년 ${month}월 ${day}일`;
+}
+
 export interface Restaurant {
   id: string;
   name: string;
+  title: string; // 일기 제목처럼 쓰는 선택 입력, 없으면 빈 문자열(이 경우 name을 대신 보여줘요)
   category: Category;
   companion: string;
   weather: string;
@@ -57,6 +65,7 @@ export interface Restaurant {
 
 // 예전 데이터 호환:
 // - 자유 텍스트로 저장된 음식 종류가 고정 목록에 없으면 "기타"로 취급해요.
+// - title 필드가 없던 예전 데이터는 빈 문자열로 채워요(이름을 대신 보여줘요).
 // - companion/weather/neighborhood 필드가 없으면 빈 문자열로 채워요.
 // - menus 필드가 없던 예전 데이터는 빈 배열로 채워요.
 // - visitDate 이전에는 visitedAt("YYYY.MM.DD")이라는 이름으로 저장했어서, 있으면 변환해서 사용해요.
@@ -66,6 +75,7 @@ function parseRestaurants(value: string): Restaurant[] {
   const parsed = JSON.parse(value) as Array<{
     id: string;
     name: string;
+    title?: string;
     category: unknown;
     companion?: string;
     weather?: string;
@@ -84,6 +94,7 @@ function parseRestaurants(value: string): Restaurant[] {
   return parsed.map((item) => ({
     id: item.id,
     name: item.name,
+    title: item.title ?? "",
     category: isCategory(item.category) ? item.category : "기타",
     companion: item.companion ?? "",
     weather: item.weather ?? "",

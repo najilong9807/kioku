@@ -194,6 +194,7 @@ function QuickPickChips({
 
 interface AddRestaurantFormValues {
   name: string;
+  title: string;
   category: Category;
   menus: string[];
   companion: string;
@@ -227,6 +228,7 @@ function RestaurantForm({
   onCancel: () => void;
 }) {
   const [name, setName] = useState(initialValues?.name ?? "");
+  const [title, setTitle] = useState(initialValues?.title ?? "");
   const [category, setCategory] = useState<Category>(
     initialValues?.category ?? CATEGORIES[0],
   );
@@ -325,6 +327,7 @@ function RestaurantForm({
 
     onSubmit({
       name: name.trim(),
+      title: title.trim(),
       category,
       menus,
       companion: companion.trim(),
@@ -372,6 +375,25 @@ function RestaurantForm({
             placeholder="예) 우래옥"
             value={name}
             onChange={(e) => setName(e.target.value)}
+          />
+        </div>
+        <Border />
+        <div style={{ padding: FORM_SECTION_PADDING }}>
+          <div
+            style={{
+              marginBottom: "8px",
+              color: "#6b7684",
+              fontSize: "14px",
+              textAlign: "center",
+            }}
+          >
+            제목 (선택)
+          </div>
+          <TextField
+            variant="box"
+            placeholder="예) 과천 데이트"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
           />
         </div>
         <Border />
@@ -909,7 +931,7 @@ function NicknameForm({ onSubmit }: { onSubmit: (nickname: string) => void }) {
   );
 }
 
-const MAIN_TABS = ["홈", "맛집 기록", "오늘뭐먹", "달력"] as const;
+const MAIN_TABS = ["홈", "맛있는 하루", "오늘뭐먹", "달력"] as const;
 const HOME_TAB_INDEX = 0;
 const RESTAURANT_TAB_INDEX = 1;
 const TODAY_MEAL_TAB_INDEX = 2;
@@ -1221,6 +1243,7 @@ function App() {
           submitLabel="기록하기"
           initialValues={{
             name: visit.name,
+            title: "",
             category: CATEGORIES[0],
             menus: [],
             companion: "",
@@ -1355,6 +1378,7 @@ function App() {
         <RestaurantForm
           initialValues={{
             name: restaurant.name,
+            title: restaurant.title,
             category: restaurant.category,
             menus: restaurant.menus,
             companion: restaurant.companion,
@@ -1385,9 +1409,10 @@ function App() {
 
   // 목록/홈에서 항목을 클릭하면 우선 이 읽기 전용 상세보기를 열어요.
   // 여기서 "수정하기"를 눌러야만 기존 수정 폼(openEditSheet)으로 넘어가요.
+  // 일기장 스타일 헤더(뒤로가기+날짜 제목+북마크)를 RestaurantDetailView가 직접
+  // 그리기 때문에, 바텀시트 기본 header는 쓰지 않아요.
   const openDetailSheet = (restaurant: Restaurant) => {
     open({
-      header: restaurant.name,
       children: (
         <RestaurantDetailView
           restaurant={restaurant}

@@ -122,7 +122,7 @@ function StatsCard({ isLoaded, count }: { isLoaded: boolean; count: number }) {
           </span>
         ) : (
           <span style={{ fontSize: "14px", fontWeight: 600, color: "#333d4b" }}>
-            첫 맛집 기록을 남겨볼까요?
+            첫 맛있는 하루를 기록해볼까요?
           </span>
         )}
       </div>
@@ -384,7 +384,7 @@ export default function HomeScreen({
       </div>
 
       <div>
-        <SectionLabel>최근 맛집 기록</SectionLabel>
+        <SectionLabel>최근 맛있는 하루</SectionLabel>
         {!isRestaurantsLoaded ? (
           <div style={{ padding: "0 24px" }}>
             <Skeleton
