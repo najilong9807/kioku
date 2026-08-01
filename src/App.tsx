@@ -16,7 +16,7 @@ import {
   useBottomSheet,
   useDialog,
 } from "@toss/tds-mobile";
-import { Clock } from "lucide-react";
+import { Clock, Star } from "lucide-react";
 import {
   useEffect,
   useMemo,
@@ -26,6 +26,7 @@ import {
   type CSSProperties,
 } from "react";
 import "./App.css";
+import { BrandMarkIcon } from "./BrandMarkIcon";
 import HomeScreen from "./HomeScreen";
 import {
   buildRegionFilterOptions,
@@ -438,8 +439,18 @@ function RestaurantForm({
               cursor: "pointer",
             }}
           >
-            <span style={{ fontSize: "15px", color: "#191f28", fontWeight: 500 }}>
-              ⭐ 특별한 날이었어요
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                fontSize: "15px",
+                color: "#191f28",
+                fontWeight: 500,
+              }}
+            >
+              <Star size={16} color="#FFC107" fill="#FFC107" />
+              특별한 날이었어요
             </span>
             <input
               type="checkbox"
@@ -1338,7 +1349,14 @@ function App() {
         }}
       >
         <Top
-          title={<Top.TitleParagraph size={22}>이게맛다</Top.TitleParagraph>}
+          title={
+            <div
+              style={{ display: "flex", alignItems: "center", gap: "6px" }}
+            >
+              <BrandMarkIcon size={22} />
+              <Top.TitleParagraph size={22}>이게맛다</Top.TitleParagraph>
+            </div>
+          }
           right={
             <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
               <ProfileIconButton
