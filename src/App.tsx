@@ -16,6 +16,7 @@ import {
   useBottomSheet,
   useDialog,
 } from "@toss/tds-mobile";
+import { Clock } from "lucide-react";
 import {
   useEffect,
   useMemo,
@@ -406,7 +407,17 @@ function RestaurantForm({
               cursor: "pointer",
             }}
           >
-            <span style={{ fontSize: "15px", color: "#191f28", fontWeight: 500 }}>
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                fontSize: "15px",
+                color: "#191f28",
+                fontWeight: 500,
+              }}
+            >
+              <Clock size={16} color="#6b7684" />
               예약하고 갔어요
             </span>
             <input
@@ -631,7 +642,7 @@ function RestaurantForm({
           >
             먹은 메뉴
           </div>
-          <div style={{ display: "flex", gap: "8px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <TextField
               variant="box"
               placeholder="예) 짜장면"
@@ -645,7 +656,12 @@ function RestaurantForm({
               }}
               style={{ flex: 1 }}
             />
-            <Button variant="weak" color="dark" onClick={addMenu}>
+            <Button
+              size="large"
+              variant="weak"
+              color="dark"
+              onClick={addMenu}
+            >
               추가
             </Button>
           </div>
