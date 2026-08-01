@@ -916,6 +916,9 @@ function App() {
   const [selectedTab, setSelectedTab] = useState(HOME_TAB_INDEX);
   const [nickname, setNickname] = useState<string | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [homeNeighborhood, setHomeNeighborhood] = useState<string | null>(
+    null,
+  );
   const [userHash, setUserHash] = useState<string | null>(null);
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -1044,6 +1047,7 @@ function App() {
       } else {
         setNickname(profile.nickname);
         setProfileImage(profile.profile_image);
+        setHomeNeighborhood(profile.neighborhood);
       }
 
       const unreadCount = await countUnreadNotifications(userHash);
@@ -1094,10 +1098,12 @@ function App() {
           userHash={userHash}
           nickname={nickname ?? ""}
           profileImage={profileImage}
+          neighborhood={homeNeighborhood}
           restaurantCount={restaurants.length}
-          onSaved={(nextNickname, nextProfileImage) => {
+          onSaved={(nextNickname, nextProfileImage, nextNeighborhood) => {
             setNickname(nextNickname);
             setProfileImage(nextProfileImage);
+            setHomeNeighborhood(nextNeighborhood);
           }}
           onClose={close}
         />

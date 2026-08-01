@@ -23,6 +23,7 @@ import {
 import { resizeImageFile } from "./lib/imageResize";
 import { formatTierRange, getLevelInfo, LEVEL_TIERS } from "./lib/levels";
 import { saveProfile } from "./lib/profile";
+import { RegionPicker } from "./RegionPicker";
 
 // 브랜드 색(노란색)이 밝아서 흰 글씨는 가독성이 떨어져요. App.tsx의 동명 상수와
 // 같은 이유로, variant="fill" 버튼의 글자색을 진하게 덮어써요.
@@ -318,6 +319,7 @@ export default function ProfileView({
   userHash,
   nickname,
   profileImage,
+  neighborhood,
   restaurantCount,
   onSaved,
   onClose,
@@ -325,12 +327,20 @@ export default function ProfileView({
   userHash: string | null;
   nickname: string;
   profileImage: string | null;
+  neighborhood: string | null;
   restaurantCount: number;
-  onSaved: (nickname: string, profileImage: string | null) => void;
+  onSaved: (
+    nickname: string,
+    profileImage: string | null,
+    neighborhood: string | null,
+  ) => void;
   onClose: () => void;
 }) {
   const [draftNickname, setDraftNickname] = useState(nickname);
   const [draftImage, setDraftImage] = useState<string | null>(profileImage);
+  const [draftNeighborhood, setDraftNeighborhood] = useState(
+    neighborhood ?? "",
+  );
   const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
   const [avatarCategory, setAvatarCategory] = useState<AvatarCategory>(
     parseAvatarValue(profileImage)?.category ?? "person",
@@ -366,11 +376,17 @@ export default function ProfileView({
     }
 
     setIsSaving(true);
-    const ok = await saveProfile(userHash, trimmed, draftImage);
+    const trimmedNeighborhood = draftNeighborhood.trim() || null;
+    const ok = await saveProfile(
+      userHash,
+      trimmed,
+      draftImage,
+      trimmedNeighborhood,
+    );
     setIsSaving(false);
 
     if (ok) {
-      onSaved(trimmed, draftImage);
+      onSaved(trimmed, draftImage, trimmedNeighborhood);
       onClose();
     }
   };
@@ -542,6 +558,40 @@ export default function ProfileView({
             placeholder="닉네임을 입력해주세요"
             value={draftNickname}
             onChange={(e) => setDraftNickname(e.target.value)}
+          />
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <span style={{ fontSize: "14px", color: "#6b7684" }}>
+              내가 사는 동네 (선택)
+            </span>
+            {draftNeighborhood && (
+              <button
+                type="button"
+                onClick={() => setDraftNeighborhood("")}
+                style={{
+                  border: "none",
+                  background: "none",
+                  padding: 0,
+                  cursor: "pointer",
+                  color: "#8b95a1",
+                  fontSize: "13px",
+                }}
+              >
+                지우기
+              </button>
+            )}
+          </div>
+          <RegionPicker
+            value={draftNeighborhood}
+            onChange={setDraftNeighborhood}
           />
         </div>
 
