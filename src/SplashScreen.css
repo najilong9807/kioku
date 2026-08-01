@@ -34,7 +34,7 @@
 .splash-book-wrap {
   position: relative;
   width: min(94vw, 520px);
-  aspect-ratio: 260 / 206;
+  aspect-ratio: 310 / 206;
   animation: splash-book-appear 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -79,14 +79,17 @@
   }
 }
 
-/* 오른쪽 페이지가 놓이는 자리예요. SVG의 오른쪽 페이지 영역(viewBox 기준
-   x:130~245, y:20~174 / 260x206)과 같은 비율의 퍼센트 위치로 맞춰뒀어요.
-   splash-cover가 이 안에서 입체적으로 보이도록 perspective를 줘요. */
+/* 안쪽 페이지/표지가 놓이는 자리예요. 초록 책이 이제 "닫힌 폭"으로 그려져 있어서,
+   이 자리도 그 책 전체 영역(viewBox 기준 x:70~190, y:20~174 / 뷰박스는
+   "-25 0 310 206")에서 초록 테두리가 살짝 보이도록 안쪽으로 4px씩 여백을 둔
+   x:74~186 범위로 맞춰뒀어요(뷰박스 min-x가 -25라서 퍼센트 계산 시 그만큼
+   더해서 비율을 냈어요). splash-cover가 이 안에서 입체적으로 보이도록
+   perspective를 줘요. */
 .splash-book__right-slot {
   position: absolute;
-  left: 50%;
+  left: 31.94%;
   top: 9.71%;
-  width: 44.23%;
+  width: 36.13%;
   height: 74.76%;
   perspective: 900px;
   -webkit-perspective: 900px;
@@ -100,9 +103,9 @@
   justify-content: center;
   background: #fffef7;
   border: 2.5px solid #191f28;
-  /* 책등(왼쪽)에 붙는 변은 각지게, 바깥쪽(오른쪽)만 둥글게 둬서 왼쪽 페이지와
-     자연스럽게 이어져 보이게 해요. */
-  border-radius: 0 10px 10px 0;
+  /* 이제 이 영역이 책 전체 폭(왼쪽 절반이 아니라)과 같아서, 네 모서리 모두
+     둥글게 둬요(왼쪽에 더 이상 붙어있는 다른 페이지가 없어요). */
+  border-radius: 10px;
 }
 
 /* 오른쪽 안쪽 페이지예요. 표지가 열려 있을 때 그대로 드러나 보이는, 항상 그
@@ -167,7 +170,7 @@
   align-items: center;
   justify-content: center;
   background: #2e6f4c;
-  border-radius: 0 10px 10px 0;
+  border-radius: 10px;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }

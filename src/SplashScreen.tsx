@@ -44,18 +44,25 @@ export default function SplashScreen({ onFinish }: { onFinish: () => void }) {
             그리는 일러스트예요. 오른쪽 안쪽 페이지와 그 위를 덮는 표지는 아래 HTML
             레이어들로 직접 겹쳐서 표현해요 — CSS 3D 회전/backface-visibility를 SVG
             안에서 쓰는 것보다 HTML 레이어로 다루는 쪽이 브라우저마다 훨씬 안정적으로
-            동작해요. */}
+            동작해요.
+
+            핵심 아이디어: 초록 표지(+노란 노트)는 "펼친 스프레드 전체 폭"이 아니라
+            처음부터 "표지가 다 닫혔을 때의 폭"(책 한 권 폭)으로 그려요. 그래서 이
+            도형들은 애니메이션 내내 위치/크기가 전혀 바뀌지 않아요. 왼쪽 페이지는 그
+            옆(책등 경계) 왼쪽에 별도로 붙여 그리고, 표지가 닫히는 동안 페이드아웃만
+            시켜요. 왼쪽 페이지가 사라지고 나면 처음부터 좁게 그려져 있던 초록 책이
+            그대로 화면 중앙에 남기 때문에, 폭이 실제로 좁아진 "책 한 권" 모습이 돼요. */}
         <svg
           className="splash-book__art"
-          viewBox="0 0 260 206"
+          viewBox="-25 0 310 206"
           aria-hidden="true"
         >
           {/* 뒤에 살짝 삐져나온 노란 노트예요. 초록 노트(메인)보다 오른쪽/아래로
               조금 어긋나게 그려서 두 권이 쌓여 있는 느낌을 줘요. */}
           <rect
-            x="14"
+            x="78"
             y="30"
-            width="244"
+            width="120"
             height="168"
             rx="12"
             fill="#FBC02D"
@@ -63,31 +70,30 @@ export default function SplashScreen({ onFinish }: { onFinish: () => void }) {
             strokeWidth="2.5"
           />
           <ellipse
-            cx="128"
-            cy="196"
-            rx="112"
+            cx="134"
+            cy="198"
+            rx="64"
             ry="6"
             fill="#191f28"
             opacity="0.12"
           />
-          {/* 메인(초록) 노트의 정적인 부분이에요. 오른쪽 안쪽 페이지와 그 위를
-              덮는 표지는 아래 HTML 레이어로 겹쳐서 표현해요. */}
+          {/* 메인(초록) 노트의 정적인 부분이에요. 표지가 다 닫혔을 때의 책 폭으로
+              그려져 있고, 중앙(x=130)에 오도록 배치했어요. 오른쪽 안쪽 페이지와 그
+              위를 덮는 표지는 아래 HTML 레이어로 겹쳐서 표현해요. */}
           <rect
-            x="6"
+            x="70"
             y="14"
-            width="244"
+            width="120"
             height="168"
             rx="12"
             fill="#2E6F4C"
           />
           {/* 표지가 열려 있는 동안에만 의미가 있는 부분(왼쪽 크림색 페이지, 페이지
-              장식 줄, 책등 그림자)이에요. 표지가 다 닫히고 나면 책 한 권만 딱 남아야
-              하는데, 이 부분들이 계속 남아있으면 "펼쳐진 왼쪽 페이지 + 덮인 표지"가
-              나란히 있는 것처럼 어색하게 보여요. 그래서 표지가 닫히는 애니메이션과
-              같은 시간(딜레이/지속시간)에 맞춰 opacity를 0으로 페이드아웃해서, 표지가
-              완전히 닫히는 순간엔 그 아래 초록 표지 색만 남도록 했어요(순서상 이
-              그룹이 초록 표지 위에 겹쳐 그려져 있어서, 사라지면 자연스럽게 초록색만
-              보여요). */}
+              장식 줄, 책등 그림자)이에요. 초록 책의 왼쪽(책등)에 붙여 그렸고, 표지가
+              닫히는 애니메이션과 같은 시간(딜레이/지속시간)에 맞춰 opacity를 0으로
+              페이드아웃해요. 이 부분이 사라져도 초록 책 자체는 처음부터 좁게 그려져
+              있어서 폭이 그대로 유지되고, 결과적으로 왼쪽 페이지 없이 책 한 권만
+              남아요. */}
           <g
             className="splash-book__open-only"
             style={{
@@ -96,16 +102,16 @@ export default function SplashScreen({ onFinish }: { onFinish: () => void }) {
             }}
           >
             <path
-              d="M130,20 L22,20 A9,9 0 0 0 13,29 L13,165 A9,9 0 0 0 22,174 L130,174 Z"
+              d="M70,20 L15,20 A9,9 0 0 0 6,29 L6,165 A9,9 0 0 0 15,174 L70,174 Z"
               fill="#fffef7"
               stroke="#191f28"
               strokeWidth="2.5"
             />
             {/* 왼쪽 페이지에 글씨가 쓰여 있는 느낌을 주는 장식 줄이에요. */}
-            <rect x="30" y="56" width="70" height="4" rx="2" fill="#191f28" opacity="0.15" />
-            <rect x="30" y="72" width="86" height="4" rx="2" fill="#191f28" opacity="0.15" />
-            <rect x="30" y="88" width="58" height="4" rx="2" fill="#191f28" opacity="0.12" />
-            <rect x="30" y="104" width="78" height="4" rx="2" fill="#191f28" opacity="0.12" />
+            <rect x="14" y="56" width="30" height="4" rx="2" fill="#191f28" opacity="0.15" />
+            <rect x="14" y="72" width="38" height="4" rx="2" fill="#191f28" opacity="0.15" />
+            <rect x="14" y="88" width="24" height="4" rx="2" fill="#191f28" opacity="0.12" />
+            <rect x="14" y="104" width="34" height="4" rx="2" fill="#191f28" opacity="0.12" />
             <defs>
               <linearGradient id="splash-spine-shadow" x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0%" stopColor="#191f28" stopOpacity="0" />
@@ -114,7 +120,7 @@ export default function SplashScreen({ onFinish }: { onFinish: () => void }) {
               </linearGradient>
             </defs>
             <rect
-              x="122"
+              x="62"
               y="20"
               width="16"
               height="154"
@@ -123,8 +129,10 @@ export default function SplashScreen({ onFinish }: { onFinish: () => void }) {
           </g>
         </svg>
 
-        {/* 오른쪽 안쪽 페이지 자리예요. 표지가 열려 있는 동안엔 이 줄쳐진 빈 페이지가
-            그대로 보이고, 표지가 닫히면서 이 자리를 덮어요. */}
+        {/* 안쪽 페이지 자리예요. 이제 초록 책 자체가 "닫힌 폭"으로 그려져 있어서,
+            이 자리도 그 책 전체 폭(왼쪽 절반이 아니라)에 맞춰요. 표지가 열려
+            있는 동안엔 이 줄쳐진 빈 페이지가 그대로 보이고, 표지가 닫히면서 이
+            자리를 덮어요. */}
         <div className="splash-book__right-slot">
           <div className="splash-page splash-page--base splash-page--ruled" />
 
