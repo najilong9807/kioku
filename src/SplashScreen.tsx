@@ -80,31 +80,47 @@ export default function SplashScreen({ onFinish }: { onFinish: () => void }) {
             rx="12"
             fill="#2E6F4C"
           />
-          <path
-            d="M130,20 L22,20 A9,9 0 0 0 13,29 L13,165 A9,9 0 0 0 22,174 L130,174 Z"
-            fill="#fffef7"
-            stroke="#191f28"
-            strokeWidth="2.5"
-          />
-          {/* 왼쪽 페이지에 글씨가 쓰여 있는 느낌을 주는 장식 줄이에요. */}
-          <rect x="30" y="56" width="70" height="4" rx="2" fill="#191f28" opacity="0.15" />
-          <rect x="30" y="72" width="86" height="4" rx="2" fill="#191f28" opacity="0.15" />
-          <rect x="30" y="88" width="58" height="4" rx="2" fill="#191f28" opacity="0.12" />
-          <rect x="30" y="104" width="78" height="4" rx="2" fill="#191f28" opacity="0.12" />
-          <defs>
-            <linearGradient id="splash-spine-shadow" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#191f28" stopOpacity="0" />
-              <stop offset="50%" stopColor="#191f28" stopOpacity="0.22" />
-              <stop offset="100%" stopColor="#191f28" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          <rect
-            x="122"
-            y="20"
-            width="16"
-            height="154"
-            fill="url(#splash-spine-shadow)"
-          />
+          {/* 표지가 열려 있는 동안에만 의미가 있는 부분(왼쪽 크림색 페이지, 페이지
+              장식 줄, 책등 그림자)이에요. 표지가 다 닫히고 나면 책 한 권만 딱 남아야
+              하는데, 이 부분들이 계속 남아있으면 "펼쳐진 왼쪽 페이지 + 덮인 표지"가
+              나란히 있는 것처럼 어색하게 보여요. 그래서 표지가 닫히는 애니메이션과
+              같은 시간(딜레이/지속시간)에 맞춰 opacity를 0으로 페이드아웃해서, 표지가
+              완전히 닫히는 순간엔 그 아래 초록 표지 색만 남도록 했어요(순서상 이
+              그룹이 초록 표지 위에 겹쳐 그려져 있어서, 사라지면 자연스럽게 초록색만
+              보여요). */}
+          <g
+            className="splash-book__open-only"
+            style={{
+              animationDelay: `${COVER_START_DELAY_MS}ms`,
+              animationDuration: `${COVER_CLOSE_DURATION_MS}ms`,
+            }}
+          >
+            <path
+              d="M130,20 L22,20 A9,9 0 0 0 13,29 L13,165 A9,9 0 0 0 22,174 L130,174 Z"
+              fill="#fffef7"
+              stroke="#191f28"
+              strokeWidth="2.5"
+            />
+            {/* 왼쪽 페이지에 글씨가 쓰여 있는 느낌을 주는 장식 줄이에요. */}
+            <rect x="30" y="56" width="70" height="4" rx="2" fill="#191f28" opacity="0.15" />
+            <rect x="30" y="72" width="86" height="4" rx="2" fill="#191f28" opacity="0.15" />
+            <rect x="30" y="88" width="58" height="4" rx="2" fill="#191f28" opacity="0.12" />
+            <rect x="30" y="104" width="78" height="4" rx="2" fill="#191f28" opacity="0.12" />
+            <defs>
+              <linearGradient id="splash-spine-shadow" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#191f28" stopOpacity="0" />
+                <stop offset="50%" stopColor="#191f28" stopOpacity="0.22" />
+                <stop offset="100%" stopColor="#191f28" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <rect
+              x="122"
+              y="20"
+              width="16"
+              height="154"
+              fill="url(#splash-spine-shadow)"
+            />
+          </g>
         </svg>
 
         {/* 오른쪽 안쪽 페이지 자리예요. 표지가 열려 있는 동안엔 이 줄쳐진 빈 페이지가

@@ -57,6 +57,28 @@
   display: block;
 }
 
+/* 표지가 열려 있을 때만 보이는 왼쪽 페이지/장식 줄/책등 그림자예요. animation-delay,
+   animation-duration은 컴포넌트에서 splash-cover와 정확히 같은 값을 인라인으로
+   지정해서, 표지가 다 닫히는 시점(rotateY 0deg)에 정확히 맞춰 완전히 사라져요.
+   그래야 표지가 닫힌 뒤에 왼쪽 페이지 잔상 없이 책 한 권만 남아요. */
+.splash-book__open-only {
+  animation-name: splash-open-only-fade;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
+}
+
+@keyframes splash-open-only-fade {
+  0% {
+    opacity: 1;
+  }
+  55% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 /* 오른쪽 페이지가 놓이는 자리예요. SVG의 오른쪽 페이지 영역(viewBox 기준
    x:130~245, y:20~174 / 260x206)과 같은 비율의 퍼센트 위치로 맞춰뒀어요.
    splash-cover가 이 안에서 입체적으로 보이도록 perspective를 줘요. */
@@ -145,7 +167,6 @@
   align-items: center;
   justify-content: center;
   background: #2e6f4c;
-  border: 2.5px solid #191f28;
   border-radius: 0 10px 10px 0;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
