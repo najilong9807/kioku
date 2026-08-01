@@ -9,6 +9,7 @@ import {
 } from "@toss/tds-mobile";
 import {
   Bookmark,
+  CalendarDays,
   Headphones,
   MapPin,
   MessageCircle,
@@ -16,6 +17,12 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import CustomerSupportView from "./CustomerSupportView";
+import {
+  formatDDay,
+  getDaysUntil,
+  sortPlannedVisitsByDate,
+  type PlannedVisit,
+} from "./lib/plannedVisitStorage";
 import { fetchTodayMealPosts, type ThreadPost } from "./lib/threadPosts";
 import type { Restaurant } from "./restaurantStorage";
 
@@ -123,6 +130,72 @@ function StatsCard({ isLoaded, count }: { isLoaded: boolean; count: number }) {
   );
 }
 
+// 가장 가까운 방문 예정 하나를 D-day 형태로 보여주는 카드예요. 지난 일정(이미
+// 지나버린 방문 예정)은 여기서는 제외하고, 오늘 포함 앞으로의 일정 중 가장
+// 가까운 것만 보여줘요. 예정이 없으면 가벼운 안내 문구로 바꿔요. 눌러도
+// 항상 달력 탭으로 이동해요.
+function DDayCard({
+  isLoaded,
+  plannedVisits,
+  onClick,
+}: {
+  isLoaded: boolean;
+  plannedVisits: PlannedVisit[];
+  onClick: () => void;
+}) {
+  if (!isLoaded) {
+    return null;
+  }
+
+  const nextVisit = sortPlannedVisitsByDate(plannedVisits).find(
+    (visit) => getDaysUntil(visit.visitDate) >= 0,
+  );
+
+  return (
+    <div style={{ padding: "0 24px" }}>
+      <div
+        onClick={onClick}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          padding: "16px 20px",
+          borderRadius: "16px",
+          backgroundColor: "#eef2ff",
+          cursor: "pointer",
+        }}
+      >
+        <div
+          style={{
+            width: "36px",
+            height: "36px",
+            borderRadius: "12px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "#dbe4ff",
+            flexShrink: 0,
+          }}
+        >
+          <CalendarDays size={18} color="#3654c9" />
+        </div>
+        {nextVisit ? (
+          <span style={{ fontSize: "14px", fontWeight: 600, color: "#333d4b" }}>
+            {nextVisit.name}까지{" "}
+            <span style={{ color: "#3654c9" }}>
+              {formatDDay(getDaysUntil(nextVisit.visitDate))}
+            </span>
+          </span>
+        ) : (
+          <span style={{ fontSize: "14px", fontWeight: 600, color: "#333d4b" }}>
+            예정된 방문이 없어요. 달력에서 계획해보세요.
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function QuickActionButton({
   icon,
   label,
@@ -191,16 +264,22 @@ export default function HomeScreen({
   nickname,
   restaurants,
   isRestaurantsLoaded,
+  plannedVisits,
+  isPlannedVisitsLoaded,
   onWriteRestaurant,
   onSelectRestaurant,
   onViewTodayMeal,
+  onViewCalendar,
 }: {
   nickname: string | null;
   restaurants: Restaurant[];
   isRestaurantsLoaded: boolean;
+  plannedVisits: PlannedVisit[];
+  isPlannedVisitsLoaded: boolean;
   onWriteRestaurant: () => void;
   onSelectRestaurant: (restaurant: Restaurant) => void;
   onViewTodayMeal: () => void;
+  onViewCalendar: () => void;
 }) {
   const [recentPosts, setRecentPosts] = useState<ThreadPost[]>([]);
   const [isPostsLoaded, setIsPostsLoaded] = useState(false);
@@ -261,6 +340,12 @@ export default function HomeScreen({
       </div>
 
       <StatsCard isLoaded={isRestaurantsLoaded} count={restaurants.length} />
+
+      <DDayCard
+        isLoaded={isPlannedVisitsLoaded}
+        plannedVisits={plannedVisits}
+        onClick={onViewCalendar}
+      />
 
       <div
         style={{

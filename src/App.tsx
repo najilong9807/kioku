@@ -27,6 +27,7 @@ import {
 } from "react";
 import "./App.css";
 import { BrandMarkIcon } from "./BrandMarkIcon";
+import CalendarView, { type PlannedVisitFormValues } from "./CalendarView";
 import HomeScreen from "./HomeScreen";
 import {
   buildRegionFilterOptions,
@@ -34,6 +35,11 @@ import {
   matchesRegion,
 } from "./lib/koreanRegions";
 import { countUnreadNotifications } from "./lib/notifications";
+import {
+  loadPlannedVisits,
+  savePlannedVisits,
+  type PlannedVisit,
+} from "./lib/plannedVisitStorage";
 import { fetchProfile, saveProfile } from "./lib/profile";
 import { getUserIdentityHash } from "./lib/userIdentity";
 import { NotificationBellButton, NotificationsSheetContent } from "./NotificationsView";
@@ -903,10 +909,11 @@ function NicknameForm({ onSubmit }: { onSubmit: (nickname: string) => void }) {
   );
 }
 
-const MAIN_TABS = ["홈", "맛집 기록", "오늘뭐먹"] as const;
+const MAIN_TABS = ["홈", "맛집 기록", "오늘뭐먹", "달력"] as const;
 const HOME_TAB_INDEX = 0;
 const RESTAURANT_TAB_INDEX = 1;
 const TODAY_MEAL_TAB_INDEX = 2;
+const CALENDAR_TAB_INDEX = 3;
 
 // 인트로를 봤는지는 세션에 저장해요. 완전히 종료했다가 다시 켤 때는 새 세션이라
 // 다시 보여주지만, 같은 세션 안에서(예: 미니앱이 백그라운드→포그라운드) 반복해서
@@ -934,6 +941,8 @@ function App() {
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [plannedVisits, setPlannedVisits] = useState<PlannedVisit[]>([]);
+  const [isPlannedVisitsLoaded, setIsPlannedVisitsLoaded] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] =
     useState<(typeof FILTER_CATEGORIES)[number]>(ALL_CATEGORY);
@@ -1036,6 +1045,30 @@ function App() {
     }
     saveRestaurants(restaurants);
   }, [restaurants, isLoaded]);
+
+  // 방문 예정도 맛집 기록과 똑같이 기기 저장이에요(restaurants와 같은 패턴).
+  useEffect(() => {
+    let isMounted = true;
+
+    loadPlannedVisits().then((loaded) => {
+      if (!isMounted) {
+        return;
+      }
+      setPlannedVisits(loaded);
+      setIsPlannedVisitsLoaded(true);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isPlannedVisitsLoaded) {
+      return;
+    }
+    savePlannedVisits(plannedVisits);
+  }, [plannedVisits, isPlannedVisitsLoaded]);
 
   // 앱 최초 실행 시 사용자 식별 해시로 Supabase profiles 테이블에 닉네임이
   // 등록되어 있는지 확인해요. 없으면 닉네임 입력 바텀시트를 한 번 띄우고,
@@ -1152,6 +1185,67 @@ function App() {
               },
               ...prev,
             ]);
+            close();
+          }}
+        />
+      ),
+    });
+  };
+
+  const handleAddPlannedVisit = (values: PlannedVisitFormValues) => {
+    setPlannedVisits((prev) => [...prev, { id: `${Date.now()}`, ...values }]);
+  };
+
+  const handleUpdatePlannedVisit = (
+    id: string,
+    values: PlannedVisitFormValues,
+  ) => {
+    setPlannedVisits((prev) =>
+      prev.map((item) => (item.id === id ? { id, ...values } : item)),
+    );
+  };
+
+  const handleDeletePlannedVisit = (id: string) => {
+    setPlannedVisits((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  // 방문 예정에서 "다녀왔어요"를 누르면, 그 예정 정보(가게 이름/메모/방문
+  // 예정일 → 실제 방문일)로 미리 채운 맛집 기록 폼을 열어요. 등록을 마치면
+  // 새 맛집 기록을 추가하고 원래 방문 예정은 목록에서 제거해요. 맛집 기록 탭에서
+  // 결과를 바로 볼 수 있도록 탭도 함께 옮겨요.
+  const openAddSheetFromPlannedVisit = (visit: PlannedVisit) => {
+    open({
+      header: "맛집 기록하기",
+      children: (
+        <RestaurantForm
+          submitLabel="기록하기"
+          initialValues={{
+            name: visit.name,
+            category: CATEGORIES[0],
+            menus: [],
+            companion: "",
+            weather: "",
+            neighborhood: "",
+            memo: visit.memo,
+            rating: 5,
+            visitDate: visit.visitDate,
+            photos: [],
+            isReservation: false,
+            isSpecialDay: false,
+          }}
+          onCancel={close}
+          onSubmit={(values) => {
+            setRestaurants((prev) => [
+              {
+                id: `${Date.now()}`,
+                ...values,
+              },
+              ...prev,
+            ]);
+            setPlannedVisits((prev) =>
+              prev.filter((item) => item.id !== visit.id),
+            );
+            setSelectedTab(RESTAURANT_TAB_INDEX);
             close();
           }}
         />
@@ -1377,7 +1471,9 @@ function App() {
                   ? restaurants.length > 0
                     ? `지금까지 ${restaurants.length}곳의 맛집을 기록했어요.`
                     : "다녀온 맛집을 기록하고 모아보세요."
-                  : "오늘 먹은 메뉴를 자유롭게 나눠보세요."}
+                  : selectedTab === CALENDAR_TAB_INDEX
+                    ? "다음 맛집 방문을 미리 계획해보세요."
+                    : "오늘 먹은 메뉴를 자유롭게 나눠보세요."}
             </Top.SubtitleParagraph>
           }
         />
@@ -1398,6 +1494,8 @@ function App() {
           nickname={nickname}
           restaurants={restaurants}
           isRestaurantsLoaded={isLoaded}
+          plannedVisits={plannedVisits}
+          isPlannedVisitsLoaded={isPlannedVisitsLoaded}
           onWriteRestaurant={() => {
             setSelectedTab(RESTAURANT_TAB_INDEX);
             openAddSheet();
@@ -1407,6 +1505,7 @@ function App() {
             openDetailSheet(restaurant);
           }}
           onViewTodayMeal={() => setSelectedTab(TODAY_MEAL_TAB_INDEX)}
+          onViewCalendar={() => setSelectedTab(CALENDAR_TAB_INDEX)}
         />
       ) : selectedTab === RESTAURANT_TAB_INDEX ? (
         <>
@@ -1595,6 +1694,15 @@ function App() {
             </List>
           )}
         </>
+      ) : selectedTab === CALENDAR_TAB_INDEX ? (
+        <CalendarView
+          plannedVisits={plannedVisits}
+          isLoaded={isPlannedVisitsLoaded}
+          onAdd={handleAddPlannedVisit}
+          onUpdate={handleUpdatePlannedVisit}
+          onDelete={handleDeletePlannedVisit}
+          onMarkVisited={openAddSheetFromPlannedVisit}
+        />
       ) : (
         <TodayMealBoard onOpenRestaurantSearch={openSearchSheet} />
       )}
