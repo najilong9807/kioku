@@ -11,8 +11,8 @@ import {
   AVATAR_CATEGORIES,
   AVATAR_CATEGORY_LABELS,
   AvatarIcon,
-  FOOD_STYLES,
-  PERSON_STYLES,
+  FOOD_SELECTABLE_STYLES,
+  PERSON_SELECTABLE_STYLES,
   avatarLabel,
   parseAvatarValue,
   toAvatarValue,
@@ -493,8 +493,8 @@ export default function ProfileView({
               >
                 {(
                   (avatarCategory === "person"
-                    ? PERSON_STYLES
-                    : FOOD_STYLES) as readonly AvatarStyle[]
+                    ? PERSON_SELECTABLE_STYLES
+                    : FOOD_SELECTABLE_STYLES) as readonly AvatarStyle[]
                 ).map((style) => {
                   const avatar: AvatarId = { category: avatarCategory, style };
                   const value = toAvatarValue(avatar);

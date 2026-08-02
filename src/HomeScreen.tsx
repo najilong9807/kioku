@@ -359,7 +359,7 @@ export default function HomeScreen({
           icon={
             <UtensilsCrossed size={24} color={QUICK_ACTION_ACTIVE_ICON_COLOR} />
           }
-          label="맛집 기록하기"
+          label="오늘의 식사"
           onClick={onWriteRestaurant}
         />
         <QuickActionButton

@@ -49,7 +49,7 @@ export function RestaurantSearchSheetContent({
       </div>
 
       <SearchField
-        placeholder="맛집 이름으로 검색"
+        placeholder="어디 가볼까요?"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onDeleteClick={() => setQuery("")}

@@ -11,3 +11,35 @@
     margin: 0 auto;
   }
 }
+
+/* 메인 탭바(홈/맛있는 하루/오늘의 한 입/다가올 한 입)예요. TDS Tab 컴포넌트는
+   기본(non-fluid) 모드에서 각 탭 버튼(.tab__item)에 flex: 0 0 auto를 적용해서
+   라벨 길이에 따라 칸 너비가 콘텐츠 크기로 제각각이 돼요. 이 규칙과 동일한
+   특이도(class 2개)라 나중에 로드되는 TDS 쪽이 이겨버리길래, !important로
+   확실히 이겨서 4칸이 항상 똑같은 너비로 나뉘도록 했어요. */
+.kioku-main-tabs [role="tab"] {
+  flex: 1 1 0 !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  overflow: visible !important;
+  align-items: flex-start !important;
+  padding-top: 8px !important;
+}
+
+/* 균등 너비 칸에서는 라벨이 길면(예: "오늘의 한 입") 한 줄에 다 안 들어갈 수
+   있어서, 줄바꿈을 허용해요. 원래 white-space: nowrap + overflow: hidden이라
+   텍스트가 잘렸는데, 이제는 2줄로 자연스럽게 감싸지도록 했어요. */
+.kioku-main-tabs .tab__item-title,
+.kioku-main-tabs .tab__item-title span {
+  white-space: normal !important;
+}
+
+.kioku-main-tabs .tab__item-title {
+  text-align: center;
+  word-break: keep-all;
+}
+
+.kioku-main-tabs .tab__list {
+  align-items: flex-start !important;
+}

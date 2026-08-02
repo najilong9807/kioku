@@ -1194,7 +1194,7 @@ function App() {
 
   const openAddSheet = () => {
     open({
-      header: "맛집 기록하기",
+      header: "오늘의 식사",
       children: (
         <RestaurantForm
           submitLabel="기록하기"
@@ -1237,7 +1237,7 @@ function App() {
   // 결과를 바로 볼 수 있도록 탭도 함께 옮겨요.
   const openAddSheetFromPlannedVisit = (visit: PlannedVisit) => {
     open({
-      header: "맛집 기록하기",
+      header: "오늘의 식사",
       children: (
         <RestaurantForm
           submitLabel="기록하기"
@@ -1280,36 +1280,51 @@ function App() {
     open({
       header: "음식 종류 선택",
       children: (
-        <List>
-          {FILTER_CATEGORIES.map((category) => {
-            const isSelected = category === selectedCategory;
-            return (
-              <div
-                key={category}
-                onClick={() => {
-                  setSelectedCategory(category);
-                  close();
-                }}
-                style={{ cursor: "pointer" }}
-              >
-                <ListRow
-                  withTouchEffect
-                  contents={
-                    <ListRow.Texts
-                      type="1RowTypeA"
-                      top={
-                        <span style={{ fontWeight: isSelected ? 700 : 400 }}>
-                          {category}
-                        </span>
-                      }
-                    />
-                  }
-                  right={isSelected ? "✓" : undefined}
-                />
-              </div>
-            );
-          })}
-        </List>
+        <>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              padding: "0 24px 12px",
+            }}
+          >
+            <Button size="small" variant="weak" color="dark" onClick={close}>
+              닫기
+            </Button>
+          </div>
+          <List>
+            {FILTER_CATEGORIES.map((category) => {
+              const isSelected = category === selectedCategory;
+              return (
+                <div
+                  key={category}
+                  onClick={() => {
+                    setSelectedCategory(category);
+                    close();
+                  }}
+                  style={{ cursor: "pointer" }}
+                >
+                  <ListRow
+                    withTouchEffect
+                    contents={
+                      <ListRow.Texts
+                        type="1RowTypeA"
+                        top={
+                          <span
+                            style={{ fontWeight: isSelected ? 700 : 400 }}
+                          >
+                            {category}
+                          </span>
+                        }
+                      />
+                    }
+                    right={isSelected ? "✓" : undefined}
+                  />
+                </div>
+              );
+            })}
+          </List>
+        </>
       ),
     });
   };
@@ -1318,36 +1333,51 @@ function App() {
     open({
       header: "정렬 기준 선택",
       children: (
-        <List>
-          {SORT_OPTIONS.map((option) => {
-            const isSelected = option.value === sortOption;
-            return (
-              <div
-                key={option.value}
-                onClick={() => {
-                  setSortOption(option.value);
-                  close();
-                }}
-                style={{ cursor: "pointer" }}
-              >
-                <ListRow
-                  withTouchEffect
-                  contents={
-                    <ListRow.Texts
-                      type="1RowTypeA"
-                      top={
-                        <span style={{ fontWeight: isSelected ? 700 : 400 }}>
-                          {option.label}
-                        </span>
-                      }
-                    />
-                  }
-                  right={isSelected ? "✓" : undefined}
-                />
-              </div>
-            );
-          })}
-        </List>
+        <>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              padding: "0 24px 12px",
+            }}
+          >
+            <Button size="small" variant="weak" color="dark" onClick={close}>
+              닫기
+            </Button>
+          </div>
+          <List>
+            {SORT_OPTIONS.map((option) => {
+              const isSelected = option.value === sortOption;
+              return (
+                <div
+                  key={option.value}
+                  onClick={() => {
+                    setSortOption(option.value);
+                    close();
+                  }}
+                  style={{ cursor: "pointer" }}
+                >
+                  <ListRow
+                    withTouchEffect
+                    contents={
+                      <ListRow.Texts
+                        type="1RowTypeA"
+                        top={
+                          <span
+                            style={{ fontWeight: isSelected ? 700 : 400 }}
+                          >
+                            {option.label}
+                          </span>
+                        }
+                      />
+                    }
+                    right={isSelected ? "✓" : undefined}
+                  />
+                </div>
+              );
+            })}
+          </List>
+        </>
       ),
     });
   };
@@ -1504,13 +1534,8 @@ function App() {
         />
       </div>
 
-      <div style={{ padding: "0 16px 16px" }}>
-        <Tab
-          size="small"
-          fluid
-          itemGap={4}
-          onChange={(index) => setSelectedTab(index)}
-        >
+      <div className="kioku-main-tabs" style={{ padding: "0 16px 16px" }}>
+        <Tab size="small" onChange={(index) => setSelectedTab(index)}>
           {MAIN_TABS.map((label, index) => (
             <Tab.Item key={label} selected={selectedTab === index}>
               {label}
@@ -1546,7 +1571,7 @@ function App() {
               style={PRIMARY_FILL_BUTTON_TEXT_STYLE}
               onClick={openAddSheet}
             >
-              맛집 기록하기
+              오늘의 식사
             </Button>
           </div>
 
@@ -1554,7 +1579,7 @@ function App() {
             <>
               <div style={{ padding: "0 24px 16px" }}>
                 <SearchField
-                  placeholder="맛집 이름으로 검색"
+                  placeholder="어디 가볼까요?"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onDeleteClick={() => setSearchQuery("")}
@@ -1722,6 +1747,22 @@ function App() {
                       </div>
                     }
                   />
+                  {restaurant.memo.trim() && (
+                    <div
+                      style={{
+                        padding: "0 24px 12px 76px",
+                        fontSize: "13px",
+                        lineHeight: 1.4,
+                        color: "#8b95a1",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {restaurant.memo.trim()}
+                    </div>
+                  )}
                 </div>
               ))}
             </List>
