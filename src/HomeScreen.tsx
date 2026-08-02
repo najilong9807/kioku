@@ -7,22 +7,22 @@ import {
   useBottomSheet,
   useToast,
 } from "@toss/tds-mobile";
-import {
-  Bookmark,
-  CalendarDays,
-  Headphones,
-  MapPin,
-  MessageCircle,
-  UtensilsCrossed,
-} from "lucide-react";
+import { CalendarDays, Headphones, Sparkles, UtensilsCrossed } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import CustomerSupportView from "./CustomerSupportView";
+import FoodTestModal from "./FoodTestView";
 import {
   formatDDay,
   getDaysUntil,
   sortPlannedVisitsByDate,
   type PlannedVisit,
 } from "./lib/plannedVisitStorage";
+import {
+  BookmarkRibbonIcon,
+  ChatHeartIcon,
+  FoldedMapPinIcon,
+  RiceBowlIcon,
+} from "./lib/quickActionIcons";
 import { fetchTodayMealPosts, type ThreadPost } from "./lib/threadPosts";
 import type { Restaurant } from "./restaurantStorage";
 
@@ -30,9 +30,11 @@ const RECENT_RESTAURANT_LIMIT = 2;
 const RECENT_POST_LIMIT = 2;
 const POST_PREVIEW_MAX_LENGTH = 40;
 
-// 퀵 액션 아이콘 타일의 공통 톤. 브랜드 색(#FFC107)을 은은하게 눌러 아이콘 배경/글자에 써요.
-const QUICK_ACTION_ACTIVE_BG = "#fff4cc";
-const QUICK_ACTION_ACTIVE_ICON_COLOR = "#9a6b00";
+// 퀵 액션 아이콘 타일의 공통 톤이에요. 아바타/문항 일러스트에서 쓰는 세이지그린
+// 계열(#9CAF9A)로 통일해서, 차분하고 정갈한 느낌을 줘요. 준비중(비활성) 타일은
+// 기존과 같이 중립 회색 톤을 유지해서 "아직 쓸 수 없다"는 신호를 그대로 남겨요.
+const QUICK_ACTION_ACTIVE_BG = "#E7EFE6";
+const QUICK_ACTION_ACTIVE_ICON_COLOR = "#4A6350";
 const QUICK_ACTION_DISABLED_BG = "#f2f4f6";
 const QUICK_ACTION_DISABLED_ICON_COLOR = "#b0b8c1";
 
@@ -226,21 +228,24 @@ function QuickActionButton({
       <span style={{ position: "relative", display: "inline-flex" }}>
         <span
           style={{
-            width: "52px",
-            height: "52px",
-            borderRadius: "16px",
+            width: "56px",
+            height: "56px",
+            borderRadius: "18px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             backgroundColor: comingSoon
               ? QUICK_ACTION_DISABLED_BG
               : QUICK_ACTION_ACTIVE_BG,
+            boxShadow: comingSoon
+              ? "none"
+              : "0 3px 8px rgba(74, 99, 80, 0.16)",
           }}
         >
           {icon}
         </span>
         {comingSoon ? (
-          <span style={{ position: "absolute", top: "-8px", right: "-16px" }}>
+          <span style={{ position: "absolute", top: "-6px", right: "-8px" }}>
             <Badge size="xsmall" color="elephant" variant="weak">
               준비중
             </Badge>
@@ -283,6 +288,7 @@ export default function HomeScreen({
 }) {
   const [recentPosts, setRecentPosts] = useState<ThreadPost[]>([]);
   const [isPostsLoaded, setIsPostsLoaded] = useState(false);
+  const [isFoodTestOpen, setIsFoodTestOpen] = useState(false);
   const { openToast } = useToast();
   const { open, close } = useBottomSheet();
 
@@ -356,27 +362,23 @@ export default function HomeScreen({
         }}
       >
         <QuickActionButton
-          icon={
-            <UtensilsCrossed size={24} color={QUICK_ACTION_ACTIVE_ICON_COLOR} />
-          }
+          icon={<RiceBowlIcon size={26} color={QUICK_ACTION_ACTIVE_ICON_COLOR} />}
           label="오늘의 식사"
           onClick={onWriteRestaurant}
         />
         <QuickActionButton
-          icon={
-            <MessageCircle size={24} color={QUICK_ACTION_ACTIVE_ICON_COLOR} />
-          }
-          label="오늘의 한 입 보기"
+          icon={<ChatHeartIcon size={26} color={QUICK_ACTION_ACTIVE_ICON_COLOR} />}
+          label="오늘의 한 입"
           onClick={onViewTodayMeal}
         />
         <QuickActionButton
-          icon={<MapPin size={24} color={QUICK_ACTION_DISABLED_ICON_COLOR} />}
+          icon={<FoldedMapPinIcon size={26} color={QUICK_ACTION_DISABLED_ICON_COLOR} />}
           label="지도"
           comingSoon
           onClick={handleComingSoon}
         />
         <QuickActionButton
-          icon={<Bookmark size={24} color={QUICK_ACTION_DISABLED_ICON_COLOR} />}
+          icon={<BookmarkRibbonIcon size={26} color={QUICK_ACTION_DISABLED_ICON_COLOR} />}
           label="스크랩"
           comingSoon
           onClick={handleComingSoon}
@@ -525,6 +527,32 @@ export default function HomeScreen({
       <Border />
 
       <div
+        onClick={() => setIsFoodTestOpen(true)}
+        style={{ cursor: "pointer" }}
+      >
+        <ListRow
+          withTouchEffect
+          withArrow
+          left={
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "36px",
+                height: "36px",
+                borderRadius: "12px",
+                backgroundColor: "#f2f4f6",
+              }}
+            >
+              <Sparkles size={18} color="#6b7684" />
+            </span>
+          }
+          contents={<ListRow.Texts type="1RowTypeA" top="먹보조사" />}
+        />
+      </div>
+
+      <div
         onClick={openCustomerSupportSheet}
         style={{ cursor: "pointer" }}
       >
@@ -549,6 +577,11 @@ export default function HomeScreen({
           contents={<ListRow.Texts type="1RowTypeA" top="고객센터" />}
         />
       </div>
+
+      <FoodTestModal
+        open={isFoodTestOpen}
+        onClose={() => setIsFoodTestOpen(false)}
+      />
     </div>
   );
 }

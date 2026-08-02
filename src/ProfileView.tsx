@@ -1,12 +1,19 @@
 import {
   Badge,
   Button,
+  ConfirmDialog,
   Modal,
   SegmentedControl,
   TextField,
 } from "@toss/tds-mobile";
 import { Info, UserRound, X } from "lucide-react";
-import { useRef, useState, type ChangeEvent, type CSSProperties } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type CSSProperties,
+} from "react";
 import {
   AVATAR_CATEGORIES,
   AVATAR_CATEGORY_LABELS,
@@ -20,6 +27,9 @@ import {
   type AvatarId,
   type AvatarStyle,
 } from "./lib/avatars";
+// TODO: 출시 전 제거 — 개발용 테스트 데이터 주입 버튼 관련 import예요.
+import { applyDevTestSeed } from "./lib/devTestSeed";
+import { loadFoodTestResult, type FoodTestResult } from "./lib/foodTest";
 import { resizeImageFile } from "./lib/imageResize";
 import { formatTierRange, getLevelInfo, LEVEL_TIERS } from "./lib/levels";
 import { saveProfile } from "./lib/profile";
@@ -152,6 +162,55 @@ function LevelBadgeRow({ restaurantCount }: { restaurantCount: number }) {
         {nextTier
           ? `· 다음 등급까지 ${remainingToNext}곳 남았어요`
           : "· 가장 높은 등급이에요"}
+      </span>
+    </div>
+  );
+}
+
+// 등급 배지 아래 놓는 "먹보조사" 결과 요약이에요. 완료했으면 결과 별명을,
+// 아직 안 했으면 유도 문구만 조용히 보여줘요(이 배지 자체는 눌러도 아무 일도
+// 일어나지 않아요 — 진입점은 홈 화면의 "먹보조사" 행이에요).
+function FoodTestResultRow() {
+  const [result, setResult] = useState<FoodTestResult | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    loadFoodTestResult().then((value) => {
+      if (isMounted) {
+        setResult(value);
+        setIsLoaded(true);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  if (!isLoaded) {
+    return null;
+  }
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "6px",
+        padding: "6px 14px",
+        borderRadius: "999px",
+        backgroundColor: result ? "#fff8e6" : "#f2f4f6",
+      }}
+    >
+      <span style={{ fontSize: "13px" }}>🍽️</span>
+      <span
+        style={{
+          fontSize: "13px",
+          fontWeight: 600,
+          color: result ? "#9a6b00" : "#8b95a1",
+        }}
+      >
+        {result ? result.title : "먹보조사 해보기"}
       </span>
     </div>
   );
@@ -347,6 +406,8 @@ export default function ProfileView({
   );
   const [isSaving, setIsSaving] = useState(false);
   const [isTierTableOpen, setIsTierTableOpen] = useState(false);
+  // TODO: 출시 전 제거 — 개발용 테스트 데이터 주입 확인 다이얼로그 상태예요.
+  const [isSeedConfirmOpen, setIsSeedConfirmOpen] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   const canSave =
@@ -415,6 +476,7 @@ export default function ProfileView({
         >
           <ProfileAvatarPreview profileImage={draftImage} size={96} />
           <LevelBadgeRow restaurantCount={restaurantCount} />
+          <FoodTestResultRow />
 
           <div
             style={{
@@ -595,6 +657,29 @@ export default function ProfileView({
           />
         </div>
 
+        {/* TODO: 출시 전 제거 — 개발용 테스트 데이터 주입 버튼이에요. "맛있는
+            하루"/"다가올 한 입" 탭에 확인용 더미 데이터를 한 번에 채워 넣어요. */}
+        <div
+          style={{
+            padding: "12px",
+            borderRadius: "12px",
+            border: "1px dashed #d1d6db",
+            backgroundColor: "#fafbfc",
+          }}
+        >
+          <div style={{ fontSize: "12px", color: "#8b95a1", marginBottom: "8px" }}>
+            🛠 개발용 (출시 전 제거 예정)
+          </div>
+          <Button
+            display="block"
+            variant="weak"
+            color="dark"
+            onClick={() => setIsSeedConfirmOpen(true)}
+          >
+            테스트 데이터 넣기
+          </Button>
+        </div>
+
         <div style={{ display: "flex", gap: "8px" }}>
           <Button
             style={{ flex: 1 }}
@@ -619,6 +704,28 @@ export default function ProfileView({
         open={isTierTableOpen}
         onClose={() => setIsTierTableOpen(false)}
         restaurantCount={restaurantCount}
+      />
+
+      {/* TODO: 출시 전 제거 — 개발용 테스트 데이터 주입 확인 다이얼로그예요. */}
+      <ConfirmDialog
+        open={isSeedConfirmOpen}
+        title={<ConfirmDialog.Title>테스트 데이터 넣기</ConfirmDialog.Title>}
+        description={
+          <ConfirmDialog.Description>
+            기존 데이터를 덮어씁니다. 계속할까요?
+          </ConfirmDialog.Description>
+        }
+        cancelButton={
+          <ConfirmDialog.CancelButton onClick={() => setIsSeedConfirmOpen(false)}>
+            취소
+          </ConfirmDialog.CancelButton>
+        }
+        confirmButton={
+          <ConfirmDialog.ConfirmButton onClick={applyDevTestSeed}>
+            계속하기
+          </ConfirmDialog.ConfirmButton>
+        }
+        onClose={() => setIsSeedConfirmOpen(false)}
       />
     </>
   );
