@@ -33,6 +33,7 @@ import {
 } from "./lib/notifications";
 import { fetchLikedPostIds, toggleLike } from "./lib/postLikes";
 import { fetchProfile } from "./lib/profile";
+import { SheetHeader } from "./lib/SheetHeader";
 import {
   createComment,
   createTodayMealPost,
@@ -208,14 +209,11 @@ function PostForm({
         ref={photoInputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         style={{ display: "none" }}
         onChange={handlePhotoChange}
       />
       {photo ? (
-        <div
-          style={{ display: "flex", justifyContent: "center", gap: "12px" }}
-        >
+        <div style={{ display: "flex", justifyContent: "center", gap: "12px" }}>
           <Asset.Image
             src={photo}
             alt="첨부한 사진"
@@ -610,7 +608,9 @@ function CommentsSheetContent({
             }
           >
             <SegmentedControl.Item value="latest">최신순</SegmentedControl.Item>
-            <SegmentedControl.Item value="popular">인기순</SegmentedControl.Item>
+            <SegmentedControl.Item value="popular">
+              인기순
+            </SegmentedControl.Item>
           </SegmentedControl>
         ) : (
           <div />
@@ -767,9 +767,9 @@ function TodayMealBoard({
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [currentUserHash, setCurrentUserHash] = useState<string | null>(null);
-  const [currentUserNickname, setCurrentUserNickname] = useState<
-    string | null
-  >(null);
+  const [currentUserNickname, setCurrentUserNickname] = useState<string | null>(
+    null,
+  );
   const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set());
   // null이면 "전체"예요.
   const [filterProvince, setFilterProvince] = useState<string | null>(null);
@@ -854,7 +854,7 @@ function TodayMealBoard({
 
   const openWriteSheet = () => {
     open({
-      header: "오늘 뭐 드셨나요?",
+      header: <SheetHeader title="오늘 뭐 드셨나요?" onClose={close} />,
       children: (
         <PostForm
           onCancel={close}
@@ -894,7 +894,7 @@ function TodayMealBoard({
 
   const openNeighborhoodFilterSheet = () => {
     open({
-      header: "동네 선택",
+      header: <SheetHeader title="동네 선택" onClose={close} />,
       children: (
         <RegionFilterSheetContent
           regionOptions={regionFilterOptions}
@@ -937,7 +937,7 @@ function TodayMealBoard({
 
   const openCommentsSheet = (post: ThreadPost) => {
     open({
-      header: "댓글",
+      header: <SheetHeader title="댓글" onClose={close} />,
       children: (
         <CommentsSheetContent
           postId={post.id}
@@ -958,7 +958,9 @@ function TodayMealBoard({
   // 바꿔치기만 해요(댓글 시트 안에서 눌러도 자연스럽게 그 화면으로 넘어가요).
   const openAuthorPostsSheet = (authorId: string, authorNickname: string) => {
     open({
-      header: `${authorNickname}님의 글`,
+      header: (
+        <SheetHeader title={`${authorNickname}님의 글`} onClose={close} />
+      ),
       children: (
         <AuthorPostsSheetContent
           authorId={authorId}

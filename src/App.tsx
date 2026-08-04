@@ -29,6 +29,7 @@ import "./App.css";
 import { BrandMarkIcon } from "./BrandMarkIcon";
 import CalendarView, { type PlannedVisitFormValues } from "./CalendarView";
 import HomeScreen from "./HomeScreen";
+import { resizeImageFile } from "./lib/imageResize";
 import {
   buildRegionFilterOptions,
   formatRegionLabel,
@@ -41,8 +42,12 @@ import {
   type PlannedVisit,
 } from "./lib/plannedVisitStorage";
 import { fetchProfile, saveProfile } from "./lib/profile";
+import { SheetHeader } from "./lib/SheetHeader";
 import { getUserIdentityHash } from "./lib/userIdentity";
-import { NotificationBellButton, NotificationsSheetContent } from "./NotificationsView";
+import {
+  NotificationBellButton,
+  NotificationsSheetContent,
+} from "./NotificationsView";
 import ProfileView, { ProfileIconButton } from "./ProfileView";
 import { RegionFilterSheetContent, RegionPicker } from "./RegionPicker";
 import RestaurantDetailView from "./RestaurantDetailView";
@@ -245,8 +250,10 @@ function RestaurantForm({
     initialValues?.visitDate ?? todayDateInputValue(),
   );
   const [receiptImage, setReceiptImage] = useState(initialValues?.receiptImage);
+  const [isReceiptProcessing, setIsReceiptProcessing] = useState(false);
   const receiptInputRef = useRef<HTMLInputElement>(null);
   const [photos, setPhotos] = useState<string[]>(initialValues?.photos ?? []);
+  const [isPhotoProcessing, setIsPhotoProcessing] = useState(false);
   const photosInputRef = useRef<HTMLInputElement>(null);
   const [isReservation, setIsReservation] = useState(
     initialValues?.isReservation ?? false,
@@ -287,18 +294,11 @@ function RestaurantForm({
     setWeather((prev) => (prev ? `${emoji} ${prev}` : emoji));
   };
 
-  const handleReceiptChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) {
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => setReceiptImage(reader.result as string);
-    reader.readAsDataURL(file);
-  };
-
-  const handlePhotosChange = (event: ChangeEvent<HTMLInputElement>) => {
+  // 원본 사진을 그대로 base64로 저장하면(특히 카메라 원본은 수 MB) 기기 Storage
+  // 용량을 넘겨 saveRestaurants가 조용히 실패해서, 사진을 첨부해도 기록 자체가
+  // 저장되지 않는 문제가 있었어요. ProfileView/TodayMealBoard와 동일하게
+  // resizeImageFile로 줄여서 저장해요.
+  const handleReceiptChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     // 같은 파일을 연달아 선택해도 매번 onChange가 발생하도록 값을 비워둬요.
     event.target.value = "";
@@ -306,14 +306,36 @@ function RestaurantForm({
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
+    setIsReceiptProcessing(true);
+    try {
+      const resized = await resizeImageFile(file);
+      setReceiptImage(resized);
+    } catch (error) {
+      console.error("영수증 사진을 처리하지 못했어요.", error);
+    } finally {
+      setIsReceiptProcessing(false);
+    }
+  };
+
+  const handlePhotosChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    // 같은 파일을 연달아 선택해도 매번 onChange가 발생하도록 값을 비워둬요.
+    event.target.value = "";
+    if (!file) {
+      return;
+    }
+
+    setIsPhotoProcessing(true);
+    try {
+      const resized = await resizeImageFile(file);
       setPhotos((prev) =>
-        prev.length >= MAX_PHOTOS ? prev : [...prev, dataUrl],
+        prev.length >= MAX_PHOTOS ? prev : [...prev, resized],
       );
-    };
-    reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("사진을 처리하지 못했어요.", error);
+    } finally {
+      setIsPhotoProcessing(false);
+    }
   };
 
   const removePhoto = (index: number) => {
@@ -504,7 +526,6 @@ function RestaurantForm({
             ref={receiptInputRef}
             type="file"
             accept="image/*"
-            capture="environment"
             style={{ display: "none" }}
             onChange={handleReceiptChange}
           />
@@ -527,9 +548,10 @@ function RestaurantForm({
                 size="small"
                 variant="weak"
                 color="dark"
+                disabled={isReceiptProcessing}
                 onClick={() => receiptInputRef.current?.click()}
               >
-                다시 선택
+                {isReceiptProcessing ? "처리 중..." : "다시 선택"}
               </Button>
               <Button
                 size="small"
@@ -545,9 +567,10 @@ function RestaurantForm({
               <Button
                 variant="weak"
                 color="dark"
+                disabled={isReceiptProcessing}
                 onClick={() => receiptInputRef.current?.click()}
               >
-                📷 영수증 사진 첨부
+                {isReceiptProcessing ? "처리 중..." : "📷 영수증 사진 첨부"}
               </Button>
             </div>
           )}
@@ -575,7 +598,6 @@ function RestaurantForm({
             ref={photosInputRef}
             type="file"
             accept="image/*"
-            capture="environment"
             style={{ display: "none" }}
             onChange={handlePhotosChange}
           />
@@ -637,9 +659,10 @@ function RestaurantForm({
               <Button
                 variant="weak"
                 color="dark"
+                disabled={isPhotoProcessing}
                 onClick={() => photosInputRef.current?.click()}
               >
-                📷 음식/가게 사진 추가
+                {isPhotoProcessing ? "처리 중..." : "📷 음식/가게 사진 추가"}
               </Button>
             </div>
           )}
@@ -695,12 +718,7 @@ function RestaurantForm({
               }}
               style={{ flex: 1 }}
             />
-            <Button
-              size="large"
-              variant="weak"
-              color="dark"
-              onClick={addMenu}
-            >
+            <Button size="large" variant="weak" color="dark" onClick={addMenu}>
               추가
             </Button>
           </div>
@@ -931,7 +949,12 @@ function NicknameForm({ onSubmit }: { onSubmit: (nickname: string) => void }) {
   );
 }
 
-const MAIN_TABS = ["홈", "맛있는 하루", "오늘의 한 입", "다가올 한 입"] as const;
+const MAIN_TABS = [
+  "홈",
+  "맛있는 하루",
+  "오늘의 한 입",
+  "다가올 한 입",
+] as const;
 const HOME_TAB_INDEX = 0;
 const RESTAURANT_TAB_INDEX = 1;
 const TODAY_MEAL_TAB_INDEX = 2;
@@ -952,13 +975,13 @@ function hasSeenSplashThisSession(): boolean {
 }
 
 function App() {
-  const [showSplash, setShowSplash] = useState(() => !hasSeenSplashThisSession());
+  const [showSplash, setShowSplash] = useState(
+    () => !hasSeenSplashThisSession(),
+  );
   const [selectedTab, setSelectedTab] = useState(HOME_TAB_INDEX);
   const [nickname, setNickname] = useState<string | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [homeNeighborhood, setHomeNeighborhood] = useState<string | null>(
-    null,
-  );
+  const [homeNeighborhood, setHomeNeighborhood] = useState<string | null>(null);
   const [userHash, setUserHash] = useState<string | null>(null);
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -996,12 +1019,19 @@ function App() {
         restaurant.category === selectedCategory;
       const matchesNeighborhood =
         !filterProvince ||
-        matchesRegion(restaurant.neighborhood, filterProvince, filterDistrict ?? "");
+        matchesRegion(
+          restaurant.neighborhood,
+          filterProvince,
+          filterDistrict ?? "",
+        );
       const matchesQuery =
         query.length === 0 || restaurant.name.toLowerCase().includes(query);
       const matchesSpecialDay = !specialDayOnly || restaurant.isSpecialDay;
       return (
-        matchesCategory && matchesNeighborhood && matchesQuery && matchesSpecialDay
+        matchesCategory &&
+        matchesNeighborhood &&
+        matchesQuery &&
+        matchesSpecialDay
       );
     });
 
@@ -1130,7 +1160,7 @@ function App() {
 
   const openNicknameSheet = (userHash: string) => {
     open({
-      header: "닉네임을 알려주세요",
+      header: <SheetHeader title="닉네임을 알려주세요" onClose={close} />,
       children: (
         <NicknameForm
           onSubmit={async (nickname) => {
@@ -1145,7 +1175,7 @@ function App() {
 
   const openNotificationsSheet = () => {
     open({
-      header: "알림",
+      header: <SheetHeader title="알림" onClose={close} />,
       children: (
         <NotificationsSheetContent
           userHash={userHash}
@@ -1158,7 +1188,7 @@ function App() {
 
   const openProfileSheet = () => {
     open({
-      header: "내 프로필",
+      header: <SheetHeader title="내 프로필" onClose={close} />,
       children: (
         <ProfileView
           userHash={userHash}
@@ -1194,7 +1224,7 @@ function App() {
 
   const openAddSheet = () => {
     open({
-      header: "오늘의 식사",
+      header: <SheetHeader title="오늘의 식사" onClose={close} />,
       children: (
         <RestaurantForm
           submitLabel="기록하기"
@@ -1237,7 +1267,7 @@ function App() {
   // 결과를 바로 볼 수 있도록 탭도 함께 옮겨요.
   const openAddSheetFromPlannedVisit = (visit: PlannedVisit) => {
     open({
-      header: "오늘의 식사",
+      header: <SheetHeader title="오늘의 식사" onClose={close} />,
       children: (
         <RestaurantForm
           submitLabel="기록하기"
@@ -1278,7 +1308,7 @@ function App() {
 
   const openCategoryFilterSheet = () => {
     open({
-      header: "음식 종류 선택",
+      header: <SheetHeader title="음식 종류 선택" onClose={close} />,
       children: (
         <>
           <div
@@ -1310,9 +1340,7 @@ function App() {
                       <ListRow.Texts
                         type="1RowTypeA"
                         top={
-                          <span
-                            style={{ fontWeight: isSelected ? 700 : 400 }}
-                          >
+                          <span style={{ fontWeight: isSelected ? 700 : 400 }}>
                             {category}
                           </span>
                         }
@@ -1331,7 +1359,7 @@ function App() {
 
   const openSortSheet = () => {
     open({
-      header: "정렬 기준 선택",
+      header: <SheetHeader title="정렬 기준 선택" onClose={close} />,
       children: (
         <>
           <div
@@ -1363,9 +1391,7 @@ function App() {
                       <ListRow.Texts
                         type="1RowTypeA"
                         top={
-                          <span
-                            style={{ fontWeight: isSelected ? 700 : 400 }}
-                          >
+                          <span style={{ fontWeight: isSelected ? 700 : 400 }}>
                             {option.label}
                           </span>
                         }
@@ -1384,7 +1410,7 @@ function App() {
 
   const openNeighborhoodFilterSheet = () => {
     open({
-      header: "동네 선택",
+      header: <SheetHeader title="동네 선택" onClose={close} />,
       children: (
         <RegionFilterSheetContent
           regionOptions={regionFilterOptions}
@@ -1403,7 +1429,7 @@ function App() {
 
   const openEditSheet = (restaurant: Restaurant) => {
     open({
-      header: "맛집 수정하기",
+      header: <SheetHeader title="맛집 수정하기" onClose={close} />,
       children: (
         <RestaurantForm
           initialValues={{
@@ -1467,7 +1493,7 @@ function App() {
 
   const openSearchSheet = () => {
     open({
-      header: "검색",
+      header: <SheetHeader title="검색" onClose={close} />,
       children: (
         <RestaurantSearchSheetContent
           restaurants={restaurants}
@@ -1499,9 +1525,7 @@ function App() {
       >
         <Top
           title={
-            <div
-              style={{ display: "flex", alignItems: "center", gap: "6px" }}
-            >
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <BrandMarkIcon size={22} />
               <Top.TitleParagraph size={22}>이게맛다</Top.TitleParagraph>
             </div>
@@ -1534,7 +1558,7 @@ function App() {
         />
       </div>
 
-      <div className="kioku-main-tabs" style={{ padding: "0 16px 16px" }}>
+      <div className="kioku-main-tabs" style={{ padding: "0 8px 16px" }}>
         <Tab size="small" onChange={(index) => setSelectedTab(index)}>
           {MAIN_TABS.map((label, index) => (
             <Tab.Item key={label} selected={selectedTab === index}>
@@ -1651,7 +1675,9 @@ function App() {
           {!isLoaded ? null : restaurants.length === 0 ? (
             <Result
               title="아직 기록된 맛집이 없어요"
-              description={"다녀온 맛집을 기록하면\n여기에 모아서 볼 수 있어요."}
+              description={
+                "다녀온 맛집을 기록하면\n여기에 모아서 볼 수 있어요."
+              }
             />
           ) : visibleRestaurants.length === 0 ? (
             <Result
@@ -1701,7 +1727,11 @@ function App() {
                               </Badge>
                             )}
                             {restaurant.isSpecialDay && (
-                              <Badge size="xsmall" variant="weak" color="yellow">
+                              <Badge
+                                size="xsmall"
+                                variant="weak"
+                                color="yellow"
+                              >
                                 ⭐ 특별한 날
                               </Badge>
                             )}

@@ -15,15 +15,30 @@ function IconBg() {
 }
 
 // ── 여정스타일 ───────────────────────────────────────────────
-function IconSignboard() {
+// 정해둔 목적지 없이 발길 닿는 대로 갈라지는 길 - IconMapPin(저장된 핀)과
+// 대비되는, 목적지가 없는 방랑을 표현해요.
+function IconWander() {
   return (
     <g>
       <IconBg />
-      <line x1="50" y1="24" x2="50" y2="76" stroke={INK} strokeWidth="3" strokeLinecap="round" />
-      <g transform="rotate(-8 62 44)">
-        <rect x="40" y="30" width="44" height="28" rx="4" fill={SAGE} stroke={INK} strokeWidth="2.5" />
-        <path d="M 50 40 Q 56 44 50 48 M 62 40 Q 68 44 62 48" fill="none" stroke={INK} strokeWidth="2.2" strokeLinecap="round" />
-      </g>
+      <path
+        d="M 50 78 Q 50 60 38 52 Q 27 45 29 32"
+        fill="none"
+        stroke={SAGE}
+        strokeWidth="4"
+        strokeLinecap="round"
+      />
+      <path
+        d="M 50 78 Q 50 60 63 52 Q 74 44 70 28"
+        fill="none"
+        stroke={SAGE}
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeDasharray="0.5 9"
+      />
+      <circle cx="50" cy="78" r="4" fill={INK} />
+      <circle cx="29" cy="30" r="3" fill={INK} opacity="0.55" />
+      <circle cx="70" cy="26" r="3" fill={INK} opacity="0.55" />
     </g>
   );
 }
@@ -68,23 +83,21 @@ function IconMarketStall() {
   );
 }
 
-function IconSpeechStar() {
+// 친구의 파격적인 스타일 - 선글라스 + 반짝임으로 대담한 패션을 표현해요.
+function IconBoldOutfit() {
   return (
     <g>
       <IconBg />
       <path
-        d="M 26 32 Q 26 26 32 26 L 68 26 Q 74 26 74 32 L 74 52 Q 74 58 68 58 L 44 58 L 34 68 L 36 58 L 32 58 Q 26 58 26 52 Z"
-        fill="#fff"
+        d="M 26 44 Q 26 38 32 38 L 42 38 Q 47 38 48 43 L 52 43 Q 53 38 58 38 L 68 38 Q 74 38 74 44"
+        fill="none"
         stroke={INK}
         strokeWidth="2.4"
+        strokeLinecap="round"
       />
-      <path
-        d="M 50 34 L 53 41 L 61 42 L 55 47 L 57 55 L 50 51 L 43 55 L 45 47 L 39 42 L 47 41 Z"
-        fill={SAGE}
-        stroke={INK}
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
+      <circle cx="37" cy="49" r="11" fill={SAGE} stroke={INK} strokeWidth="2.4" />
+      <circle cx="63" cy="49" r="11" fill={SAGE} stroke={INK} strokeWidth="2.4" />
+      <path d="M 70 25 L 72 31 L 78 33 L 72 35 L 70 41 L 68 35 L 62 33 L 68 31 Z" fill={SAGE_DARK} />
     </g>
   );
 }
@@ -547,11 +560,11 @@ function IconChefHat() {
 }
 
 export const QUESTION_ICONS: Record<string, () => ReactElement> = {
-  "journey-1": IconSignboard,
+  "journey-1": IconWander,
   "journey-2": IconMapPin,
   "journey-3": IconGameController,
   "journey-4": IconMarketStall,
-  "journey-5": IconSpeechStar,
+  "journey-5": IconBoldOutfit,
   "journey-6": IconGiftNew,
   "journey-7": IconMenuBook,
   "journey-8": IconTrail,
@@ -577,8 +590,8 @@ export const QUESTION_ICONS: Record<string, () => ReactElement> = {
   "dining-8": IconDoor,
   "dining-9": IconCakeCandle,
   "dining-10": IconStarburst,
-  "food-1": IconUtensils,
-  "food-2": IconBowlSteam,
+  "food-1": IconBowlSteam,
+  "food-2": IconUtensils,
   "food-3": IconStopwatch,
   "food-4": IconTwoPlates,
   "food-5": IconStressCloud,

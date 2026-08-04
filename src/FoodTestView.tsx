@@ -209,8 +209,7 @@ function IntroStep({
           나는 어떤 방식으로 먹고 즐기는 사람일까요?
           <br />
           여정 스타일과 음식 취향을 알아보는 40문항 테스트예요.
-          <br />
-          약 8~10분 정도 걸려요.
+          <br />약 8~10분 정도 걸려요.
         </div>
       </div>
       <label
@@ -324,11 +323,46 @@ function QuestionStep({
           gap: "18px",
         }}
       >
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "10px",
+          }}
+        >
           <QuestionIllustration questionId={question.id} size={64} />
-          <span style={{ fontSize: "12px", fontWeight: 700, color: "#9CAF9A", letterSpacing: "0.5px" }}>
-            Q{index + 1}
-          </span>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "4px",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "12px",
+                fontWeight: 700,
+                color: "#9CAF9A",
+                letterSpacing: "0.5px",
+              }}
+            >
+              Q{index + 1}
+            </span>
+            <span
+              style={{
+                fontSize: "12px",
+                fontWeight: 600,
+                color: "#6b8f71",
+                backgroundColor: "#EAF0EA",
+                borderRadius: "999px",
+                padding: "3px 10px",
+              }}
+            >
+              {question.situationLabel}
+            </span>
+          </div>
         </div>
         <div
           style={{
@@ -352,10 +386,15 @@ function QuestionStep({
                 data-food-test-option="true"
                 onClick={() => onAnswer(letter)}
                 style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "10px",
                   textAlign: "left",
                   padding: "16px",
                   borderRadius: "14px",
-                  border: isSelected ? "2px solid #9CAF9A" : "1px solid #e5e8eb",
+                  border: isSelected
+                    ? "2px solid #9CAF9A"
+                    : "1px solid #e5e8eb",
                   backgroundColor: isSelected ? "#EAF0EA" : "#f9fafb",
                   fontSize: "15px",
                   fontWeight: isSelected ? 700 : 400,
@@ -365,7 +404,16 @@ function QuestionStep({
                   WebkitTapHighlightColor: "transparent",
                 }}
               >
-                {text}
+                <span
+                  style={{
+                    flexShrink: 0,
+                    fontWeight: 700,
+                    color: isSelected ? "#6b8f71" : "#9CAF9A",
+                  }}
+                >
+                  {letter}.
+                </span>
+                <span>{text}</span>
               </button>
             );
           })}
@@ -385,71 +433,95 @@ function ResultStep({
   onDone: () => void;
 }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100%",
-        justifyContent: "center",
-        alignItems: "center",
-        textAlign: "center",
-        gap: "16px",
-      }}
-    >
-      <div style={{ fontSize: "13px", fontWeight: 600, color: "#9a6b00" }}>
-        먹보조사 결과
-      </div>
-      <div style={{ position: "relative", width: "96px", height: "96px" }}>
-        <AvatarIcon
-          category="food"
-          style={FOOD_CATEGORY_AVATAR_STYLE[result.foodCategory]}
-          size={96}
-        />
-        <div
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <button
+          type="button"
+          onClick={onDone}
+          aria-label="닫기"
           style={{
-            position: "absolute",
-            bottom: -4,
-            right: -6,
-            borderRadius: "50%",
-            border: "3px solid #ffffff",
-            boxShadow: "0 2px 6px rgba(0, 0, 0, 0.18)",
-            lineHeight: 0,
+            background: "none",
+            border: "none",
+            padding: "4px",
+            cursor: "pointer",
           }}
         >
-          <PersonalityIcon code={result.personalityCode} size={38} />
-        </div>
-      </div>
-      <div style={{ fontSize: "24px", fontWeight: 800, color: "#191f28" }}>
-        {result.title}
+          <X size={22} color="#8b95a1" />
+        </button>
       </div>
       <div
         style={{
-          fontSize: "15px",
-          color: "#4e5968",
-          lineHeight: 1.6,
-          padding: "0 8px",
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          textAlign: "center",
+          gap: "16px",
         }}
       >
-        {result.description}
-      </div>
-      <div style={{ display: "flex", gap: "8px", width: "100%", marginTop: "16px" }}>
-        <Button
-          display="block"
-          variant="weak"
-          color="dark"
-          onClick={onRetry}
-          style={{ flex: 1 }}
+        <div style={{ fontSize: "13px", fontWeight: 600, color: "#9a6b00" }}>
+          먹보조사 결과
+        </div>
+        <div style={{ position: "relative", width: "96px", height: "96px" }}>
+          <AvatarIcon
+            category="food"
+            style={FOOD_CATEGORY_AVATAR_STYLE[result.foodCategory]}
+            size={96}
+          />
+          <div
+            style={{
+              position: "absolute",
+              bottom: -4,
+              right: -6,
+              borderRadius: "50%",
+              border: "3px solid #ffffff",
+              boxShadow: "0 2px 6px rgba(0, 0, 0, 0.18)",
+              lineHeight: 0,
+            }}
+          >
+            <PersonalityIcon code={result.personalityCode} size={38} />
+          </div>
+        </div>
+        <div style={{ fontSize: "24px", fontWeight: 800, color: "#191f28" }}>
+          {result.title}
+        </div>
+        <div
+          style={{
+            fontSize: "15px",
+            color: "#4e5968",
+            lineHeight: 1.6,
+            padding: "0 8px",
+          }}
         >
-          다시 하기
-        </Button>
-        <Button
-          display="block"
-          variant="fill"
-          onClick={onDone}
-          style={{ flex: 1, ...PRIMARY_FILL_BUTTON_TEXT_STYLE }}
+          {result.description}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            gap: "8px",
+            width: "100%",
+            marginTop: "16px",
+          }}
         >
-          프로필로 돌아가기
-        </Button>
+          <Button
+            display="block"
+            variant="weak"
+            color="dark"
+            onClick={onRetry}
+            style={{ flex: 1 }}
+          >
+            다시 하기
+          </Button>
+          <Button
+            display="block"
+            variant="fill"
+            onClick={onDone}
+            style={{ flex: 1, ...PRIMARY_FILL_BUTTON_TEXT_STYLE }}
+          >
+            프로필로 돌아가기
+          </Button>
+        </div>
       </div>
     </div>
   );

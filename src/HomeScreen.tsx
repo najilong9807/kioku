@@ -7,7 +7,12 @@ import {
   useBottomSheet,
   useToast,
 } from "@toss/tds-mobile";
-import { CalendarDays, Headphones, Sparkles, UtensilsCrossed } from "lucide-react";
+import {
+  CalendarDays,
+  Headphones,
+  Sparkles,
+  UtensilsCrossed,
+} from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import CustomerSupportView from "./CustomerSupportView";
 import FoodTestModal from "./FoodTestView";
@@ -23,6 +28,7 @@ import {
   FoldedMapPinIcon,
   RiceBowlIcon,
 } from "./lib/quickActionIcons";
+import { SheetHeader } from "./lib/SheetHeader";
 import { fetchTodayMealPosts, type ThreadPost } from "./lib/threadPosts";
 import type { Restaurant } from "./restaurantStorage";
 
@@ -237,9 +243,7 @@ function QuickActionButton({
             backgroundColor: comingSoon
               ? QUICK_ACTION_DISABLED_BG
               : QUICK_ACTION_ACTIVE_BG,
-            boxShadow: comingSoon
-              ? "none"
-              : "0 3px 8px rgba(74, 99, 80, 0.16)",
+            boxShadow: comingSoon ? "none" : "0 3px 8px rgba(74, 99, 80, 0.16)",
           }}
         >
           {icon}
@@ -327,7 +331,7 @@ export default function HomeScreen({
 
   const openCustomerSupportSheet = () => {
     open({
-      header: "고객센터",
+      header: <SheetHeader title="고객센터" onClose={close} />,
       children: <CustomerSupportView onClose={close} />,
     });
   };
@@ -335,9 +339,7 @@ export default function HomeScreen({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       <div style={{ padding: "0 24px" }}>
-        <div
-          style={{ fontSize: "20px", fontWeight: 700, color: "#191f28" }}
-        >
+        <div style={{ fontSize: "20px", fontWeight: 700, color: "#191f28" }}>
           안녕하세요, {nickname ?? "회원"}님
         </div>
         <div style={{ marginTop: "4px", fontSize: "14px", color: "#8b95a1" }}>
@@ -362,23 +364,37 @@ export default function HomeScreen({
         }}
       >
         <QuickActionButton
-          icon={<RiceBowlIcon size={26} color={QUICK_ACTION_ACTIVE_ICON_COLOR} />}
+          icon={
+            <RiceBowlIcon size={26} color={QUICK_ACTION_ACTIVE_ICON_COLOR} />
+          }
           label="오늘의 식사"
           onClick={onWriteRestaurant}
         />
         <QuickActionButton
-          icon={<ChatHeartIcon size={26} color={QUICK_ACTION_ACTIVE_ICON_COLOR} />}
+          icon={
+            <ChatHeartIcon size={26} color={QUICK_ACTION_ACTIVE_ICON_COLOR} />
+          }
           label="오늘의 한 입"
           onClick={onViewTodayMeal}
         />
         <QuickActionButton
-          icon={<FoldedMapPinIcon size={26} color={QUICK_ACTION_DISABLED_ICON_COLOR} />}
+          icon={
+            <FoldedMapPinIcon
+              size={26}
+              color={QUICK_ACTION_DISABLED_ICON_COLOR}
+            />
+          }
           label="지도"
           comingSoon
           onClick={handleComingSoon}
         />
         <QuickActionButton
-          icon={<BookmarkRibbonIcon size={26} color={QUICK_ACTION_DISABLED_ICON_COLOR} />}
+          icon={
+            <BookmarkRibbonIcon
+              size={26}
+              color={QUICK_ACTION_DISABLED_ICON_COLOR}
+            />
+          }
           label="스크랩"
           comingSoon
           onClick={handleComingSoon}
@@ -552,10 +568,7 @@ export default function HomeScreen({
         />
       </div>
 
-      <div
-        onClick={openCustomerSupportSheet}
-        style={{ cursor: "pointer" }}
-      >
+      <div onClick={openCustomerSupportSheet} style={{ cursor: "pointer" }}>
         <ListRow
           withTouchEffect
           withArrow

@@ -1,4 +1,12 @@
-import { Badge, Button, Result, TextArea, TextField, useBottomSheet, useDialog } from "@toss/tds-mobile";
+import {
+  Badge,
+  Button,
+  Result,
+  TextArea,
+  TextField,
+  useBottomSheet,
+  useDialog,
+} from "@toss/tds-mobile";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { useMemo, useState, type CSSProperties } from "react";
 import {
@@ -7,7 +15,12 @@ import {
   sortPlannedVisitsByDate,
   type PlannedVisit,
 } from "./lib/plannedVisitStorage";
-import { formatDisplayDate, toDateInputValue, todayDateInputValue } from "./restaurantStorage";
+import {
+  formatDisplayDate,
+  toDateInputValue,
+  todayDateInputValue,
+} from "./restaurantStorage";
+import { SheetHeader } from "./lib/SheetHeader";
 
 const WEEKDAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -295,7 +308,7 @@ export default function CalendarView({
 
   const openAddSheet = (defaultDate?: string) => {
     open({
-      header: "방문 예정 등록",
+      header: <SheetHeader title="방문 예정 등록" onClose={close} />,
       children: (
         <PlannedVisitForm
           submitLabel="등록"
@@ -316,7 +329,7 @@ export default function CalendarView({
 
   const openEditSheet = (visit: PlannedVisit) => {
     open({
-      header: "방문 예정 수정",
+      header: <SheetHeader title="방문 예정 수정" onClose={close} />,
       children: (
         <PlannedVisitForm
           submitLabel="저장"
