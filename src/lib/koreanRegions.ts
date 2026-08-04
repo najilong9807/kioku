@@ -114,6 +114,20 @@ export function matchesRegion(
   );
 }
 
+// neighborhood 문자열이 속한 시/도 하나를 찾아요. (지도 화면에서 시/도별 기록
+// 개수를 집계할 때 써요.) 시/도 짧은 이름들은 서로 부분 문자열로 겹치지 않도록
+// 설계되어 있어서(예: "경상북" vs "경상남") 두 개 이상 매칭될 걱정은 없어요.
+// 매칭되는 시/도가 없으면(예: 시/도 정보를 알 수 없는 아주 오래된 자유 텍스트
+// 동네) null을 반환해요.
+export function findProvinceForNeighborhood(
+  neighborhood: string | null | undefined,
+): string | null {
+  if (!neighborhood) {
+    return null;
+  }
+  return PROVINCES.find((province) => matchesRegion(neighborhood, province, "")) ?? null;
+}
+
 // 실제로 존재하는 동네 문자열들(neighborhoods) 중에 매칭되는 시/도-시/군/구만
 // 골라서 필터 옵션으로 써요. 시/군/구가 없는 시/도(세종특별자치시)는 빈 배열로 들어가요.
 // 반환되는 Map은 PROVINCES/DISTRICTS_BY_PROVINCE 순서를 그대로 따라요.

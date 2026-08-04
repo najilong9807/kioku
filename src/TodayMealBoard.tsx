@@ -10,7 +10,7 @@ import {
   useBottomSheet,
   useDialog,
 } from "@toss/tds-mobile";
-import { Heart, Search } from "lucide-react";
+import { Bookmark, Heart, Search } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -32,6 +32,7 @@ import {
   fetchUserHashByProfileId,
 } from "./lib/notifications";
 import { fetchLikedPostIds, toggleLike } from "./lib/postLikes";
+import { fetchScrapedPostIds, toggleScrap } from "./lib/postScraps";
 import { fetchProfile } from "./lib/profile";
 import { SheetHeader } from "./lib/SheetHeader";
 import {
@@ -771,6 +772,7 @@ function TodayMealBoard({
     null,
   );
   const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set());
+  const [scrapedPostIds, setScrapedPostIds] = useState<Set<string>>(new Set());
   // null이면 "전체"예요.
   const [filterProvince, setFilterProvince] = useState<string | null>(null);
   const [filterDistrict, setFilterDistrict] = useState<string | null>(null);
@@ -844,6 +846,30 @@ function TodayMealBoard({
     ).then((liked) => {
       if (isMounted) {
         setLikedPostIds(liked);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [posts, currentUserHash]);
+
+  // 좋아요와 동일한 방식으로, 내가 스크랩한 글 id 집합을 다시 계산해요. 북마크
+  // 아이콘을 채워서 보여줄지 판단하는 데 써요.
+  useEffect(() => {
+    if (!currentUserHash || posts.length === 0) {
+      setScrapedPostIds(new Set());
+      return;
+    }
+
+    let isMounted = true;
+
+    fetchScrapedPostIds(
+      posts.map((post) => post.id),
+      currentUserHash,
+    ).then((scraped) => {
+      if (isMounted) {
+        setScrapedPostIds(scraped);
       }
     });
 
@@ -1020,6 +1046,40 @@ function TodayMealBoard({
         );
       }
     }
+  };
+
+  // 좋아요와 달리 스크랩은 상대방에게 알리지 않아요(나만 보는 북마크 목록이라
+  // 굳이 알림까지 남길 필요는 없다고 판단했어요). likeCount 같은 표시용 카운트도
+  // 화면에 없어서, posts 배열을 따로 갱신할 필요 없이 scrapedPostIds만 바꿔요.
+  const handleToggleScrap = async (post: ThreadPost) => {
+    if (!currentUserHash) {
+      await openAlert({
+        title: "닉네임 설정이 필요해요",
+        description: "닉네임을 먼저 설정한 뒤에 스크랩할 수 있어요.",
+        alertButton: "확인",
+      });
+      return;
+    }
+
+    const result = await toggleScrap(post.id, currentUserHash);
+    if (result === null) {
+      await openAlert({
+        title: "요청에 실패했어요",
+        description: "잠시 후 다시 시도해 주세요.",
+        alertButton: "확인",
+      });
+      return;
+    }
+
+    setScrapedPostIds((prev) => {
+      const next = new Set(prev);
+      if (result) {
+        next.add(post.id);
+      } else {
+        next.delete(post.id);
+      }
+      return next;
+    });
   };
 
   return (
@@ -1213,6 +1273,34 @@ function TodayMealBoard({
                         fill={likedPostIds.has(post.id) ? "#f04452" : "none"}
                       />
                       {post.likeCount > 0 ? post.likeCount : ""}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleScrap(post)}
+                      aria-label={
+                        scrapedPostIds.has(post.id) ? "스크랩 취소" : "스크랩"
+                      }
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        border: "none",
+                        background: "none",
+                        padding: "6px 10px",
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                        color: scrapedPostIds.has(post.id)
+                          ? "#4A6350"
+                          : "#6b7684",
+                        WebkitTapHighlightColor: "transparent",
+                      }}
+                    >
+                      <Bookmark
+                        size={16}
+                        color={
+                          scrapedPostIds.has(post.id) ? "#4A6350" : "#6b7684"
+                        }
+                        fill={scrapedPostIds.has(post.id) ? "#4A6350" : "none"}
+                      />
                     </button>
                     <Button
                       size="small"

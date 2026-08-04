@@ -2,45 +2,79 @@
 // 라인아트 아이콘이에요. lucide 기본 아이콘 대신, 아바타·문항 일러스트와 톤을
 // 맞춘 손그림 느낌의 SVG로 새로 그렸어요. lucide 아이콘과 같은 방식으로
 // size/color props를 받아서 기존 사용부(QuickActionButton)를 그대로 재사용해요.
+// color는 호출부(HomeScreen)에서 세이지그린 계열(#4A6350, #9CAF9A 톤)로 통일해서
+// 넘겨줘요.
 
 interface QuickActionIconProps {
   size?: number;
   color?: string;
 }
 
-// 오늘의 식사: 밥그릇 + 김이 피어오르는 모습 + 젓가락.
-export function RiceBowlIcon({ size = 24, color = "#191f28" }: QuickActionIconProps) {
+// 오늘의 식사: 밥그릇 + 김이 피어오르는 모습 + 젓가락. 그릇 입구를 얇은 타원으로
+// 따로 그려서 위에서 살짝 내려다보는 느낌을 주고, 김/젓가락이 서로 겹치지
+// 않도록 위치를 정리했어요.
+export function RiceBowlIcon({
+  size = 24,
+  color = "#191f28",
+}: QuickActionIconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 28 28" fill="none">
       <path
-        d="M5 13.5 Q5 22 14 22 Q23 22 23 13.5"
+        d="M4.5 13.7 Q4.5 22.3 14 22.3 Q23.5 22.3 23.5 13.7"
         stroke={color}
         strokeWidth="1.8"
         strokeLinecap="round"
       />
-      <path d="M4 13.5 L24 13.5" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
+      <ellipse
+        cx="14"
+        cy="13.7"
+        rx="9.5"
+        ry="1.9"
+        stroke={color}
+        strokeWidth="1.8"
+      />
       <path
-        d="M8.7 13 Q8.7 10.3 11.2 9.7"
+        d="M9.8 12.3 Q9.1 9.3 11.6 8"
         stroke={color}
         strokeWidth="1.3"
         strokeLinecap="round"
         opacity="0.55"
       />
       <path
-        d="M13.2 9.3 Q13.2 6.6 15.4 6"
+        d="M13.9 12 Q13.9 8.4 16.6 6.9"
         stroke={color}
         strokeWidth="1.3"
         strokeLinecap="round"
         opacity="0.55"
       />
-      <line x1="17.5" y1="4" x2="21.5" y2="15.5" stroke={color} strokeWidth="1.6" strokeLinecap="round" />
-      <line x1="20.3" y1="4" x2="23.3" y2="15" stroke={color} strokeWidth="1.6" strokeLinecap="round" />
+      <line
+        x1="18.6"
+        y1="4.3"
+        x2="22.3"
+        y2="15.3"
+        stroke={color}
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+      <line
+        x1="21.3"
+        y1="4.6"
+        x2="24.3"
+        y2="14.6"
+        stroke={color}
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
 
-// 오늘의 한 입 보기: 둥글고 부드러운 말풍선 + 안에 작은 하트(따뜻한 공감/나눔 느낌).
-export function ChatHeartIcon({ size = 24, color = "#191f28" }: QuickActionIconProps) {
+// 오늘의 한 입 보기: 둥글고 부드러운 말풍선 + 안에 작은 하트(따뜻한 공감/나눔
+// 느낌). 하트를 말풍선 정중앙에 맞추고 좌우 대칭을 다듬었어요.
+export function ChatHeartIcon({
+  size = 24,
+  color = "#191f28",
+}: QuickActionIconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 28 28" fill="none">
       <path
@@ -51,53 +85,67 @@ export function ChatHeartIcon({ size = 24, color = "#191f28" }: QuickActionIconP
         strokeLinecap="round"
       />
       <path
-        d="M14 13.6 Q10.2 11.2 10.2 9 Q10.2 7.3 11.9 7.3 Q13.1 7.3 14 8.8 Q14.9 7.3 16.1 7.3 Q17.8 7.3 17.8 9 Q17.8 11.2 14 13.6 Z"
+        d="M14 13.9 C10.5 11.5 10.5 9 12.5 9 C13.5 9 14 9.8 14 9.8 C14 9.8 14.5 9 15.5 9 C17.5 9 17.5 11.5 14 13.9 Z"
         fill={color}
-        opacity="0.85"
       />
     </svg>
   );
 }
 
-// 지도: 접힌 지도(접힘선) + 그 위에 놓인 위치 핀.
-export function FoldedMapPinIcon({ size = 24, color = "#191f28" }: QuickActionIconProps) {
+// 지도: 실제 지도 화면(시/도별 기록 클러스터)으로 이어지는 아이콘이에요. 국토
+// 실루엣을 옅게 깔고 그 위에 위치 핀을 또렷하게 올려서, "이 앱에서 기록한
+// 장소들을 지도로 본다"는 느낌을 바로 전달해요.
+export function FoldedMapPinIcon({
+  size = 24,
+  color = "#191f28",
+}: QuickActionIconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 28 28" fill="none">
       <path
-        d="M5 7.5 L11 5.3 L17 7.5 L23 5.3 L23 20.5 L17 22.7 L11 20.5 L5 22.7 Z"
+        d="M13 4.3 Q17 4.8 17.6 8.3 Q20.6 10.9 19.1 14.4 Q20.2 17.9 16.6 19.9 Q17.1 22.9 13.6 23.4 Q9.5 23.9 8 20.9 Q5 20.4 5.5 16.9 Q3.4 14.9 5 11.9 Q4.4 8.9 7.5 7.4 Q8.5 4.8 13 4.3 Z"
         stroke={color}
-        strokeWidth="1.5"
+        strokeWidth="1.4"
         strokeLinejoin="round"
-        strokeLinecap="round"
+        opacity="0.45"
       />
       <path
-        d="M11 5.3 L11 20.5 M17 7.5 L17 22.7"
-        stroke={color}
-        strokeWidth="1.1"
-        strokeDasharray="1.4 2.2"
-        opacity="0.55"
-      />
-      <path
-        d="M15 9.6 Q19.2 9.6 19.2 13.3 Q19.2 16.4 15 20.2 Q10.8 16.4 10.8 13.3 Q10.8 9.6 15 9.6 Z"
+        d="M17 8 Q21.3 8 21.3 12.3 Q21.3 15.6 17 20.4 Q12.7 15.6 12.7 12.3 Q12.7 8 17 8 Z"
         fill={color}
       />
-      <circle cx="15" cy="13.1" r="1.6" fill="#ffffff" />
+      <circle cx="17" cy="12.1" r="1.7" fill="#ffffff" />
     </svg>
   );
 }
 
-// 스크랩: 리본형 북마크 + 안쪽 포인트 선.
-export function BookmarkRibbonIcon({ size = 24, color = "#191f28" }: QuickActionIconProps) {
+// 스크랩: 리본형 북마크예요. 아래쪽 V자 노치를 좀 더 뾰족하게, 안쪽 텍스트
+// 줄(굵기 다른 두 줄)을 더해서 "저장해 둔 글" 느낌을 또렷하게 살렸어요.
+export function BookmarkRibbonIcon({
+  size = 24,
+  color = "#191f28",
+}: QuickActionIconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 28 28" fill="none">
       <path
-        d="M8 4.5 L20 4.5 L20 24 L14 18.8 L8 24 Z"
+        d="M8.5 4.5 Q7.5 4.5 7.5 5.6 L7.5 23.5 L14 18.2 L20.5 23.5 L20.5 5.6 Q20.5 4.5 19.5 4.5 Z"
         stroke={color}
         strokeWidth="1.7"
         strokeLinejoin="round"
         strokeLinecap="round"
       />
-      <path d="M11 9.2 L17 9.2" stroke={color} strokeWidth="1.3" strokeLinecap="round" opacity="0.5" />
+      <path
+        d="M10.5 8.4 L17.5 8.4"
+        stroke={color}
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        opacity="0.55"
+      />
+      <path
+        d="M10.5 11.6 L15.3 11.6"
+        stroke={color}
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        opacity="0.35"
+      />
     </svg>
   );
 }

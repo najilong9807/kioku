@@ -5,7 +5,6 @@ import {
   ListRow,
   Skeleton,
   useBottomSheet,
-  useToast,
 } from "@toss/tds-mobile";
 import {
   CalendarDays,
@@ -42,7 +41,6 @@ const POST_PREVIEW_MAX_LENGTH = 40;
 const QUICK_ACTION_ACTIVE_BG = "#E7EFE6";
 const QUICK_ACTION_ACTIVE_ICON_COLOR = "#4A6350";
 const QUICK_ACTION_DISABLED_BG = "#f2f4f6";
-const QUICK_ACTION_DISABLED_ICON_COLOR = "#b0b8c1";
 
 function formatTodayGreetingDate(): string {
   return new Date().toLocaleDateString("ko-KR", {
@@ -279,6 +277,8 @@ export default function HomeScreen({
   onSelectRestaurant,
   onViewTodayMeal,
   onViewCalendar,
+  onViewMap,
+  onViewScraps,
 }: {
   nickname: string | null;
   restaurants: Restaurant[];
@@ -289,11 +289,12 @@ export default function HomeScreen({
   onSelectRestaurant: (restaurant: Restaurant) => void;
   onViewTodayMeal: () => void;
   onViewCalendar: () => void;
+  onViewMap: () => void;
+  onViewScraps: () => void;
 }) {
   const [recentPosts, setRecentPosts] = useState<ThreadPost[]>([]);
   const [isPostsLoaded, setIsPostsLoaded] = useState(false);
   const [isFoodTestOpen, setIsFoodTestOpen] = useState(false);
-  const { openToast } = useToast();
   const { open, close } = useBottomSheet();
 
   useEffect(() => {
@@ -324,10 +325,6 @@ export default function HomeScreen({
         .slice(0, RECENT_RESTAURANT_LIMIT),
     [restaurants],
   );
-
-  const handleComingSoon = () => {
-    openToast("곧 만나요!");
-  };
 
   const openCustomerSupportSheet = () => {
     open({
@@ -381,23 +378,21 @@ export default function HomeScreen({
           icon={
             <FoldedMapPinIcon
               size={26}
-              color={QUICK_ACTION_DISABLED_ICON_COLOR}
+              color={QUICK_ACTION_ACTIVE_ICON_COLOR}
             />
           }
           label="지도"
-          comingSoon
-          onClick={handleComingSoon}
+          onClick={onViewMap}
         />
         <QuickActionButton
           icon={
             <BookmarkRibbonIcon
               size={26}
-              color={QUICK_ACTION_DISABLED_ICON_COLOR}
+              color={QUICK_ACTION_ACTIVE_ICON_COLOR}
             />
           }
           label="스크랩"
-          comingSoon
-          onClick={handleComingSoon}
+          onClick={onViewScraps}
         />
       </div>
 

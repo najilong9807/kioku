@@ -113,8 +113,20 @@ async function fetchCommentCounts(
 
 // parent_post_id가 null인, 즉 댓글이 아닌 원글만 최신순으로 가져와요. authorId를
 // 주면 그 작성자의 글만 걸러서 가져와요(닉네임 클릭 -> 모아보기 화면에서 사용).
-async function fetchThreadPosts(authorId?: string): Promise<ThreadPost[]> {
+// onlyIds를 주면 그 id들만 가져와요(스크랩한 글 모아보기에서 사용). 둘 다 없으면
+// 전체 원글을 가져와요. onlyIds가 빈 배열이면(스크랩이 하나도 없는 경우) 전체를
+// 가져오지 않도록 조회 없이 바로 빈 배열을 반환해요.
+// (이름을 postIds가 아니라 onlyIds로 지은 건, 아래에서 조회 결과 id 목록을 담는
+// 지역 변수 postIds와 이름이 겹치면 그 블록 전체에서 매개변수 대신 아직 초기화
+// 안 된 지역 변수가 참조돼서 TDZ 오류가 나기 때문이에요.)
+async function fetchThreadPosts(
+  authorId?: string,
+  onlyIds?: string[],
+): Promise<ThreadPost[]> {
   if (!supabase) {
+    return [];
+  }
+  if (onlyIds && onlyIds.length === 0) {
     return [];
   }
 
@@ -129,6 +141,9 @@ async function fetchThreadPosts(authorId?: string): Promise<ThreadPost[]> {
 
     if (authorId) {
       query = query.eq("user_id", authorId);
+    }
+    if (onlyIds) {
+      query = query.in("id", onlyIds);
     }
 
     const { data: posts, error } = await query.order("created_at", {
@@ -187,6 +202,14 @@ export async function fetchTodayMealPosts(): Promise<ThreadPost[]> {
 // 닉네임을 클릭해서 그 사람의 글을 모아보는 화면에서 사용해요.
 export async function fetchPostsByAuthor(authorId: string): Promise<ThreadPost[]> {
   return fetchThreadPosts(authorId);
+}
+
+// postIds에 해당하는 원글들을 가져와요. 스크랩 목록(lib/postScraps.ts)처럼 특정
+// id 집합의 글만 모아 보여줘야 할 때 사용해요. 반환 순서는 postIds 순서와 무관하니
+// (조회 결과는 created_at 최신순), 스크랩한 순서로 보여주려면 호출부에서 다시
+// 정렬해야 해요.
+export async function fetchPostsByIds(postIds: string[]): Promise<ThreadPost[]> {
+  return fetchThreadPosts(undefined, postIds);
 }
 
 // userId는 anon_profiles.id예요. restaurant_id는 이 게시판에서 쓰지 않아서 insert에

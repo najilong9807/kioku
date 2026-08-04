@@ -408,6 +408,7 @@ export default function ProfileView({
   const [isTierTableOpen, setIsTierTableOpen] = useState(false);
   // TODO: 출시 전 제거 — 개발용 테스트 데이터 주입 확인 다이얼로그 상태예요.
   const [isSeedConfirmOpen, setIsSeedConfirmOpen] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   const canSave =
@@ -450,6 +451,20 @@ export default function ProfileView({
       onSaved(trimmed, draftImage, trimmedNeighborhood);
       onClose();
     }
+  };
+
+  // TODO: 출시 전 제거 — 개발용 테스트 데이터 주입 버튼의 클릭 핸들러예요.
+  // 오늘의 한 입은 실제 서버에 쓰는 네트워크 요청이라 즉시 끝나지 않으니,
+  // 완료될 때까지 기다렸다가 새로고침해요.
+  const handleApplyDevSeed = async () => {
+    setIsSeeding(true);
+    const result = await applyDevTestSeed(userHash);
+    if (result.failedPostCount > 0) {
+      console.error(
+        `오늘의 한 입 테스트 글 ${result.failedPostCount}개를 넣지 못했어요.`,
+      );
+    }
+    window.location.reload();
   };
 
   return (
@@ -658,7 +673,8 @@ export default function ProfileView({
         </div>
 
         {/* TODO: 출시 전 제거 — 개발용 테스트 데이터 주입 버튼이에요. "맛있는
-            하루"/"다가올 한 입" 탭에 확인용 더미 데이터를 한 번에 채워 넣어요. */}
+            하루"/"다가올 한 입"/"오늘의 한 입" 세 탭에 확인용 더미 데이터를 한
+            번에 채워 넣어요. */}
         <div
           style={{
             padding: "12px",
@@ -712,20 +728,33 @@ export default function ProfileView({
         title={<ConfirmDialog.Title>테스트 데이터 넣기</ConfirmDialog.Title>}
         description={
           <ConfirmDialog.Description>
-            기존 데이터를 덮어씁니다. 계속할까요?
+            {
+              "맛있는 하루/다가올 한 입(기기 저장)과 오늘의 한 입 데이터를 테스트용으로 덮어씁니다.\n오늘의 한 입은 실제 Supabase 서버에 지금 닉네임으로 글이 등록돼요.\n계속할까요?"
+            }
           </ConfirmDialog.Description>
         }
         cancelButton={
-          <ConfirmDialog.CancelButton onClick={() => setIsSeedConfirmOpen(false)}>
+          <ConfirmDialog.CancelButton
+            onClick={() => setIsSeedConfirmOpen(false)}
+            disabled={isSeeding}
+          >
             취소
           </ConfirmDialog.CancelButton>
         }
         confirmButton={
-          <ConfirmDialog.ConfirmButton onClick={applyDevTestSeed}>
+          <ConfirmDialog.ConfirmButton
+            onClick={handleApplyDevSeed}
+            loading={isSeeding}
+            disabled={isSeeding}
+          >
             계속하기
           </ConfirmDialog.ConfirmButton>
         }
-        onClose={() => setIsSeedConfirmOpen(false)}
+        onClose={() => {
+          if (!isSeeding) {
+            setIsSeedConfirmOpen(false);
+          }
+        }}
       />
     </>
   );

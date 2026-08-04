@@ -44,6 +44,7 @@ import {
 import { fetchProfile, saveProfile } from "./lib/profile";
 import { SheetHeader } from "./lib/SheetHeader";
 import { getUserIdentityHash } from "./lib/userIdentity";
+import MapView from "./MapView";
 import {
   NotificationBellButton,
   NotificationsSheetContent,
@@ -52,6 +53,7 @@ import ProfileView, { ProfileIconButton } from "./ProfileView";
 import { RegionFilterSheetContent, RegionPicker } from "./RegionPicker";
 import RestaurantDetailView from "./RestaurantDetailView";
 import { RestaurantSearchSheetContent } from "./RestaurantSearchOverlay";
+import ScrapsView from "./ScrapsView";
 import SplashScreen from "./SplashScreen";
 import { HANDWRITING_TEXT_STYLE } from "./theme";
 import {
@@ -1207,6 +1209,40 @@ function App() {
     });
   };
 
+  // 시/도 배지를 누르면 그 지역 필터를 걸어서 "맛있는 하루" 탭으로 보내요.
+  // 시/군/구까지는 좁히지 않고 시/도 전체로만 걸어요(지도가 딱 그 정도 해상도예요).
+  const openMapSheet = () => {
+    open({
+      header: <SheetHeader title="지역별 기록" onClose={close} />,
+      children: (
+        <MapView
+          restaurants={restaurants}
+          onSelectProvince={(province) => {
+            setFilterProvince(province);
+            setFilterDistrict(null);
+            setSelectedTab(RESTAURANT_TAB_INDEX);
+            close();
+          }}
+        />
+      ),
+    });
+  };
+
+  const openScrapsSheet = () => {
+    open({
+      header: <SheetHeader title="스크랩한 글" onClose={close} />,
+      children: (
+        <ScrapsView
+          userHash={userHash}
+          onViewPost={() => {
+            setSelectedTab(TODAY_MEAL_TAB_INDEX);
+            close();
+          }}
+        />
+      ),
+    });
+  };
+
   const handleDelete = async (restaurant: Restaurant) => {
     const confirmed = await openConfirm({
       title: `${restaurant.name}을(를) 삭제할까요?`,
@@ -1585,6 +1621,8 @@ function App() {
           }}
           onViewTodayMeal={() => setSelectedTab(TODAY_MEAL_TAB_INDEX)}
           onViewCalendar={() => setSelectedTab(CALENDAR_TAB_INDEX)}
+          onViewMap={openMapSheet}
+          onViewScraps={openScrapsSheet}
         />
       ) : selectedTab === RESTAURANT_TAB_INDEX ? (
         <>
