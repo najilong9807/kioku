@@ -1,5 +1,6 @@
 import { Badge } from "@toss/tds-mobile";
 import { useMemo } from "react";
+import koreaMapImage from "./assets/korea-map.png";
 import {
   findProvinceForNeighborhood,
   getProvinceShortName,
@@ -12,10 +13,9 @@ import {
 import type { Restaurant } from "./restaurantStorage";
 
 // GPS나 외부 지도 API 없이, 시/도 단위로 "어디에 얼마나 기록했는지"만 한눈에
-// 보여주는 클러스터 지도예요. 배경은 실제 행정구역 경계가 아니라 한반도 실루엣을
-// 흉내 낸 장식용 SVG이고, 실제 정보는 그 위에 얹은 배지(숫자)들이 전부예요.
-const MAP_LAND_FILL = "#E7EFE6";
-const MAP_LAND_STROKE = "#9CAF9A";
+// 보여주는 클러스터 지도예요. 배경은 실제 행정구역 경계가 아니라 손그림으로 그린
+// 한반도 일러스트(korea-map.png)이고, 실제 정보는 그 위에 얹은 배지(숫자)들이
+// 전부예요.
 
 export default function MapView({
   restaurants,
@@ -57,46 +57,26 @@ export default function MapView({
         style={{
           position: "relative",
           width: "100%",
-          // viewBox 비율(300:400)을 그대로 유지해서, 백분율로 계산한 배지
-          // 위치가 SVG 위 실제 좌표와 항상 일치하도록 해요.
+          // 배경 이미지의 실제 픽셀 비율을 그대로 유지해서, 백분율로 계산한
+          // 배지 위치가 이미지 위 실제 좌표와 항상 일치하도록 해요.
           aspectRatio: `${KOREA_MAP_VIEWBOX_WIDTH} / ${KOREA_MAP_VIEWBOX_HEIGHT}`,
           margin: "0 auto",
           maxWidth: "280px",
         }}
       >
-        <svg
-          viewBox={`0 0 ${KOREA_MAP_VIEWBOX_WIDTH} ${KOREA_MAP_VIEWBOX_HEIGHT}`}
-          style={{ width: "100%", height: "100%", display: "block" }}
+        <img
+          src={koreaMapImage}
+          alt=""
           aria-hidden="true"
-        >
-          {/* 한반도를 정확히 그린 게 아니라, "지도처럼 보이는" 부드러운
-              실루엣이에요. 실제 정보는 이 위에 얹는 배지들이 전달해요. */}
-          <path
-            d="M150,20
-               Q210,30 230,70
-               Q260,110 250,160
-               Q260,210 230,250
-               Q215,300 170,330
-               Q120,335 90,300
-               Q60,260 55,190
-               Q45,140 75,90
-               Q95,50 150,20 Z"
-            fill={MAP_LAND_FILL}
-            stroke={MAP_LAND_STROKE}
-            strokeWidth="2.5"
-            strokeLinejoin="round"
-          />
-          {/* 제주도예요. 본토와 이어지지 않은 별도 섬으로 남쪽에 작게 그려요. */}
-          <ellipse
-            cx="95"
-            cy="368"
-            rx="30"
-            ry="15"
-            fill={MAP_LAND_FILL}
-            stroke={MAP_LAND_STROKE}
-            strokeWidth="2.5"
-          />
-        </svg>
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "block",
+            objectFit: "contain",
+            userSelect: "none",
+            pointerEvents: "none",
+          }}
+        />
 
         {PROVINCE_MAP_POINTS.map(({ province, x, y }) => {
           const count = countByProvince.get(province) ?? 0;
