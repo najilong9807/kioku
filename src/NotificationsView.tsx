@@ -1,4 +1,4 @@
-import { Button, List, ListRow } from "@toss/tds-mobile";
+import { List, ListRow } from "@toss/tds-mobile";
 import { Bell } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
@@ -88,11 +88,9 @@ export function NotificationBellButton({
 export function NotificationsSheetContent({
   userHash,
   onRead,
-  onClose,
 }: {
   userHash: string | null;
   onRead: () => void;
-  onClose: () => void;
 }) {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -131,11 +129,6 @@ export function NotificationsSheetContent({
 
   return (
     <div style={{ padding: "0 24px 24px" }}>
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
-        <Button size="small" variant="weak" color="dark" onClick={onClose}>
-          닫기
-        </Button>
-      </div>
       {!isLoaded ? null : notifications.length === 0 ? (
         <div
           style={{

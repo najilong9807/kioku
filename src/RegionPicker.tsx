@@ -133,13 +133,11 @@ export function RegionFilterSheetContent({
   selectedProvince,
   selectedDistrict,
   onSelect,
-  onClose,
 }: {
   regionOptions: Map<string, string[]>;
   selectedProvince: string | null;
   selectedDistrict: string | null;
   onSelect: (province: string | null, district: string | null) => void;
-  onClose: () => void;
 }) {
   const [draftProvince, setDraftProvince] = useState<string | null>(null);
   const provinces = Array.from(regionOptions.keys());
@@ -147,17 +145,6 @@ export function RegionFilterSheetContent({
   if (!draftProvince) {
     return (
       <div>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            padding: "0 24px 12px",
-          }}
-        >
-          <Button size="small" variant="weak" color="dark" onClick={onClose}>
-            닫기
-          </Button>
-        </div>
         <List>
           <div
             onClick={() => onSelect(null, null)}
@@ -221,17 +208,6 @@ export function RegionFilterSheetContent({
   const districts = regionOptions.get(draftProvince) ?? [];
   return (
     <div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "flex-end",
-          padding: "0 24px 12px",
-        }}
-      >
-        <Button size="small" variant="weak" color="dark" onClick={onClose}>
-          닫기
-        </Button>
-      </div>
       <div
         onClick={() => setDraftProvince(null)}
         style={{

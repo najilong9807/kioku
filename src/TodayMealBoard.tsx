@@ -10,7 +10,7 @@ import {
   useBottomSheet,
   useDialog,
 } from "@toss/tds-mobile";
-import { Bookmark, Heart, Search } from "lucide-react";
+import { Heart, MessageCircle, Search } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -34,6 +34,7 @@ import {
 import { fetchLikedPostIds, toggleLike } from "./lib/postLikes";
 import { fetchScrapedPostIds, toggleScrap } from "./lib/postScraps";
 import { fetchProfile } from "./lib/profile";
+import { BookmarkRibbonIcon } from "./lib/quickActionIcons";
 import { SheetHeader } from "./lib/SheetHeader";
 import {
   createComment,
@@ -60,6 +61,19 @@ type CommentSortOption = "latest" | "popular";
 const PRIMARY_FILL_BUTTON_TEXT_STYLE = {
   "--button-color": "#000000",
 } as CSSProperties;
+
+// 닉네임이 아무리 길어도 옆에 나란히 있는 배지·시간이 밀려나지 않도록, 닉네임
+// 쪽에만 한 줄 말줄임을 적용해요. App.tsx의 동명 상수 주석에 -webkit-line-clamp를
+// 쓰는 이유가 설명되어 있어요.
+const NAME_ELLIPSIS_STYLE: CSSProperties = {
+  flex: "1 1 auto",
+  minWidth: 0,
+  display: "-webkit-box",
+  WebkitLineClamp: 1,
+  WebkitBoxOrient: "vertical",
+  overflow: "hidden",
+  wordBreak: "break-all",
+};
 
 function formatPostTime(createdAt: string): string {
   const date = new Date(createdAt);
@@ -281,11 +295,9 @@ function PostForm({
 function AuthorPostsSheetContent({
   authorId,
   authorNickname,
-  onClose,
 }: {
   authorId: string;
   authorNickname: string;
-  onClose: () => void;
 }) {
   const [posts, setPosts] = useState<ThreadPost[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -305,18 +317,6 @@ function AuthorPostsSheetContent({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "flex-end",
-          padding: "0 24px 8px",
-        }}
-      >
-        <Button size="small" variant="weak" color="dark" onClick={onClose}>
-          닫기
-        </Button>
-      </div>
-
       {!isLoaded ? null : posts.length === 0 ? (
         <Result
           title="아직 쓴 글이 없어요"
@@ -408,7 +408,6 @@ function CommentsSheetContent({
   currentUserNickname,
   currentUserHash,
   onChanged,
-  onClose,
   onOpenAuthorPosts,
 }: {
   postId: string;
@@ -417,7 +416,6 @@ function CommentsSheetContent({
   currentUserNickname: string | null;
   currentUserHash: string | null;
   onChanged: () => void;
-  onClose: () => void;
   onOpenAuthorPosts: (authorId: string, authorNickname: string) => void;
 }) {
   const [comments, setComments] = useState<ThreadComment[]>([]);
@@ -599,27 +597,16 @@ function CommentsSheetContent({
         padding: "0 24px 24px",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        {comments.length > 0 ? (
-          <SegmentedControl
-            size="small"
-            value={commentSortOption}
-            onChange={(value) =>
-              setCommentSortOption(value as CommentSortOption)
-            }
-          >
-            <SegmentedControl.Item value="latest">최신순</SegmentedControl.Item>
-            <SegmentedControl.Item value="popular">
-              인기순
-            </SegmentedControl.Item>
-          </SegmentedControl>
-        ) : (
-          <div />
-        )}
-        <Button size="small" variant="weak" color="dark" onClick={onClose}>
-          닫기
-        </Button>
-      </div>
+      {comments.length > 0 && (
+        <SegmentedControl
+          size="small"
+          value={commentSortOption}
+          onChange={(value) => setCommentSortOption(value as CommentSortOption)}
+        >
+          <SegmentedControl.Item value="latest">최신순</SegmentedControl.Item>
+          <SegmentedControl.Item value="popular">인기순</SegmentedControl.Item>
+        </SegmentedControl>
+      )}
 
       <div
         style={{
@@ -654,6 +641,7 @@ function CommentsSheetContent({
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
+                  gap: "6px",
                 }}
               >
                 <NicknameButton
@@ -664,9 +652,16 @@ function CommentsSheetContent({
                     fontSize: "13px",
                     fontWeight: 700,
                     color: "#191f28",
+                    ...NAME_ELLIPSIS_STYLE,
                   }}
                 />
-                <span style={{ fontSize: "11px", color: "#8b95a1" }}>
+                <span
+                  style={{
+                    fontSize: "11px",
+                    color: "#8b95a1",
+                    flexShrink: 0,
+                  }}
+                >
                   {formatPostTime(comment.createdAt)}
                 </span>
               </div>
@@ -931,7 +926,6 @@ function TodayMealBoard({
             setFilterDistrict(district);
             close();
           }}
-          onClose={close}
         />
       ),
     });
@@ -972,7 +966,6 @@ function TodayMealBoard({
           currentUserNickname={currentUserNickname}
           currentUserHash={currentUserHash}
           onChanged={loadPosts}
-          onClose={close}
           onOpenAuthorPosts={openAuthorPostsSheet}
         />
       ),
@@ -991,7 +984,6 @@ function TodayMealBoard({
         <AuthorPostsSheetContent
           authorId={authorId}
           authorNickname={authorNickname}
-          onClose={close}
         />
       ),
     });
@@ -1172,6 +1164,7 @@ function TodayMealBoard({
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
+                    gap: "6px",
                   }}
                 >
                   <span
@@ -1179,6 +1172,7 @@ function TodayMealBoard({
                       fontSize: "14px",
                       fontWeight: 700,
                       color: "#191f28",
+                      ...NAME_ELLIPSIS_STYLE,
                     }}
                   >
                     <NicknameButton
@@ -1198,6 +1192,7 @@ function TodayMealBoard({
                       display: "flex",
                       alignItems: "center",
                       gap: "6px",
+                      flexShrink: 0,
                     }}
                   >
                     {post.isReservation && (
@@ -1294,22 +1289,35 @@ function TodayMealBoard({
                         WebkitTapHighlightColor: "transparent",
                       }}
                     >
-                      <Bookmark
+                      <BookmarkRibbonIcon
                         size={16}
                         color={
                           scrapedPostIds.has(post.id) ? "#4A6350" : "#6b7684"
                         }
-                        fill={scrapedPostIds.has(post.id) ? "#4A6350" : "none"}
                       />
                     </button>
-                    <Button
-                      size="small"
-                      variant="weak"
-                      color="dark"
+                    <button
+                      type="button"
                       onClick={() => openCommentsSheet(post)}
+                      aria-label="댓글"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                        border: "none",
+                        background: "none",
+                        padding: "6px 10px",
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                        color: "#6b7684",
+                        fontSize: "13px",
+                        fontWeight: 600,
+                        WebkitTapHighlightColor: "transparent",
+                      }}
                     >
-                      댓글{post.commentCount > 0 ? ` ${post.commentCount}` : ""}
-                    </Button>
+                      <MessageCircle size={16} color="#6b7684" />
+                      {post.commentCount > 0 ? post.commentCount : ""}
+                    </button>
                   </div>
                   {post.userId === currentUserId && (
                     <Button

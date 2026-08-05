@@ -12,7 +12,13 @@ import {
   Sparkles,
   UtensilsCrossed,
 } from "lucide-react";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import CustomerSupportView from "./CustomerSupportView";
 import FoodTestModal from "./FoodTestView";
 import {
@@ -41,6 +47,20 @@ const POST_PREVIEW_MAX_LENGTH = 40;
 const QUICK_ACTION_ACTIVE_BG = "#E7EFE6";
 const QUICK_ACTION_ACTIVE_ICON_COLOR = "#4A6350";
 const QUICK_ACTION_DISABLED_BG = "#f2f4f6";
+
+// 이름이 아무리 길어도 옆에 나란히 있는 배지가 밀려나지 않도록, 이름 쪽에만
+// 한 줄 말줄임을 적용해요. white-space: nowrap 대신 -webkit-line-clamp를 쓰는
+// 이유는 App.tsx의 동명 상수 주석을 참고해주세요(ListRow 내부 래퍼가 nowrap
+// 텍스트 때문에 억지로 넓어지는 문제가 있어요).
+const NAME_ELLIPSIS_STYLE: CSSProperties = {
+  flex: "1 1 auto",
+  minWidth: 0,
+  display: "-webkit-box",
+  WebkitLineClamp: 1,
+  WebkitBoxOrient: "vertical",
+  overflow: "hidden",
+  wordBreak: "break-all",
+};
 
 function formatTodayGreetingDate(): string {
   return new Date().toLocaleDateString("ko-KR", {
@@ -439,18 +459,41 @@ export default function HomeScreen({
                             display: "flex",
                             alignItems: "center",
                             gap: "6px",
+                            width: "100%",
+                            minWidth: 0,
                           }}
                         >
-                          <span>{restaurant.name}</span>
-                          {restaurant.isReservation && (
-                            <Badge size="xsmall" variant="weak" color="green">
-                              예약
-                            </Badge>
-                          )}
-                          {restaurant.isSpecialDay && (
-                            <Badge size="xsmall" variant="weak" color="yellow">
-                              ⭐ 특별한 날
-                            </Badge>
+                          <span style={NAME_ELLIPSIS_STYLE}>
+                            {restaurant.name}
+                          </span>
+                          {(restaurant.isReservation ||
+                            restaurant.isSpecialDay) && (
+                            <span
+                              style={{
+                                display: "flex",
+                                gap: "6px",
+                                flexShrink: 0,
+                              }}
+                            >
+                              {restaurant.isReservation && (
+                                <Badge
+                                  size="xsmall"
+                                  variant="weak"
+                                  color="green"
+                                >
+                                  예약
+                                </Badge>
+                              )}
+                              {restaurant.isSpecialDay && (
+                                <Badge
+                                  size="xsmall"
+                                  variant="weak"
+                                  color="yellow"
+                                >
+                                  ⭐ 특별한 날
+                                </Badge>
+                              )}
+                            </span>
                           )}
                         </span>
                       }

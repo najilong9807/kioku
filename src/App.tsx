@@ -59,6 +59,7 @@ import { HANDWRITING_TEXT_STYLE } from "./theme";
 import {
   CATEGORIES,
   formatDisplayDate,
+  formatFullKoreanDate,
   loadRestaurants,
   saveRestaurants,
   todayDateInputValue,
@@ -82,6 +83,23 @@ function summarizeMenus(menus: string[]): string {
 const PRIMARY_FILL_BUTTON_TEXT_STYLE = {
   "--button-color": "#000000",
 } as CSSProperties;
+
+// 이름이 아무리 길어도 옆에 나란히 있는 배지·별점·버튼이 밀려나지 않도록, 이름
+// 쪽에만 한 줄 말줄임을 적용해요. white-space: nowrap 방식은 ListRow 내부
+// 래퍼(TDS)의 min-width가 auto라서 오히려 그 래퍼를 텍스트 전체 너비만큼 늘려
+// 버려요(줄바꿈이 아예 불가능한 콘텐츠는 min-content 크기가 전체 너비가
+// 되기 때문이에요). 그 대신 -webkit-line-clamp로 "1줄까지만 보여주고 넘치면
+// 말줄임" 방식을 써요 — 줄바꿈 자체는 허용하기 때문에 조상 요소가 억지로
+// 넓어지지 않아요. 맛집 메모 미리보기(2줄 클램프)와 같은 방식이에요.
+const NAME_ELLIPSIS_STYLE: CSSProperties = {
+  flex: "1 1 auto",
+  minWidth: 0,
+  display: "-webkit-box",
+  WebkitLineClamp: 1,
+  WebkitBoxOrient: "vertical",
+  overflow: "hidden",
+  wordBreak: "break-all",
+};
 
 // 폼의 각 섹션(라벨 + 입력)이 공통으로 사용하는 안팎 여백과 카드 배경이에요.
 // 여기서만 값을 바꾸면 모든 섹션의 여백이 동일하게 유지돼요.
@@ -1182,7 +1200,6 @@ function App() {
         <NotificationsSheetContent
           userHash={userHash}
           onRead={() => setHasUnreadNotifications(false)}
-          onClose={close}
         />
       ),
     });
@@ -1347,17 +1364,6 @@ function App() {
       header: <SheetHeader title="음식 종류 선택" onClose={close} />,
       children: (
         <>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              padding: "0 24px 12px",
-            }}
-          >
-            <Button size="small" variant="weak" color="dark" onClick={close}>
-              닫기
-            </Button>
-          </div>
           <List>
             {FILTER_CATEGORIES.map((category) => {
               const isSelected = category === selectedCategory;
@@ -1398,17 +1404,6 @@ function App() {
       header: <SheetHeader title="정렬 기준 선택" onClose={close} />,
       children: (
         <>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              padding: "0 24px 12px",
-            }}
-          >
-            <Button size="small" variant="weak" color="dark" onClick={close}>
-              닫기
-            </Button>
-          </div>
           <List>
             {SORT_OPTIONS.map((option) => {
               const isSelected = option.value === sortOption;
@@ -1457,7 +1452,6 @@ function App() {
             setFilterDistrict(district);
             close();
           }}
-          onClose={close}
         />
       ),
     });
@@ -1501,14 +1495,17 @@ function App() {
 
   // 목록/홈에서 항목을 클릭하면 우선 이 읽기 전용 상세보기를 열어요.
   // 여기서 "수정하기"를 눌러야만 기존 수정 폼(openEditSheet)으로 넘어가요.
-  // 일기장 스타일 헤더(뒤로가기+날짜 제목+북마크)를 RestaurantDetailView가 직접
-  // 그리기 때문에, 바텀시트 기본 header는 쓰지 않아요.
   const openDetailSheet = (restaurant: Restaurant) => {
     open({
+      header: (
+        <SheetHeader
+          title={`${formatFullKoreanDate(restaurant.visitDate)}의 기록`}
+          onClose={close}
+        />
+      ),
       children: (
         <RestaurantDetailView
           restaurant={restaurant}
-          onClose={close}
           onEdit={() => {
             close();
             openEditSheet(restaurant);
@@ -1538,7 +1535,6 @@ function App() {
             setSelectedTab(RESTAURANT_TAB_INDEX);
             openDetailSheet(restaurant);
           }}
-          onClose={close}
         />
       ),
     });
@@ -1756,22 +1752,41 @@ function App() {
                               display: "flex",
                               alignItems: "center",
                               gap: "6px",
+                              width: "100%",
+                              minWidth: 0,
                             }}
                           >
-                            <span>{restaurant.name}</span>
-                            {restaurant.isReservation && (
-                              <Badge size="xsmall" variant="weak" color="green">
-                                예약
-                              </Badge>
-                            )}
-                            {restaurant.isSpecialDay && (
-                              <Badge
-                                size="xsmall"
-                                variant="weak"
-                                color="yellow"
+                            <span style={NAME_ELLIPSIS_STYLE}>
+                              {restaurant.name}
+                            </span>
+                            {(restaurant.isReservation ||
+                              restaurant.isSpecialDay) && (
+                              <span
+                                style={{
+                                  display: "flex",
+                                  gap: "6px",
+                                  flexShrink: 0,
+                                }}
                               >
-                                ⭐ 특별한 날
-                              </Badge>
+                                {restaurant.isReservation && (
+                                  <Badge
+                                    size="xsmall"
+                                    variant="weak"
+                                    color="green"
+                                  >
+                                    예약
+                                  </Badge>
+                                )}
+                                {restaurant.isSpecialDay && (
+                                  <Badge
+                                    size="xsmall"
+                                    variant="weak"
+                                    color="yellow"
+                                  >
+                                    ⭐ 특별한 날
+                                  </Badge>
+                                )}
+                              </span>
                             )}
                           </span>
                         }
