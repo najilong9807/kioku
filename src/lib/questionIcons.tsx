@@ -129,24 +129,6 @@ function IconMenuBook() {
   );
 }
 
-function IconTrail() {
-  return (
-    <g>
-      <IconBg />
-      <path
-        d="M 26 74 Q 34 54 50 58 Q 66 62 74 40"
-        fill="none"
-        stroke={SAGE}
-        strokeWidth="5"
-        strokeLinecap="round"
-        strokeDasharray="1 12"
-      />
-      <path d="M 26 74 Q 34 54 50 58 Q 66 62 74 40" fill="none" stroke={INK} strokeWidth="1.4" opacity="0.35" />
-      <circle cx="74" cy="34" r="5" fill={SAGE} stroke={INK} strokeWidth="2" />
-    </g>
-  );
-}
-
 function IconPuzzle() {
   return (
     <g>
@@ -158,17 +140,6 @@ function IconPuzzle() {
         strokeWidth="2.4"
         strokeLinejoin="round"
       />
-    </g>
-  );
-}
-
-function IconCompass() {
-  return (
-    <g>
-      <IconBg />
-      <circle cx="50" cy="50" r="24" fill="#fff" stroke={INK} strokeWidth="2.6" />
-      <path d="M 50 34 L 56 50 L 50 66 L 44 50 Z" fill={SAGE} stroke={INK} strokeWidth="1.8" strokeLinejoin="round" />
-      <circle cx="50" cy="50" r="2.6" fill={INK} />
     </g>
   );
 }
@@ -254,18 +225,6 @@ function IconWindowSeat() {
   );
 }
 
-function IconReceiptCheck() {
-  return (
-    <g>
-      <IconBg />
-      <path d="M 32 26 L 68 26 L 68 74 L 63 70 L 58 74 L 53 70 L 48 74 L 43 70 L 38 74 L 32 70 Z" fill="#fff" stroke={INK} strokeWidth="2.2" strokeLinejoin="round" />
-      <line x1="38" y1="38" x2="62" y2="38" stroke="#d7e2d8" strokeWidth="2" />
-      <line x1="38" y1="46" x2="62" y2="46" stroke="#d7e2d8" strokeWidth="2" />
-      <path d="M 40 56 L 46 62 L 60 48" fill="none" stroke={SAGE_DARK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-    </g>
-  );
-}
-
 function IconSunset() {
   return (
     <g>
@@ -275,22 +234,6 @@ function IconSunset() {
       <line x1="50" y1="30" x2="50" y2="24" stroke={INK} strokeWidth="2" strokeLinecap="round" />
       <line x1="33" y1="41" x2="29" y2="37" stroke={INK} strokeWidth="2" strokeLinecap="round" />
       <line x1="67" y1="41" x2="71" y2="37" stroke={INK} strokeWidth="2" strokeLinecap="round" />
-    </g>
-  );
-}
-
-function IconHeartSpark() {
-  return (
-    <g>
-      <IconBg />
-      <path
-        d="M 50 68 Q 26 52 26 38 Q 26 26 38 26 Q 46 26 50 34 Q 54 26 62 26 Q 74 26 74 38 Q 74 52 50 68 Z"
-        fill={SAGE}
-        stroke={INK}
-        strokeWidth="2.4"
-        strokeLinejoin="round"
-      />
-      <path d="M 66 26 L 68 32 L 74 34 L 68 36 L 66 42 L 64 36 L 58 34 L 64 32 Z" fill="#fff" opacity="0.9" />
     </g>
   );
 }
@@ -389,18 +332,6 @@ function IconDoor() {
       <IconBg />
       <rect x="34" y="24" width="32" height="50" rx="3" fill={SAGE} stroke={INK} strokeWidth="2.4" />
       <circle cx="58" cy="50" r="2.6" fill={INK} />
-    </g>
-  );
-}
-
-function IconCakeCandle() {
-  return (
-    <g>
-      <IconBg />
-      <rect x="28" y="50" width="44" height="20" rx="3" fill={SAGE} stroke={INK} strokeWidth="2.4" />
-      <path d="M 28 50 Q 38 44 50 50 Q 62 44 72 50" fill="none" stroke={INK} strokeWidth="2.2" />
-      <rect x="47" y="34" width="6" height="12" fill="#fff" stroke={INK} strokeWidth="1.8" />
-      <path d="M 50 28 Q 54 32 50 36 Q 46 32 50 28 Z" fill="#f2a33c" />
     </g>
   );
 }
@@ -567,9 +498,7 @@ export const QUESTION_ICONS: Record<string, () => ReactElement> = {
   "journey-5": IconBoldOutfit,
   "journey-6": IconGiftNew,
   "journey-7": IconMenuBook,
-  "journey-8": IconTrail,
   "journey-9": IconPuzzle,
-  "journey-10": IconCompass,
   "choice-1": IconShoppingBag,
   "choice-2": IconLamp,
   "choice-3": IconBed,
@@ -577,9 +506,7 @@ export const QUESTION_ICONS: Record<string, () => ReactElement> = {
   "choice-5": IconCamera,
   "choice-6": IconShirt,
   "choice-7": IconWindowSeat,
-  "choice-8": IconReceiptCheck,
   "choice-9": IconSunset,
-  "choice-10": IconHeartSpark,
   "dining-1": IconMegaphone,
   "dining-2": IconClockFree,
   "dining-3": IconSuitcase,
@@ -588,7 +515,6 @@ export const QUESTION_ICONS: Record<string, () => ReactElement> = {
   "dining-6": IconGroup,
   "dining-7": IconAlone,
   "dining-8": IconDoor,
-  "dining-9": IconCakeCandle,
   "dining-10": IconStarburst,
   "food-1": IconBowlSteam,
   "food-2": IconUtensils,

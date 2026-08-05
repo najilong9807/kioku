@@ -2,9 +2,10 @@ import { Storage } from "@apps-in-toss/web-framework";
 import type { FoodStyle as AvatarFoodStyle } from "./avatars";
 
 // "먹보조사" 음식 성향 테스트예요. 4개 축(여정스타일/선택기준/식사방식/음식취향)에
-// 10문항씩, 총 40문항의 3지선다로 구성돼요. 앞 3개 축은 A/B/C에 각각 +1/0/-1
-// 점수를 매겨 합산 후 성향 코드를 정하고, 음식취향 축은 각 보기가 가리키는
-// 음식 카테고리의 등장 빈도로 판정해요. 두 결과를 조합해서 최종 별명을 만들어요.
+// 각각 8/8/9/10문항, 총 35문항의 3지선다로 구성돼요. 앞 3개 축은 A/B/C에 각각
+// +1/0/-1 점수를 매겨 합산 후 성향 코드를 정하고, 음식취향 축은 각 보기가
+// 가리키는 음식 카테고리의 등장 빈도로 판정해요. 두 결과를 조합해서 최종
+// 별명을 만들어요.
 
 const RESULT_STORAGE_KEY = "kioku:foodTestResult";
 const HIDE_INTRO_STORAGE_KEY = "kioku:foodTestHideIntro";
@@ -121,17 +122,6 @@ const JOURNEY_QUESTIONS: ScoredQuestion[] = [
     ],
   },
   {
-    id: "journey-8",
-    axis: "journey",
-    situationLabel: "새로운 산책로",
-    prompt: "우리 동네에 새로 생긴 산책로를 발견했을 때 나는?",
-    options: [
-      "궁금해서 그 자리에서 바로 걸어가 본다",
-      "'다음에 시간 날 때 가봐야지' 하고 기억해둔다",
-      "원래 늘 걷던 편안한 익숙한 길로 간다",
-    ],
-  },
-  {
     id: "journey-9",
     axis: "journey",
     situationLabel: "괴식/이색 요리",
@@ -140,17 +130,6 @@ const JOURNEY_QUESTIONS: ScoredQuestion[] = [
       "호기심이 폭발해서 당장 먹어보고 싶다",
       "남들이 먼저 먹어보고 괜찮다고 하면 도전한다",
       "검증된 맛의 조합만 먹는 게 마음 편하다",
-    ],
-  },
-  {
-    id: "journey-10",
-    axis: "journey",
-    situationLabel: "바뀐 교통 경로",
-    prompt: "약속 장소로 가는 평소 길에 공사가 시작되어 돌아가야 할 때 나는?",
-    options: [
-      "\"이참에 새로운 길로 가볼까?\" 하며 안 가본 길로 돌아간다",
-      "지도 앱이 추천하는 가장 무난한 돌아가는 길로 간다",
-      "길을 잃을까 봐 제일 익숙하고 안전한 대로변으로만 돌아간다",
     ],
   },
 ];
@@ -235,17 +214,6 @@ const CHOICE_QUESTIONS: ScoredQuestion[] = [
     ],
   },
   {
-    id: "choice-8",
-    axis: "choice",
-    situationLabel: "쇼핑의 만족감",
-    prompt: "\"아, 오늘 쇼핑 진짜 잘했다!\"라고 느끼는 순간은?",
-    options: [
-      "보는 것만으로도 기분이 좋아지는 예쁜 물건을 샀을 때",
-      "호불호 없이 유용하고 적당한 물건을 골랐을 때",
-      "할인이나 이득을 챙겨 알뜰하게 잘 샀을 때",
-    ],
-  },
-  {
     id: "choice-9",
     axis: "choice",
     situationLabel: "퇴근 후 위로",
@@ -254,17 +222,6 @@ const CHOICE_QUESTIONS: ScoredQuestion[] = [
       "오늘 본 예쁜 풍경이나 분위기 좋은 공간에서의 기억",
       "오늘 하루도 별탈 없이 무난하게 지나갔다는 편안함",
       "오늘 계획했던 일들을 차근차근 해냈다는 성취감",
-    ],
-  },
-  {
-    id: "choice-10",
-    axis: "choice",
-    situationLabel: "만족의 순간",
-    prompt: "무언가를 구매한 뒤 최종적으로 드는 생각은?",
-    options: [
-      "\"아, 진짜 너무 예쁘다!\"",
-      "\"딱히 아쉬울 것 없이 괜찮네.\"",
-      "\"진짜 알차게 잘 샀다(개이득)!\"",
     ],
   },
 ];
@@ -357,17 +314,6 @@ const DINING_QUESTIONS: ScoredQuestion[] = [
       "여럿이 왁자지껄 함께 들어가는 게 편하다",
       "친한 친구 한 명 정도와 함께 들어가는 게 편하다",
       "혼자 스윽 들어가서 자리를 잡는 게 오히려 편하다",
-    ],
-  },
-  {
-    id: "dining-9",
-    axis: "dining",
-    situationLabel: "기념일 보내기",
-    prompt: "생일이나 특별한 기념일을 보낼 때 내가 원하는 방식은?",
-    options: [
-      "사람들을 왁자지껄하게 불러 모아 파티를 하는 것",
-      "정말 가까운 소수 인원과 조용히 축하하는 것",
-      "나만을 위한 시간을 보내며 호캉스나 취미를 즐기는 것",
     ],
   },
   {
