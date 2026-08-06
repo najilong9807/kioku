@@ -1,6 +1,7 @@
 import {
   Asset,
   Badge,
+  BottomSheet,
   Border,
   Button,
   List,
@@ -8,7 +9,6 @@ import {
   Rating,
   Result,
   SearchField,
-  SegmentedControl,
   Tab,
   TextArea,
   TextField,
@@ -217,6 +217,48 @@ function QuickPickChips({
   );
 }
 
+// 카테고리(음식 종류) 후보를 리스트로 보여주는 바텀시트 내용이에요. "맛집 기록" 탭의
+// 음식 종류 필터와, 등록/수정 폼의 음식 종류 선택 바텀시트가 이 컴포넌트를 함께 써요.
+function CategoryListSheetContent<T extends string>({
+  options,
+  selected,
+  onSelect,
+}: {
+  options: readonly T[];
+  selected: T;
+  onSelect: (option: T) => void;
+}) {
+  return (
+    <List>
+      {options.map((option) => {
+        const isSelected = option === selected;
+        return (
+          <div
+            key={option}
+            onClick={() => onSelect(option)}
+            style={{ cursor: "pointer" }}
+          >
+            <ListRow
+              withTouchEffect
+              contents={
+                <ListRow.Texts
+                  type="1RowTypeA"
+                  top={
+                    <span style={{ fontWeight: isSelected ? 700 : 400 }}>
+                      {option}
+                    </span>
+                  }
+                />
+              }
+              right={isSelected ? "✓" : undefined}
+            />
+          </div>
+        );
+      })}
+    </List>
+  );
+}
+
 interface AddRestaurantFormValues {
   name: string;
   title: string;
@@ -257,6 +299,7 @@ function RestaurantForm({
   const [category, setCategory] = useState<Category>(
     initialValues?.category ?? CATEGORIES[0],
   );
+  const [isCategorySheetOpen, setIsCategorySheetOpen] = useState(false);
   const [menus, setMenus] = useState<string[]>(initialValues?.menus ?? []);
   const [menuInput, setMenuInput] = useState("");
   const [companion, setCompanion] = useState(initialValues?.companion ?? "");
@@ -699,18 +742,29 @@ function RestaurantForm({
           >
             음식 종류
           </div>
-          <SegmentedControl
-            alignment="fluid"
-            size="small"
-            value={category}
-            onChange={(value) => setCategory(value as Category)}
+          <button
+            type="button"
+            onClick={() => setIsCategorySheetOpen(true)}
+            style={{
+              width: "100%",
+              boxSizing: "border-box",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "14px 16px",
+              borderRadius: "12px",
+              border: "none",
+              backgroundColor: "#f2f4f6",
+              fontSize: "16px",
+              fontFamily: "inherit",
+              color: "#191f28",
+              cursor: "pointer",
+              WebkitTapHighlightColor: "transparent",
+            }}
           >
-            {CATEGORIES.map((item) => (
-              <SegmentedControl.Item key={item} value={item}>
-                {item}
-              </SegmentedControl.Item>
-            ))}
-          </SegmentedControl>
+            <span>{category}</span>
+            <span style={{ color: "#8b95a1" }}>▾</span>
+          </button>
         </div>
         <Border />
         <div style={{ padding: FORM_SECTION_PADDING }}>
@@ -919,6 +973,31 @@ function RestaurantForm({
           {submitLabel}
         </Button>
       </div>
+
+      {/* 이 폼 자체가 이미 useBottomSheet()로 열린 바텀시트의 children이라, 같은
+          훅으로 카테고리 바텀시트를 또 열면(싱글턴이라) 이 폼이 그 내용으로
+          통째로 바뀌어버려요. 그래서 RegionPicker처럼 별도 오버레이를 직접
+          로컬 상태로 다뤄요. useBottomSheet 대신 BottomSheet 컴포넌트를 직접
+          써서, 폼 위에 겹쳐 뜨는 별개의 바텀시트로 만들어요. */}
+      <BottomSheet
+        open={isCategorySheetOpen}
+        onClose={() => setIsCategorySheetOpen(false)}
+        header={
+          <SheetHeader
+            title="음식 종류 선택"
+            onClose={() => setIsCategorySheetOpen(false)}
+          />
+        }
+      >
+        <CategoryListSheetContent
+          options={CATEGORIES}
+          selected={category}
+          onSelect={(value) => {
+            setCategory(value);
+            setIsCategorySheetOpen(false);
+          }}
+        />
+      </BottomSheet>
     </div>
   );
 }
@@ -1363,38 +1442,14 @@ function App() {
     open({
       header: <SheetHeader title="음식 종류 선택" onClose={close} />,
       children: (
-        <>
-          <List>
-            {FILTER_CATEGORIES.map((category) => {
-              const isSelected = category === selectedCategory;
-              return (
-                <div
-                  key={category}
-                  onClick={() => {
-                    setSelectedCategory(category);
-                    close();
-                  }}
-                  style={{ cursor: "pointer" }}
-                >
-                  <ListRow
-                    withTouchEffect
-                    contents={
-                      <ListRow.Texts
-                        type="1RowTypeA"
-                        top={
-                          <span style={{ fontWeight: isSelected ? 700 : 400 }}>
-                            {category}
-                          </span>
-                        }
-                      />
-                    }
-                    right={isSelected ? "✓" : undefined}
-                  />
-                </div>
-              );
-            })}
-          </List>
-        </>
+        <CategoryListSheetContent
+          options={FILTER_CATEGORIES}
+          selected={selectedCategory}
+          onSelect={(category) => {
+            setSelectedCategory(category);
+            close();
+          }}
+        />
       ),
     });
   };
