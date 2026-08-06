@@ -1,0 +1,28 @@
+/* 스크롤 스냅 캐러셀의 가로 스크롤바를 브라우저마다 감춰요(스와이프/점/버튼으로만
+   넘기는 느낌을 주기 위해서예요). 나머지 스타일은 OnboardingSlides.tsx에서
+   인라인으로 관리해요. */
+.onboarding-slides__track {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.onboarding-slides__track::-webkit-scrollbar {
+  display: none;
+}
+
+/* 점 인디케이터가 현재 장으로 바뀔 때 폭/색이 차분하게 이어지도록만 해요.
+   화면이 흔들리거나 강조되는 애니메이션은 의도적으로 넣지 않았어요. */
+.onboarding-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background-color: #d9e3d8;
+  transition:
+    width 0.25s ease,
+    background-color 0.25s ease;
+}
+
+.onboarding-dot--active {
+  width: 22px;
+  background-color: #9caf9a;
+}

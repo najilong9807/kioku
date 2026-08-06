@@ -49,6 +49,7 @@ import {
   NotificationBellButton,
   NotificationsSheetContent,
 } from "./NotificationsView";
+import OnboardingSlides from "./OnboardingSlides";
 import ProfileView, { ProfileIconButton } from "./ProfileView";
 import { RegionFilterSheetContent, RegionPicker } from "./RegionPicker";
 import RestaurantDetailView from "./RestaurantDetailView";
@@ -1073,15 +1074,47 @@ function hasSeenSplashThisSession(): boolean {
   }
 }
 
+// 온보딩 슬라이드는 세션이 아니라 "최초 1회"만 봐야 해서, 세션이 끝나도
+// 유지되는 localStorage에 저장해요(위 SPLASH_SESSION_STORAGE_KEY는 세션마다
+// 다시 보여줘야 해서 sessionStorage를 쓰는 것과 대비돼요).
+const ONBOARDING_SEEN_STORAGE_KEY = "kioku:onboardingSeen";
+
+function hasSeenOnboarding(): boolean {
+  try {
+    return localStorage.getItem(ONBOARDING_SEEN_STORAGE_KEY) === "true";
+  } catch {
+    // localStorage를 사용할 수 없는 환경이면 매번 온보딩을 보여줘요.
+    return false;
+  }
+}
+
+function markOnboardingSeen(): void {
+  try {
+    localStorage.setItem(ONBOARDING_SEEN_STORAGE_KEY, "true");
+  } catch {
+    // ignore
+  }
+}
+
 function App() {
   const [showSplash, setShowSplash] = useState(
     () => !hasSeenSplashThisSession(),
+  );
+  const [showOnboarding, setShowOnboarding] = useState(
+    () => !hasSeenOnboarding(),
   );
   const [selectedTab, setSelectedTab] = useState(HOME_TAB_INDEX);
   const [nickname, setNickname] = useState<string | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [homeNeighborhood, setHomeNeighborhood] = useState<string | null>(null);
   const [userHash, setUserHash] = useState<string | null>(null);
+  // 닉네임이 없는 사용자라는 걸 확인해도, 온보딩 슬라이드가 떠 있는 동안에는
+  // 바로 닉네임 바텀시트를 열지 않고 여기 잠깐 담아둬요. 두 오버레이가 동시에
+  // 뜨면(닉네임 시트의 다이얼로그가 온보딩 위에서 클릭을 가로채는 문제가 있어서)
+  // 온보딩부터 다 보여준 뒤에 이어서 열어요.
+  const [pendingNicknameUserHash, setPendingNicknameUserHash] = useState<
+    string | null
+  >(null);
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -1238,7 +1271,7 @@ function App() {
       setUserHash(userHash);
 
       if (!profile?.nickname) {
-        openNicknameSheet(userHash);
+        setPendingNicknameUserHash(userHash);
       } else {
         setNickname(profile.nickname);
         setProfileImage(profile.profile_image);
@@ -1256,6 +1289,16 @@ function App() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // 스플래시/온보딩이 모두 끝난 뒤에야 닉네임 바텀시트를 열어요.
+  useEffect(() => {
+    if (showSplash || showOnboarding || !pendingNicknameUserHash) {
+      return;
+    }
+    openNicknameSheet(pendingNicknameUserHash);
+    setPendingNicknameUserHash(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showSplash, showOnboarding, pendingNicknameUserHash]);
 
   const openNicknameSheet = (userHash: string) => {
     open({
@@ -1579,6 +1622,11 @@ function App() {
     setShowSplash(false);
   };
 
+  const handleOnboardingFinish = () => {
+    markOnboardingSeen();
+    setShowOnboarding(false);
+  };
+
   const openSearchSheet = () => {
     open({
       header: <SheetHeader title="검색" onClose={close} />,
@@ -1600,6 +1648,14 @@ function App() {
       {/* 다른 화면들이 뒤에서 준비되는 동안 잠깐 덮어서 보여주는 인트로예요.
           사라지고 나면 이미 로드된 홈 화면이 바로 보여요. */}
       {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
+
+      {/* 스플래시가 끝난 뒤, 최초 1회만(localStorage 플래그) 보여주는 온보딩
+          소개 슬라이드예요. 닉네임 입력 바텀시트는 이미 별도 useEffect에서
+          열려 있을 수 있지만, 이 오버레이가 z-index로 그 위를 덮고 있다가
+          "시작하기"/"건너뛰기"로 닫히면 자연스럽게 그 아래 있던 화면이 드러나요. */}
+      {!showSplash && showOnboarding && (
+        <OnboardingSlides onFinish={handleOnboardingFinish} />
+      )}
 
       {/* 탭을 전환해도 항상 보이는 전역 상단바예요. 스크롤해도 화면 위에 고정돼요. */}
       <div
