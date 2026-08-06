@@ -9,6 +9,7 @@ import {
 import {
   CalendarDays,
   Headphones,
+  History,
   Sparkles,
   UtensilsCrossed,
 } from "lucide-react";
@@ -35,7 +36,7 @@ import {
 } from "./lib/quickActionIcons";
 import { SheetHeader } from "./lib/SheetHeader";
 import { fetchTodayMealPosts, type ThreadPost } from "./lib/threadPosts";
-import type { Restaurant } from "./restaurantStorage";
+import { oneYearAgoDateInputValue, type Restaurant } from "./restaurantStorage";
 
 const RECENT_RESTAURANT_LIMIT = 2;
 const RECENT_POST_LIMIT = 2;
@@ -222,6 +223,131 @@ function DDayCard({
   );
 }
 
+// 정확히 1년 전 오늘 방문한 맛집 기록이 있을 때만 보여주는 회고 카드예요.
+// 여러 곳이면 사진이 있는 기록을 대표로 앞세우고(없으면 그냥 첫 기록),
+// 나머지는 "+N곳 더보기"로 펼쳐볼 수 있게 해요. 다른 홈 카드(StatsCard,
+// DDayCard)와 같은 구조(아이콘 칩 + 문구, 16px 라운드 카드)를 쓰되, 색만
+// 세이지그린 톤으로 구분해요. 매번 화면을 흔들거나 강조 애니메이션을 넣지
+// 않고 차분한 카드로만 보여줘서, 그날 홈을 여러 번 오가도 부담스럽지 않게 해요.
+function AnniversaryCard({
+  restaurants,
+  onSelectRestaurant,
+  onViewMore,
+}: {
+  restaurants: Restaurant[];
+  onSelectRestaurant: (restaurant: Restaurant) => void;
+  onViewMore: () => void;
+}) {
+  const featured =
+    restaurants.find((restaurant) => (restaurant.photos?.length ?? 0) > 0) ??
+    restaurants[0];
+  const extraCount = restaurants.length - 1;
+  const photo = featured.photos?.[0];
+  const preview = featured.memo
+    ? truncateForPreview(featured.memo, POST_PREVIEW_MAX_LENGTH)
+    : null;
+
+  return (
+    <div style={{ padding: "0 24px" }}>
+      <div
+        style={{
+          borderRadius: "16px",
+          backgroundColor: "#EAF0EA",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          onClick={() => onSelectRestaurant(featured)}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            padding: "16px 20px",
+            cursor: "pointer",
+          }}
+        >
+          {photo ? (
+            <img
+              src={photo}
+              alt=""
+              style={{
+                width: "44px",
+                height: "44px",
+                borderRadius: "12px",
+                objectFit: "cover",
+                flexShrink: 0,
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "12px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "#DCE7DB",
+                flexShrink: 0,
+              }}
+            >
+              <History size={18} color="#4A6350" />
+            </div>
+          )}
+          <div
+            style={{
+              flex: "1 1 auto",
+              minWidth: 0,
+              display: "flex",
+              flexDirection: "column",
+              gap: "2px",
+            }}
+          >
+            <span style={{ fontSize: "12px", fontWeight: 700, color: "#4A6350" }}>
+              1년 전 오늘
+            </span>
+            <span
+              style={{
+                fontSize: "14px",
+                fontWeight: 600,
+                color: "#333d4b",
+                ...NAME_ELLIPSIS_STYLE,
+              }}
+            >
+              {featured.name}에 다녀왔어요
+            </span>
+            {preview && (
+              <span
+                style={{
+                  fontSize: "13px",
+                  color: "#6b7684",
+                  ...NAME_ELLIPSIS_STYLE,
+                }}
+              >
+                {preview}
+              </span>
+            )}
+          </div>
+        </div>
+        {extraCount > 0 && (
+          <div
+            onClick={onViewMore}
+            style={{
+              padding: "0 20px 14px",
+              textAlign: "right",
+              cursor: "pointer",
+            }}
+          >
+            <span style={{ fontSize: "12px", fontWeight: 700, color: "#4A6350" }}>
+              +{extraCount}곳 더보기 ›
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function QuickActionButton({
   icon,
   label,
@@ -346,10 +472,63 @@ export default function HomeScreen({
     [restaurants],
   );
 
+  // 정확히 1년 전 오늘(같은 월/일) 방문한 기록만 골라요. 날짜가 바뀌는 자정
+  // 경계에서만 값이 바뀌면 되니 매 렌더마다 다시 계산해도 부담 없어요.
+  const oneYearAgoRestaurants = useMemo(() => {
+    const target = oneYearAgoDateInputValue();
+    return restaurants.filter((restaurant) => restaurant.visitDate === target);
+  }, [restaurants]);
+
   const openCustomerSupportSheet = () => {
     open({
       header: <SheetHeader title="고객센터" onClose={close} />,
       children: <CustomerSupportView onClose={close} />,
+    });
+  };
+
+  const openAnniversarySheet = () => {
+    open({
+      header: <SheetHeader title="1년 전 오늘" onClose={close} />,
+      children: (
+        <List>
+          {oneYearAgoRestaurants.map((restaurant) => (
+            <div
+              key={restaurant.id}
+              onClick={() => {
+                close();
+                onSelectRestaurant(restaurant);
+              }}
+              style={{ cursor: "pointer" }}
+            >
+              <ListRow
+                withTouchEffect
+                left={
+                  restaurant.photos && restaurant.photos.length > 0 ? (
+                    <ListRow.AssetImage
+                      src={restaurant.photos[0]}
+                      shape="squircle"
+                      size="medium"
+                    />
+                  ) : (
+                    <ListRow.AssetText shape="squircle" size="medium">
+                      {restaurant.name.slice(0, 1)}
+                    </ListRow.AssetText>
+                  )
+                }
+                contents={
+                  <ListRow.Texts
+                    type="2RowTypeA"
+                    top={restaurant.name}
+                    bottom={[restaurant.neighborhood, `★ ${restaurant.rating}`]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  />
+                }
+              />
+            </div>
+          ))}
+        </List>
+      ),
     });
   };
 
@@ -363,6 +542,14 @@ export default function HomeScreen({
           {formatTodayGreetingDate()}
         </div>
       </div>
+
+      {isRestaurantsLoaded && oneYearAgoRestaurants.length > 0 && (
+        <AnniversaryCard
+          restaurants={oneYearAgoRestaurants}
+          onSelectRestaurant={onSelectRestaurant}
+          onViewMore={openAnniversarySheet}
+        />
+      )}
 
       <StatsCard isLoaded={isRestaurantsLoaded} count={restaurants.length} />
 

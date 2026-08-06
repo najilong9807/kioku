@@ -33,6 +33,18 @@ export function todayDateInputValue(): string {
   return toDateInputValue(new Date());
 }
 
+// "1년 전 오늘"(정확히 1년 전 같은 월/일)의 "YYYY-MM-DD"예요. 예: 오늘이
+// 2026-08-06이면 "2025-08-06"을 돌려줘요. 오늘이 윤년의 2월 29일이어도(작년엔
+// 그 날짜 자체가 없었을 거라) 그대로 "YYYY-02-29"를 돌려줘요 — 어차피 그
+// 날짜로 저장된 기록은 있을 수 없으니(<input type="date">가 그 해엔 2/29를
+// 허용하지 않아요) 자연스럽게 일치하는 기록이 없는 것으로 처리돼요.
+export function oneYearAgoDateInputValue(baseDate: Date = new Date()): string {
+  const yyyy = baseDate.getFullYear() - 1;
+  const mm = String(baseDate.getMonth() + 1).padStart(2, "0");
+  const dd = String(baseDate.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 // 화면에 보여줄 때는 기존처럼 "YYYY.MM.DD" 형태로 표시해요.
 export function formatDisplayDate(value: string): string {
   return value.replaceAll("-", ".");
