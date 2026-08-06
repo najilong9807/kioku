@@ -1,5 +1,8 @@
-import { Asset, Button } from "@toss/tds-mobile";
-import type { CSSProperties } from "react";
+import { Asset, Button, useToast } from "@toss/tds-mobile";
+import { Share2 } from "lucide-react";
+import { useState, type CSSProperties } from "react";
+import { shareImage } from "./lib/share";
+import { renderRestaurantCard } from "./lib/shareCard";
 import type { Restaurant } from "./restaurantStorage";
 import { HANDWRITING_TEXT_STYLE } from "./theme";
 
@@ -25,9 +28,45 @@ export default function RestaurantDetailView({
   restaurant: Restaurant;
   onEdit: () => void;
 }) {
+  const toast = useToast();
+  const [isSharing, setIsSharing] = useState(false);
   const photos = restaurant.photos ?? [];
   // 커스텀 제목이 있으면 그걸 소제목으로, 없으면 가게 이름을 그대로 써요.
   const subtitle = restaurant.title.trim() || restaurant.name;
+
+  // 카드 이미지를 만들고, Web Share API(또는 앱인토스/클립보드/다운로드 폴백)로
+  // 공유해요. 실제 공유/저장 동작은 lib/share.ts가 맡아요.
+  const handleShare = async () => {
+    if (isSharing) {
+      return;
+    }
+    setIsSharing(true);
+    try {
+      const blob = await renderRestaurantCard(restaurant);
+      const outcome = await shareImage({
+        blob,
+        fileName: `이게맛다-${subtitle}.png`,
+        title: `이게맛다 - ${subtitle}`,
+        text: restaurant.memo || `${subtitle}에 다녀왔어요.`,
+      });
+
+      if (outcome === "saved") {
+        toast.openToast("이미지를 기기에 저장했어요");
+      } else if (outcome === "copied") {
+        toast.openToast("이미지를 클립보드에 복사했어요");
+      } else if (outcome === "downloaded") {
+        toast.openToast("이미지를 다운로드했어요");
+      } else if (outcome === "failed") {
+        toast.openToast("공유에 실패했어요. 다시 시도해주세요");
+      }
+      // "shared"/"cancelled"는 공유 시트 자체가 충분한 피드백이라 토스트를 따로 띄우지 않아요.
+    } catch (error) {
+      console.error("맛집 기록 카드를 만들지 못했어요.", error);
+      toast.openToast("이미지를 만들지 못했어요. 다시 시도해주세요");
+    } finally {
+      setIsSharing(false);
+    }
+  };
 
   const infoLine = [
     restaurant.category,
@@ -124,14 +163,31 @@ export default function RestaurantDetailView({
         </div>
       )}
 
-      <Button
-        display="block"
-        variant="fill"
-        style={PRIMARY_FILL_BUTTON_TEXT_STYLE}
-        onClick={onEdit}
-      >
-        수정하기
-      </Button>
+      <div style={{ display: "flex", gap: "8px" }}>
+        <Button
+          display="block"
+          variant="weak"
+          color="dark"
+          onClick={handleShare}
+          loading={isSharing}
+          style={{ flex: 1 }}
+        >
+          <span
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+          >
+            <Share2 size={16} />
+            공유하기
+          </span>
+        </Button>
+        <Button
+          display="block"
+          variant="fill"
+          style={{ flex: 1, ...PRIMARY_FILL_BUTTON_TEXT_STYLE }}
+          onClick={onEdit}
+        >
+          수정하기
+        </Button>
+      </div>
     </div>
   );
 }

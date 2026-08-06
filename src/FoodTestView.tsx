@@ -1,5 +1,5 @@
-import { Button, Checkbox, Modal, ProgressBar } from "@toss/tds-mobile";
-import { ChevronLeft, X } from "lucide-react";
+import { Button, Checkbox, Modal, ProgressBar, useToast } from "@toss/tds-mobile";
+import { ChevronLeft, Share2, X } from "lucide-react";
 import { useEffect, useState, type CSSProperties } from "react";
 import { AvatarIcon } from "./lib/avatars";
 import {
@@ -16,6 +16,8 @@ import {
 } from "./lib/foodTest";
 import { PersonalityIcon } from "./lib/personalityIcons";
 import { QuestionIllustration } from "./lib/questionIcons";
+import { shareImage } from "./lib/share";
+import { renderFoodTestResultCard } from "./lib/shareCard";
 
 const ANSWER_LETTERS: readonly AnswerLetter[] = ["A", "B", "C"];
 
@@ -432,6 +434,43 @@ function ResultStep({
   onRetry: () => void;
   onDone: () => void;
 }) {
+  const toast = useToast();
+  const [isSharing, setIsSharing] = useState(false);
+
+  // 카드 이미지를 만들고, Web Share API(또는 앱인토스/클립보드/다운로드 폴백)로
+  // 공유해요. 실제 공유/저장 동작은 lib/share.ts가 맡아요.
+  const handleShare = async () => {
+    if (isSharing) {
+      return;
+    }
+    setIsSharing(true);
+    try {
+      const blob = await renderFoodTestResultCard(result);
+      const outcome = await shareImage({
+        blob,
+        fileName: `이게맛다-먹보조사-${result.personalityCode}.png`,
+        title: `이게맛다 먹보조사 - ${result.title}`,
+        text: result.description,
+      });
+
+      if (outcome === "saved") {
+        toast.openToast("이미지를 기기에 저장했어요");
+      } else if (outcome === "copied") {
+        toast.openToast("이미지를 클립보드에 복사했어요");
+      } else if (outcome === "downloaded") {
+        toast.openToast("이미지를 다운로드했어요");
+      } else if (outcome === "failed") {
+        toast.openToast("공유에 실패했어요. 다시 시도해주세요");
+      }
+      // "shared"/"cancelled"는 공유 시트 자체가 충분한 피드백이라 토스트를 따로 띄우지 않아요.
+    } catch (error) {
+      console.error("먹보조사 결과 카드를 만들지 못했어요.", error);
+      toast.openToast("이미지를 만들지 못했어요. 다시 시도해주세요");
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <div style={{ display: "flex", justifyContent: "flex-end" }}>
@@ -496,12 +535,27 @@ function ResultStep({
         >
           {result.description}
         </div>
+        <Button
+          display="block"
+          variant="weak"
+          color="dark"
+          onClick={handleShare}
+          loading={isSharing}
+          style={{ width: "100%", marginTop: "16px" }}
+        >
+          <span
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+          >
+            <Share2 size={16} />
+            결과 카드 공유하기
+          </span>
+        </Button>
         <div
           style={{
             display: "flex",
             gap: "8px",
             width: "100%",
-            marginTop: "16px",
+            marginTop: "8px",
           }}
         >
           <Button
