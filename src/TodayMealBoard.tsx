@@ -10,7 +10,7 @@ import {
   useBottomSheet,
   useDialog,
 } from "@toss/tds-mobile";
-import { Heart, MessageCircle, Search } from "lucide-react";
+import { Heart, MessageCircle, NotebookPen, Search } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -765,8 +765,12 @@ function CommentsSheetContent({
 
 function TodayMealBoard({
   onOpenRestaurantSearch,
+  onRecordFromPost,
 }: {
   onOpenRestaurantSearch: () => void;
+  // 게시글의 "나도 기록할래요"를 누르면 실행돼요. 맛있는 하루 등록폼으로
+  // 이동하면서 이름 필드를 이 글 내용으로 미리 채워줘요(App.tsx가 구현).
+  onRecordFromPost: (post: ThreadPost) => void;
 }) {
   // 탭에 들어올 때마다(컴포넌트가 새로 마운트될 때마다) 랜덤으로 하나 골라요.
   const [searchEntryLabel] = useState(() =>
@@ -1337,16 +1341,35 @@ function TodayMealBoard({
                       {post.commentCount > 0 ? post.commentCount : ""}
                     </button>
                   </div>
-                  {post.userId === currentUserId && (
+                  <div style={{ display: "flex", gap: "6px" }}>
                     <Button
                       size="small"
                       variant="weak"
-                      color="danger"
-                      onClick={() => handleDelete(post)}
+                      color="dark"
+                      onClick={() => onRecordFromPost(post)}
                     >
-                      삭제
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                        }}
+                      >
+                        <NotebookPen size={14} />
+                        나도 기록할래요
+                      </span>
                     </Button>
-                  )}
+                    {post.userId === currentUserId && (
+                      <Button
+                        size="small"
+                        variant="weak"
+                        color="danger"
+                        onClick={() => handleDelete(post)}
+                      >
+                        삭제
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
               <Border />
