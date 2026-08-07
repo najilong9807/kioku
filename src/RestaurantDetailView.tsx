@@ -1,4 +1,4 @@
-import { Asset, Button, useToast } from "@toss/tds-mobile";
+import { Asset, Badge, Button, useToast } from "@toss/tds-mobile";
 import { Share2 } from "lucide-react";
 import { useState, type CSSProperties } from "react";
 import { shareImage } from "./lib/share";
@@ -24,9 +24,13 @@ const PRIMARY_FILL_BUTTON_TEXT_STYLE = {
 export default function RestaurantDetailView({
   restaurant,
   onEdit,
+  onSelectTag,
 }: {
   restaurant: Restaurant;
   onEdit: () => void;
+  // 메뉴 태그 칩을 탭했을 때 실행돼요. 검색과 별개인 "태그 모아보기" 진입점이에요.
+  // 넘기지 않으면(예: 미리보기 등 다른 맥락) 태그가 그냥 일반 텍스트로만 보여요.
+  onSelectTag?: (tag: string) => void;
 }) {
   const toast = useToast();
   const [isSharing, setIsSharing] = useState(false);
@@ -127,8 +131,39 @@ export default function RestaurantDetailView({
       </div>
 
       {restaurant.menus.length > 0 && (
-        <div style={{ fontSize: "13px", color: "#8b95a1" }}>
-          먹은 메뉴 · {restaurant.menus.join(", ")}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "6px",
+          }}
+        >
+          <span style={{ fontSize: "13px", color: "#8b95a1" }}>먹은 메뉴</span>
+          {restaurant.menus.map((menu) =>
+            onSelectTag ? (
+              <button
+                key={menu}
+                type="button"
+                onClick={() => onSelectTag(menu)}
+                style={{
+                  border: "none",
+                  background: "none",
+                  padding: 0,
+                  cursor: "pointer",
+                  WebkitTapHighlightColor: "transparent",
+                }}
+              >
+                <Badge size="small" variant="weak" color="green">
+                  #{menu}
+                </Badge>
+              </button>
+            ) : (
+              <Badge key={menu} size="small" variant="weak" color="green">
+                #{menu}
+              </Badge>
+            ),
+          )}
         </div>
       )}
 

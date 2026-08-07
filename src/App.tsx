@@ -72,6 +72,7 @@ import {
   type Category,
   type Restaurant,
 } from "./restaurantStorage";
+import { TagRestaurantsSheetContent } from "./TagRestaurantsView";
 import TodayMealBoard from "./TodayMealBoard";
 
 // 목록에서 메뉴가 많으면 2개까지만 보여주고 나머지는 "+N"으로 축약해요.
@@ -1630,6 +1631,25 @@ function App() {
           onEdit={() => {
             close();
             openEditSheet(restaurant);
+          }}
+          onSelectTag={(tag) => openTagSheet(tag)}
+        />
+      ),
+    });
+  };
+
+  // 상세보기에서 메뉴 태그 칩을 탭하면 열리는 "태그 모아보기"예요. 검색과는
+  // 별개 진입점이라, 상세보기 → 태그 모아보기 → (다시) 상세보기로만 이어져요.
+  const openTagSheet = (tag: string) => {
+    open({
+      header: <SheetHeader title={`#${tag}`} onClose={close} />,
+      children: (
+        <TagRestaurantsSheetContent
+          tag={tag}
+          restaurants={restaurants}
+          onSelectRestaurant={(selected) => {
+            close();
+            openDetailSheet(selected);
           }}
         />
       ),
