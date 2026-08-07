@@ -9,6 +9,7 @@ import {
 } from "@toss/tds-mobile";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { useMemo, useState, type CSSProperties } from "react";
+import { EmptyCalendarIcon, EmptyStateFigure } from "./lib/emptyStateIcons";
 import {
   formatDDay,
   getDaysUntil,
@@ -526,7 +527,12 @@ export default function CalendarView({
 
       {!isLoaded ? null : sortedVisits.length === 0 ? (
         <Result
-          title="등록된 방문 예정이 없어요"
+          figure={
+            <EmptyStateFigure
+              icon={<EmptyCalendarIcon size={32} color="#4A6350" />}
+            />
+          }
+          title="아직 계획한 방문이 없어요"
           description={"달력에서 날짜를 눌러\n다음 맛집 방문을 계획해보세요."}
         />
       ) : (

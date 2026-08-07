@@ -21,6 +21,7 @@ import {
   type CSSProperties,
 } from "react";
 import { fetchLikedCommentIds, toggleCommentLike } from "./lib/commentLikes";
+import { EmptyChatIcon, EmptyStateFigure } from "./lib/emptyStateIcons";
 import { resizeImageFile } from "./lib/imageResize";
 import {
   buildFullRegionOptions,
@@ -1151,7 +1152,12 @@ function TodayMealBoard({
 
       {!isLoaded ? null : posts.length === 0 ? (
         <Result
-          title="아직 올라온 글이 없어요"
+          figure={
+            <EmptyStateFigure
+              icon={<EmptyChatIcon size={32} color="#4A6350" />}
+            />
+          }
+          title="아직 올라온 한 입이 없어요"
           description={"오늘 먹은 메뉴를\n자유롭게 나눠보세요."}
         />
       ) : visiblePosts.length === 0 ? (

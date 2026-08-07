@@ -1,5 +1,6 @@
 import { Button, List, ListRow, Result, Skeleton } from "@toss/tds-mobile";
 import { useEffect, useState, type MouseEvent } from "react";
+import { EmptyBookmarkIcon, EmptyStateFigure } from "./lib/emptyStateIcons";
 import { fetchScrapedPosts, toggleScrap } from "./lib/postScraps";
 import type { ThreadPost } from "./lib/threadPosts";
 
@@ -81,6 +82,11 @@ export default function ScrapsView({
         </div>
       ) : posts.length === 0 ? (
         <Result
+          figure={
+            <EmptyStateFigure
+              icon={<EmptyBookmarkIcon size={32} color="#4A6350" />}
+            />
+          }
           title="아직 스크랩한 글이 없어요"
           description={"오늘의 한 입에서 마음에 드는 글을\n스크랩해보세요."}
         />

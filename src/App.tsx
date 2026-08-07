@@ -29,6 +29,10 @@ import "./App.css";
 import { BrandMarkIcon } from "./BrandMarkIcon";
 import CalendarView, { type PlannedVisitFormValues } from "./CalendarView";
 import HomeScreen from "./HomeScreen";
+import {
+  EmptyDiaryIcon,
+  EmptyStateFigure,
+} from "./lib/emptyStateIcons";
 import { resizeImageFile } from "./lib/imageResize";
 import {
   buildRegionFilterOptions,
@@ -1838,10 +1842,13 @@ function App() {
 
           {!isLoaded ? null : restaurants.length === 0 ? (
             <Result
-              title="아직 기록된 맛집이 없어요"
-              description={
-                "다녀온 맛집을 기록하면\n여기에 모아서 볼 수 있어요."
+              figure={
+                <EmptyStateFigure
+                  icon={<EmptyDiaryIcon size={32} color="#4A6350" />}
+                />
               }
+              title="아직 기록한 맛집이 없어요"
+              description={"첫 기록을 남겨보세요."}
             />
           ) : visibleRestaurants.length === 0 ? (
             <Result
