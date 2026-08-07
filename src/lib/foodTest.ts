@@ -2,7 +2,7 @@ import { Storage } from "@apps-in-toss/web-framework";
 import type { FoodStyle as AvatarFoodStyle } from "./avatars";
 
 // "먹보조사" 음식 성향 테스트예요. 4개 축(여정스타일/선택기준/식사방식/음식취향)에
-// 각각 8/8/9/10문항, 총 35문항의 3지선다로 구성돼요. 앞 3개 축은 A/B/C에 각각
+// 각각 6/6/6/8문항, 총 26문항의 3지선다로 구성돼요. 앞 3개 축은 A/B/C에 각각
 // +1/0/-1 점수를 매겨 합산 후 성향 코드를 정하고, 음식취향 축은 각 보기가
 // 가리키는 음식 카테고리의 등장 빈도로 판정해요. 두 결과를 조합해서 최종
 // 별명을 만들어요.
@@ -53,17 +53,6 @@ const JOURNEY_QUESTIONS: ScoredQuestion[] = [
       "정해둔 목적지 없이 끌리는 대로 걸어간다",
       "대략적인 방향만 정해두고 걷는다",
       "미리 검색해둔 장소로 곧장 향한다",
-    ],
-  },
-  {
-    id: "journey-2",
-    axis: "journey",
-    situationLabel: "지도 앱 활용",
-    prompt: "여행지에서 지도 앱을 켰을 때 나는?",
-    options: [
-      "지도에 없는 골목이나 수상해 보이는 길로 들어가 본다",
-      "동선만 대충 확인하고 즉흥적으로 움직인다",
-      "저장해둔 장소 순서대로만 이동한다",
     ],
   },
   {
@@ -121,32 +110,10 @@ const JOURNEY_QUESTIONS: ScoredQuestion[] = [
       "그나마 아는 단어가 하나라도 들어간 안전한 메뉴를 고른다",
     ],
   },
-  {
-    id: "journey-9",
-    axis: "journey",
-    situationLabel: "괴식/이색 요리",
-    prompt: "\"이 재료랑 이 재료가 어울린다고?\" 싶은 특이한 조합의 요리를 추천받는다면?",
-    options: [
-      "호기심이 폭발해서 당장 먹어보고 싶다",
-      "남들이 먼저 먹어보고 괜찮다고 하면 도전한다",
-      "검증된 맛의 조합만 먹는 게 마음 편하다",
-    ],
-  },
 ];
 
 // ── 선택기준 (A=감성 / C=효율) ──────────────────────────────────
 const CHOICE_QUESTIONS: ScoredQuestion[] = [
-  {
-    id: "choice-1",
-    axis: "choice",
-    situationLabel: "물건 구매",
-    prompt: "쇼핑할 때 내 마음을 먼저 사로잡는 것은?",
-    options: [
-      "보는 순간 기분 좋아지는 예쁜 디자인",
-      "디자인과 실용성의 적절한 조화",
-      "오래 쓸 수 있고 기능이 확실한 실용성",
-    ],
-  },
   {
     id: "choice-2",
     axis: "choice",
@@ -156,17 +123,6 @@ const CHOICE_QUESTIONS: ScoredQuestion[] = [
       "방의 전체 분위기를 바꿔줄 감성 조명이나 소품",
       "디자인도 예쁘고 수납도 되는 가구",
       "공간 활용도를 극대화해 줄 효율적인 수납장",
-    ],
-  },
-  {
-    id: "choice-3",
-    axis: "choice",
-    situationLabel: "숙소 예약",
-    prompt: "여행지 숙소를 고를 때 가장 중요하게 보는 것은?",
-    options: [
-      "탁 트인 뷰와 인스타그램 감성의 인테리어",
-      "적당한 가격과 무난한 위치",
-      "가성비 최고의 실속 있는 가격과 이동 효율성",
     ],
   },
   {
@@ -240,17 +196,6 @@ const DINING_QUESTIONS: ScoredQuestion[] = [
     ],
   },
   {
-    id: "dining-2",
-    axis: "dining",
-    situationLabel: "주말 일정",
-    prompt: "주말에 갑자기 자유시간이 생겼을 때 나의 행동은?",
-    options: [
-      "누구한테 연락해서 만날지부터 생각한다",
-      "상황과 컨디션에 따라 다르게 결정한다",
-      "혼자서 뭘 하며 쉴지부터 즐겁게 구상한다",
-    ],
-  },
-  {
     id: "dining-3",
     axis: "dining",
     situationLabel: "여행 스타일",
@@ -292,28 +237,6 @@ const DINING_QUESTIONS: ScoredQuestion[] = [
       "이 사람 저 사람 자리를 옮겨 다니며 대화를 주도한다",
       "옆 사람들과 소소하게 어울리며 분위기를 맞춘다",
       "구석에서 조용히 음식을 즐기며 상황을 관망한다",
-    ],
-  },
-  {
-    id: "dining-7",
-    axis: "dining",
-    situationLabel: "혼밥/혼술 반응",
-    prompt: "\"나는 혼자 밥 먹고 혼자 여행하는 게 제일 편해\"라는 말을 들으면?",
-    options: [
-      "\"어떻게 혼자서 그래?\" 하고 잘 이해가 안 간다",
-      "\"그럴 때도 있지\" 하고 어느 정도 이해한다",
-      "\"격하게 공감한다! 혼자가 제일이다\"라고 생각한다",
-    ],
-  },
-  {
-    id: "dining-8",
-    axis: "dining",
-    situationLabel: "새 공간 입장",
-    prompt: "한 번도 안 가본 힙한 레스토랑/바에 처음 들어설 때 나는?",
-    options: [
-      "여럿이 왁자지껄 함께 들어가는 게 편하다",
-      "친한 친구 한 명 정도와 함께 들어가는 게 편하다",
-      "혼자 스윽 들어가서 자리를 잡는 게 오히려 편하다",
     ],
   },
   {
@@ -404,18 +327,6 @@ const FOOD_QUESTIONS: FoodQuestion[] = [
     categories: ["분식", "디저트", "패스트푸드"],
   },
   {
-    id: "food-7",
-    axis: "food",
-    situationLabel: "해외 여행의 묘미",
-    prompt: "현지 여행지에서 절대 놓치고 싶지 않은 식경험은?",
-    options: [
-      "향신료와 고수가 듬뿍 들어간 독특한 야시장 음식",
-      "화려한 불쇼와 함께 만들어지는 길거리 볶음면",
-      "장인의 손길이 느껴지는 깔끔하고 정갈한 로컬 요리",
-    ],
-    categories: ["동남아", "중식", "일식"],
-  },
-  {
     id: "food-8",
     axis: "food",
     situationLabel: "기분 전환",
@@ -426,18 +337,6 @@ const FOOD_QUESTIONS: FoodQuestion[] = [
       "어머니가 해준 듯한 속이 풀리는 뜨끈한 집밥",
     ],
     categories: ["양식", "디저트", "한식"],
-  },
-  {
-    id: "food-9",
-    axis: "food",
-    situationLabel: "집들이 선물",
-    prompt: "친구 집들이에 직접 음식이나 소스를 챙겨간다면?",
-    options: [
-      "제대로 된 깊은 맛의 집된장이나 장아찌류",
-      "피시소스나 스리라차 등 힙하고 이국적인 향신 소스",
-      "정성스럽게 구워 간 달달한 수제 쿠키나 케이크",
-    ],
-    categories: ["한식", "동남아", "디저트"],
   },
   {
     id: "food-10",

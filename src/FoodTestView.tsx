@@ -5,6 +5,7 @@ import { AvatarIcon } from "./lib/avatars";
 import {
   computeFoodTestResult,
   FOOD_CATEGORY_AVATAR_STYLE,
+  FOOD_TEST_QUESTION_COUNT,
   loadFoodTestHideIntro,
   saveFoodTestHideIntro,
   saveFoodTestResult,
@@ -210,8 +211,8 @@ function IntroStep({
         <div style={{ fontSize: "15px", color: "#4e5968", lineHeight: 1.6 }}>
           나는 어떤 방식으로 먹고 즐기는 사람일까요?
           <br />
-          여정 스타일과 음식 취향을 알아보는 35문항 테스트예요.
-          <br />약 8~10분 정도 걸려요.
+          여정 스타일과 음식 취향을 알아보는 {FOOD_TEST_QUESTION_COUNT}문항 테스트예요.
+          <br />약 5~7분 정도 걸려요.
         </div>
       </div>
       <label

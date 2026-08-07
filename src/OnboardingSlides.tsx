@@ -101,7 +101,7 @@ const SLIDES: OnboardingSlide[] = [
   {
     icon: <PersonalityIcon code="탐험대장" size={64} />,
     title: "먹보조사",
-    description: "35가지 질문으로 알아보는 나만의 음식 취향, 재미로 확인해보세요!",
+    description: "26가지 질문으로 알아보는 나만의 음식 취향, 재미로 확인해보세요!",
   },
 ];
 
