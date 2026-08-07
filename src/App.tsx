@@ -42,6 +42,7 @@ import {
   type PlannedVisit,
 } from "./lib/plannedVisitStorage";
 import { fetchProfile, saveProfile } from "./lib/profile";
+import { pickRandomItem } from "./lib/random";
 import { SheetHeader } from "./lib/SheetHeader";
 import { getUserIdentityHash } from "./lib/userIdentity";
 import MapView from "./MapView";
@@ -1060,6 +1061,13 @@ const RESTAURANT_TAB_INDEX = 1;
 const TODAY_MEAL_TAB_INDEX = 2;
 const CALENDAR_TAB_INDEX = 3;
 
+// "맛있는 하루" 탭 검색창 placeholder예요. 탭에 들어갈 때마다 랜덤으로 하나
+// 골라서 보여줘요(하루 고정 같은 건 필요 없어요).
+const RESTAURANT_SEARCH_PLACEHOLDERS = [
+  "어떤 맛집을 찾아볼까요?",
+  "다녀온 곳을 검색해보세요",
+] as const;
+
 // 인트로를 봤는지는 세션에 저장해요. 완전히 종료했다가 다시 켤 때는 새 세션이라
 // 다시 보여주지만, 같은 세션 안에서(예: 미니앱이 백그라운드→포그라운드) 반복해서
 // 보이지 않도록 해요.
@@ -1121,6 +1129,8 @@ function App() {
   const [plannedVisits, setPlannedVisits] = useState<PlannedVisit[]>([]);
   const [isPlannedVisitsLoaded, setIsPlannedVisitsLoaded] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [restaurantSearchPlaceholder, setRestaurantSearchPlaceholder] =
+    useState(() => pickRandomItem(RESTAURANT_SEARCH_PLACEHOLDERS));
   const [selectedCategory, setSelectedCategory] =
     useState<(typeof FILTER_CATEGORIES)[number]>(ALL_CATEGORY);
   // null이면 "전체"예요. 필터는 시/도만 고르거나(시/군/구 없는 세종특별자치시 등),
@@ -1229,6 +1239,15 @@ function App() {
     }
     saveRestaurants(restaurants);
   }, [restaurants, isLoaded]);
+
+  // "맛있는 하루" 탭에 들어갈 때마다 검색창 placeholder를 새로 랜덤하게 골라요.
+  useEffect(() => {
+    if (selectedTab === RESTAURANT_TAB_INDEX) {
+      setRestaurantSearchPlaceholder(
+        pickRandomItem(RESTAURANT_SEARCH_PLACEHOLDERS),
+      );
+    }
+  }, [selectedTab]);
 
   // 방문 예정도 맛집 기록과 똑같이 기기 저장이에요(restaurants와 같은 패턴).
   useEffect(() => {
@@ -1748,7 +1767,7 @@ function App() {
             <>
               <div style={{ padding: "0 24px 16px" }}>
                 <SearchField
-                  placeholder="어디 가볼까요?"
+                  placeholder={restaurantSearchPlaceholder}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onDeleteClick={() => setSearchQuery("")}

@@ -35,6 +35,7 @@ import { fetchLikedPostIds, toggleLike } from "./lib/postLikes";
 import { fetchScrapedPostIds, toggleScrap } from "./lib/postScraps";
 import { fetchProfile } from "./lib/profile";
 import { BookmarkRibbonIcon } from "./lib/quickActionIcons";
+import { pickRandomItem } from "./lib/random";
 import { SheetHeader } from "./lib/SheetHeader";
 import {
   createComment,
@@ -52,6 +53,13 @@ import { HANDWRITING_TEXT_STYLE } from "./theme";
 
 // 첨부 사진은 가로 폭 기준 이 값 이하로 리사이즈해서 저장해요.
 const MAX_PHOTO_WIDTH = 800;
+
+// "오늘의 한 입" 탭 검색창(관심 있는 맛집 검색 버튼) 문구예요. 탭에 들어갈
+// 때마다 랜덤으로 하나 골라서 보여줘요.
+const TODAY_MEAL_SEARCH_PLACEHOLDERS = [
+  "다른 사람들의 한 입을 검색해보세요",
+  "궁금한 메뉴나 맛집을 찾아보세요",
+] as const;
 
 type PostSortOption = "latest" | "popular";
 type CommentSortOption = "latest" | "popular";
@@ -759,6 +767,10 @@ function TodayMealBoard({
 }: {
   onOpenRestaurantSearch: () => void;
 }) {
+  // 탭에 들어올 때마다(컴포넌트가 새로 마운트될 때마다) 랜덤으로 하나 골라요.
+  const [searchEntryLabel] = useState(() =>
+    pickRandomItem(TODAY_MEAL_SEARCH_PLACEHOLDERS),
+  );
   const [posts, setPosts] = useState<ThreadPost[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -1097,7 +1109,7 @@ function TodayMealBoard({
           }}
         >
           <Search size={18} color="#8b95a1" />
-          관심 있는 맛집 검색
+          {searchEntryLabel}
         </button>
       </div>
 
