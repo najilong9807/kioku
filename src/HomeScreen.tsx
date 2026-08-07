@@ -34,6 +34,7 @@ import {
   FoldedMapPinIcon,
   RiceBowlIcon,
 } from "./lib/quickActionIcons";
+import { SeasonIcon } from "./lib/seasonIcon";
 import { SheetHeader } from "./lib/SheetHeader";
 import { fetchTodayMealPosts, type ThreadPost } from "./lib/threadPosts";
 import { oneYearAgoDateInputValue, type Restaurant } from "./restaurantStorage";
@@ -535,8 +536,18 @@ export default function HomeScreen({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       <div style={{ padding: "0 24px" }}>
-        <div style={{ fontSize: "20px", fontWeight: 700, color: "#191f28" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            fontSize: "20px",
+            fontWeight: 700,
+            color: "#191f28",
+          }}
+        >
           안녕하세요, {nickname ?? "회원"}님
+          <SeasonIcon size={20} color="#9CAF9A" />
         </div>
         <div style={{ marginTop: "4px", fontSize: "14px", color: "#8b95a1" }}>
           {formatTodayGreetingDate()}
