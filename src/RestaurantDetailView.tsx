@@ -114,7 +114,12 @@ export default function RestaurantDetailView({
           wordBreak: "break-word",
           ...HANDWRITING_TEXT_STYLE,
           fontSize: "20px",
-          lineHeight: 2,
+          // 이 화면(상세보기)에서만, 손글씨 폰트 특유의 "짜치는" 느낌을 줄이려고
+          // 기본값(theme.ts의 letterSpacing 0.2px)보다 자간은 살짝 좁히고, 줄간격은
+          // 기존 이 화면의 2보다 살짝 더 넓혔어요. 다른 화면(오늘의 한 입 등)의
+          // HANDWRITING_TEXT_STYLE 사용부는 그대로예요.
+          letterSpacing: "-0.2px",
+          lineHeight: 2.15,
           color: restaurant.memo ? "#191f28" : "#b0b8c1",
         }}
       >
@@ -130,6 +135,10 @@ export default function RestaurantDetailView({
       {photos.length > 0 && (
         <div
           style={{
+            // 종이 다이어리에서 사진을 붙여넣은 것처럼, 본문 텍스트와 사진 사이는
+            // 다른 화면의 기본 flex gap(20px)보다 조금 더 여유 있게 둬요. 이
+            // marginTop은 부모의 flex gap 위에 "추가로" 더해지는 간격이에요.
+            marginTop: "16px",
             display: "grid",
             gridTemplateColumns: "repeat(3, 1fr)",
             gap: "8px",
