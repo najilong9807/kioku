@@ -1,7 +1,9 @@
-// 홈 화면 "이번 주/이번 달" 요약 카드를 위한 순수 계산 유틸이에요. Supabase
-// 스키마 변경 없이, 이미 로컬(kioku:restaurants)에 있는 맛있는 하루 기록의
-// visitDate만으로 클라이언트에서 집계해요.
+// 홈 화면 "이번 주/이번 달" 요약 카드, 프로필 화면 "계절 스탬프"를 위한 순수
+// 계산 유틸이에요. Supabase 스키마 변경이나 별도 저장 테이블 없이, 이미
+// 로컬(kioku:restaurants)에 있는 맛있는 하루 기록의 visitDate만으로 매번
+// 다시 계산해요.
 import { toDateInputValue, type Restaurant } from "../restaurantStorage";
+import { seasonForMonth, type Season } from "./seasonIcon";
 
 export interface VisitSummary {
   weekCount: number;
@@ -55,4 +57,32 @@ export function computeVisitSummary(
     weekLabel: `${now.getMonth() + 1}월 ${weekOfMonth}주차`,
     monthLabel: `${now.getMonth() + 1}월`,
   };
+}
+
+// 프로필 화면 "계절 스탬프"용이에요. 등급 시스템과 별개로, 올해(year) 기록을
+// 방문월 기준 계절별로 세어요. 영구 저장하는 스탬프가 아니라 볼 때마다
+// 로컬 기록에서 다시 계산하는 가벼운 집계예요. visitDate 문자열에서 월을
+// 직접 뽑아 쓰기 때문에(Date 파싱 없음) 타임존에 영향받지 않아요.
+export function computeSeasonStamps(
+  restaurants: Restaurant[],
+  year: number = new Date().getFullYear(),
+): Record<Season, number> {
+  const counts: Record<Season, number> = {
+    spring: 0,
+    summer: 0,
+    autumn: 0,
+    winter: 0,
+  };
+
+  for (const restaurant of restaurants) {
+    const [visitYear, visitMonth] = restaurant.visitDate
+      .split("-")
+      .map(Number);
+    if (visitYear !== year) {
+      continue;
+    }
+    counts[seasonForMonth(visitMonth)] += 1;
+  }
+
+  return counts;
 }

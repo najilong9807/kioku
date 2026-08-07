@@ -8,13 +8,20 @@ interface SeasonIconProps {
 
 export type Season = "spring" | "summer" | "autumn" | "winter";
 
-// 월 기준으로 계절을 판단해요. 3~5월 봄, 6~8월 여름, 9~11월 가을, 12~2월 겨울.
-export function getCurrentSeason(date: Date = new Date()): Season {
-  const month = date.getMonth() + 1;
+// 월(1~12) 기준으로 계절을 판단해요. 3~5월 봄, 6~8월 여름, 9~11월 가을, 12~2월
+// 겨울. "YYYY-MM-DD" 문자열에서 뽑은 월처럼, Date 객체 없이 순수 숫자로 판단해야
+// 할 때(예: lib/recordSummary.ts) 이 함수를 바로 써요 — new Date(dateString)로
+// 파싱하면 타임존에 따라 자정 근처 날짜의 월이 하루 밀릴 수 있어서예요
+// (restaurantStorage.ts의 다른 날짜 함수들과 동일한 이유로 문자열을 직접 다뤄요).
+export function seasonForMonth(month: number): Season {
   if (month >= 3 && month <= 5) return "spring";
   if (month >= 6 && month <= 8) return "summer";
   if (month >= 9 && month <= 11) return "autumn";
   return "winter";
+}
+
+export function getCurrentSeason(date: Date = new Date()): Season {
+  return seasonForMonth(date.getMonth() + 1);
 }
 
 // 봄: 벚꽃. 꽃잎 하나를 그려서 중심을 기준으로 72도씩 회전시켜 다섯 장을 만들어요.
@@ -115,11 +122,23 @@ function SnowflakeIcon({ size = 20, color = "#191f28" }: SeasonIconProps) {
   );
 }
 
-const SEASON_ICONS: Record<Season, (props: SeasonIconProps) => React.JSX.Element> = {
+// 계절별 아이콘 컴포넌트예요. 프로필 화면의 "계절 스탬프"처럼 특정 계절
+// 하나를 지정해서 그려야 할 때는 이 맵을 바로 써요.
+export const SEASON_ICONS: Record<
+  Season,
+  (props: SeasonIconProps) => React.JSX.Element
+> = {
   spring: SakuraIcon,
   summer: MonsoonSunIcon,
   autumn: MapleLeafIcon,
   winter: SnowflakeIcon,
+};
+
+export const SEASON_LABELS: Record<Season, string> = {
+  spring: "봄",
+  summer: "여름",
+  autumn: "가을",
+  winter: "겨울",
 };
 
 // 현재 월 기준 계절 아이콘을 보여줘요. 홈 화면 인사말 옆처럼 작은 보조

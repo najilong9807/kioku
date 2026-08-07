@@ -1361,6 +1361,7 @@ function App() {
           profileImage={profileImage}
           neighborhood={homeNeighborhood}
           restaurantCount={restaurants.length}
+          restaurants={restaurants}
           onSaved={(nextNickname, nextProfileImage, nextNeighborhood) => {
             setNickname(nextNickname);
             setProfileImage(nextProfileImage);

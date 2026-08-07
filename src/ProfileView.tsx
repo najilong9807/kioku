@@ -33,7 +33,10 @@ import { loadFoodTestResult, type FoodTestResult } from "./lib/foodTest";
 import { resizeImageFile } from "./lib/imageResize";
 import { formatTierRange, getLevelInfo, LEVEL_TIERS } from "./lib/levels";
 import { saveProfile } from "./lib/profile";
+import { computeSeasonStamps } from "./lib/recordSummary";
+import { SEASON_ICONS, SEASON_LABELS, type Season } from "./lib/seasonIcon";
 import { RegionPicker } from "./RegionPicker";
+import type { Restaurant } from "./restaurantStorage";
 
 // 브랜드 색(노란색)이 밝아서 흰 글씨는 가독성이 떨어져요. App.tsx의 동명 상수와
 // 같은 이유로, variant="fill" 버튼의 글자색을 진하게 덮어써요.
@@ -216,6 +219,67 @@ function FoodTestResultRow() {
   );
 }
 
+const SEASON_ORDER: Season[] = ["spring", "summer", "autumn", "winter"];
+
+// 등급 시스템(Lv.1~10)과는 완전히 별개예요. 영구히 쌓이는 스탬프 수집 시스템이
+// 아니라, 올해 맛있는 하루 기록을 방문월 기준으로 계절별로 세어 매번 다시
+// 계산해서 보여주는 가벼운 표시예요(별도 저장 테이블 없음).
+function SeasonStampRow({ restaurants }: { restaurants: Restaurant[] }) {
+  const year = new Date().getFullYear();
+  const stamps = computeSeasonStamps(restaurants, year);
+
+  if (restaurants.length === 0) {
+    return null;
+  }
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "8px",
+      }}
+    >
+      <span style={{ fontSize: "12px", color: "#8b95a1" }}>
+        {year}년 계절별 기록
+      </span>
+      <div style={{ display: "flex", gap: "10px" }}>
+        {SEASON_ORDER.map((season) => {
+          const Icon = SEASON_ICONS[season];
+          return (
+            <div
+              key={season}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "4px",
+                padding: "10px 12px",
+                borderRadius: "14px",
+                backgroundColor: "#EAF0EA",
+                minWidth: "52px",
+              }}
+            >
+              <Icon size={20} color="#4A6350" />
+              <span
+                style={{ fontSize: "11px", color: "#4A6350", fontWeight: 600 }}
+              >
+                {SEASON_LABELS[season]}
+              </span>
+              <span
+                style={{ fontSize: "13px", color: "#191f28", fontWeight: 700 }}
+              >
+                {stamps[season]}곳
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // 화면 오른쪽 상단에 놓는 작은 정보 아이콘 버튼이에요. 누르면 전체 등급표 모달이 열려요.
 function LevelInfoButton({ onClick }: { onClick: () => void }) {
   return (
@@ -380,6 +444,7 @@ export default function ProfileView({
   profileImage,
   neighborhood,
   restaurantCount,
+  restaurants,
   onSaved,
   onClose,
 }: {
@@ -388,6 +453,9 @@ export default function ProfileView({
   profileImage: string | null;
   neighborhood: string | null;
   restaurantCount: number;
+  // 계절 스탬프 계산용이에요. 등급(restaurantCount)과 달리 방문월별 집계가
+  // 필요해서 전체 배열을 받아요.
+  restaurants: Restaurant[];
   onSaved: (
     nickname: string,
     profileImage: string | null,
@@ -492,6 +560,7 @@ export default function ProfileView({
           <ProfileAvatarPreview profileImage={draftImage} size={96} />
           <LevelBadgeRow restaurantCount={restaurantCount} />
           <FoodTestResultRow />
+          <SeasonStampRow restaurants={restaurants} />
 
           <div
             style={{
