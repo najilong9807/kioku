@@ -17,6 +17,7 @@ import {
   wrapText,
 } from "./canvasCard";
 import type { FoodCategory, FoodTestResult } from "./foodTest";
+import type { VisitSummary } from "./recordSummary";
 
 const SAGE_GREEN = "#9CAF9A";
 const INK = "#191f28";
@@ -322,6 +323,79 @@ export async function renderRestaurantCard(restaurant: Restaurant): Promise<Blob
   }
 
   drawWatermark(ctx, w / 2, h - 46);
+
+  return canvasToBlob(canvas);
+}
+
+const VISIT_SUMMARY_CARD_WIDTH = 720;
+const VISIT_SUMMARY_CARD_HEIGHT = 860;
+
+// "이번 주/이번 달" 기록 요약 카드예요. 먹보조사 결과 카드와 같은 세이지그린
+// 배경 + 장식 원을 쓰되, 가운데는 큰 숫자 두 개(이번 주/이번 달)를 나란히
+// 보여줘요.
+export async function renderVisitSummaryCard(
+  summary: VisitSummary,
+): Promise<Blob> {
+  const w = VISIT_SUMMARY_CARD_WIDTH;
+  const h = VISIT_SUMMARY_CARD_HEIGHT;
+  const { canvas, ctx } = createCardCanvas(w, h);
+
+  ctx.fillStyle = SAGE_GREEN;
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.fillStyle = "rgba(255, 255, 255, 0.10)";
+  ctx.beginPath();
+  ctx.arc(w * 0.9, h * 0.12, 150, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(w * 0.06, h * 0.88, 130, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.textAlign = "center";
+  ctx.textBaseline = "alphabetic";
+
+  ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+  ctx.font = sansFont(700, 24);
+  ctx.fillText("나 의   맛 있 는   기 록", w / 2, 108);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = sansFont(800, 42);
+  ctx.fillText(`${summary.monthLabel} 기록 요약`, w / 2, 168);
+
+  // 이번 주 / 이번 달, 두 스탯을 하나의 흰 카드 안에 나란히 담아요.
+  const panelX = 60;
+  const panelY = 236;
+  const panelW = w - panelX * 2;
+  const panelH = 420;
+  fillRoundedRect(ctx, panelX, panelY, panelW, panelH, 28, "#fffef9");
+
+  const half = panelW / 2;
+  const statCenterY = panelY + panelH / 2 - 20;
+
+  ctx.fillStyle = "#8b95a1";
+  ctx.font = sansFont(600, 24);
+  ctx.fillText(`이번 주(${summary.weekLabel})`, panelX + half / 2, statCenterY - 74);
+  ctx.fillText("이번 달", panelX + half * 1.5, statCenterY - 74);
+
+  ctx.fillStyle = INK;
+  ctx.font = sansFont(800, 96);
+  ctx.fillText(`${summary.weekCount}`, panelX + half / 2, statCenterY + 30);
+  ctx.fillText(`${summary.monthCount}`, panelX + half * 1.5, statCenterY + 30);
+
+  ctx.fillStyle = "#4A6350";
+  ctx.font = sansFont(700, 28);
+  ctx.fillText("곳", panelX + half / 2, statCenterY + 70);
+  ctx.fillText("곳", panelX + half * 1.5, statCenterY + 70);
+
+  // 두 스탯 사이 구분선
+  ctx.strokeStyle = "rgba(25, 31, 40, 0.12)";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(panelX + half, panelY + 48);
+  ctx.lineTo(panelX + half, panelY + panelH - 48);
+  ctx.stroke();
+
+  drawWatermark(ctx, w / 2, h - 52);
 
   return canvasToBlob(canvas);
 }

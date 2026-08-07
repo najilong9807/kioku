@@ -5,12 +5,15 @@ import {
   ListRow,
   Skeleton,
   useBottomSheet,
+  useToast,
 } from "@toss/tds-mobile";
 import {
   CalendarDays,
   Headphones,
   History,
+  Share2,
   Sparkles,
+  TrendingUp,
   UtensilsCrossed,
 } from "lucide-react";
 import {
@@ -18,6 +21,7 @@ import {
   useMemo,
   useState,
   type CSSProperties,
+  type MouseEvent,
   type ReactNode,
 } from "react";
 import CustomerSupportView from "./CustomerSupportView";
@@ -34,7 +38,10 @@ import {
   FoldedMapPinIcon,
   RiceBowlIcon,
 } from "./lib/quickActionIcons";
+import { computeVisitSummary } from "./lib/recordSummary";
 import { SeasonIcon } from "./lib/seasonIcon";
+import { shareImage } from "./lib/share";
+import { renderVisitSummaryCard } from "./lib/shareCard";
 import { SheetHeader } from "./lib/SheetHeader";
 import { fetchTodayMealPosts, type ThreadPost } from "./lib/threadPosts";
 import { oneYearAgoDateInputValue, type Restaurant } from "./restaurantStorage";
@@ -219,6 +226,122 @@ function DDayCard({
             예정된 방문이 없어요. 다가올 한 입에서 계획해보세요.
           </span>
         )}
+      </div>
+    </div>
+  );
+}
+
+// "이번 주 N곳 · 이번 달 N곳" 요약 카드예요. 맛있는 하루 로컬 기록의 visitDate
+// 기준으로 클라이언트에서 집계하고(별도 서버 조회 없음), 오른쪽 공유 버튼을
+// 누르면 기존 카드 이미지 생성 파이프라인(lib/shareCard.ts)을 재사용해
+// 같은 내용을 이미지로 공유할 수 있어요.
+function VisitSummaryCard({
+  isLoaded,
+  restaurants,
+}: {
+  isLoaded: boolean;
+  restaurants: Restaurant[];
+}) {
+  const toast = useToast();
+  const [isSharing, setIsSharing] = useState(false);
+  const summary = useMemo(() => computeVisitSummary(restaurants), [restaurants]);
+
+  if (!isLoaded) {
+    return null;
+  }
+
+  const handleShare = async (event: MouseEvent) => {
+    event.stopPropagation();
+    if (isSharing) {
+      return;
+    }
+    setIsSharing(true);
+    try {
+      const blob = await renderVisitSummaryCard(summary);
+      const outcome = await shareImage({
+        blob,
+        fileName: `이게맛다-${summary.monthLabel}-기록요약.png`,
+        title: "이게맛다 - 기록 요약",
+        text: `이번 주 ${summary.weekCount}곳, 이번 달 ${summary.monthCount}곳 기록했어요.`,
+      });
+
+      if (outcome === "saved") {
+        toast.openToast("이미지를 기기에 저장했어요");
+      } else if (outcome === "copied") {
+        toast.openToast("이미지를 클립보드에 복사했어요");
+      } else if (outcome === "downloaded") {
+        toast.openToast("이미지를 다운로드했어요");
+      } else if (outcome === "failed") {
+        toast.openToast("공유에 실패했어요. 다시 시도해주세요");
+      }
+    } catch (error) {
+      console.error("기록 요약 카드를 만들지 못했어요.", error);
+      toast.openToast("이미지를 만들지 못했어요. 다시 시도해주세요");
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  return (
+    <div style={{ padding: "0 24px" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          padding: "16px 20px",
+          borderRadius: "16px",
+          backgroundColor: "#f2effc",
+        }}
+      >
+        <div
+          style={{
+            width: "36px",
+            height: "36px",
+            borderRadius: "12px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "#e0d6f8",
+            flexShrink: 0,
+          }}
+        >
+          <TrendingUp size={18} color="#6d4fb1" />
+        </div>
+        <span
+          style={{
+            flex: "1 1 auto",
+            fontSize: "14px",
+            fontWeight: 600,
+            color: "#333d4b",
+          }}
+        >
+          이번 주 <span style={{ color: "#6d4fb1" }}>{summary.weekCount}곳</span>,
+          이번 달 <span style={{ color: "#6d4fb1" }}>{summary.monthCount}곳</span>{" "}
+          기록했어요
+        </span>
+        <button
+          type="button"
+          onClick={handleShare}
+          disabled={isSharing}
+          aria-label="기록 요약 이미지로 공유하기"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "32px",
+            height: "32px",
+            borderRadius: "10px",
+            border: "none",
+            background: "rgba(255, 255, 255, 0.6)",
+            flexShrink: 0,
+            cursor: isSharing ? "default" : "pointer",
+            opacity: isSharing ? 0.5 : 1,
+            WebkitTapHighlightColor: "transparent",
+          }}
+        >
+          <Share2 size={15} color="#6d4fb1" />
+        </button>
       </div>
     </div>
   );
@@ -563,6 +686,11 @@ export default function HomeScreen({
       )}
 
       <StatsCard isLoaded={isRestaurantsLoaded} count={restaurants.length} />
+
+      <VisitSummaryCard
+        isLoaded={isRestaurantsLoaded}
+        restaurants={restaurants}
+      />
 
       <DDayCard
         isLoaded={isPlannedVisitsLoaded}
