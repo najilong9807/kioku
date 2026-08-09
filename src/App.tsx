@@ -44,7 +44,6 @@ import {
   savePlannedVisits,
   type PlannedVisit,
 } from "./lib/plannedVisitStorage";
-import { guessRestaurantNameFromPost } from "./lib/postToRestaurant";
 import { fetchProfile, saveProfile } from "./lib/profile";
 import { pickRandomItem } from "./lib/random";
 import {
@@ -1509,49 +1508,6 @@ function App() {
     });
   };
 
-  // "오늘의 한 입" 게시글에서 "나도 기록할래요"를 누르면, 그 글에서 짐작한
-  // 가게 이름으로 이름 필드만 미리 채운 맛집 기록 폼을 열어요.
-  // openAddSheetFromPlannedVisit(다녀왔어요 전환)과 같은 패턴이지만, 여기는
-  // 게시글을 지우거나 상태를 바꾸지 않고 오직 새 기록만 추가해요(DB 연결
-  // 없이 단순 텍스트 프리필만 하는 거라, 원본 글과는 아무 관계도 남기지 않아요).
-  const openAddSheetFromPost = (post: ThreadPost) => {
-    open({
-      header: <SheetHeader title="오늘의 식사" onClose={close} />,
-      children: (
-        <RestaurantForm
-          submitLabel="기록하기"
-          initialValues={{
-            name: guessRestaurantNameFromPost(post.content),
-            title: "",
-            category: CATEGORIES[0],
-            menus: [],
-            companion: "",
-            weather: "",
-            neighborhood: post.neighborhood ?? "",
-            memo: "",
-            rating: 5,
-            visitDate: todayDateInputValue(),
-            photos: [],
-            isReservation: false,
-            isSpecialDay: false,
-          }}
-          onCancel={close}
-          onSubmit={(values) => {
-            setRestaurants((prev) => [
-              {
-                id: `${Date.now()}`,
-                ...values,
-              },
-              ...prev,
-            ]);
-            setSelectedTab(RESTAURANT_TAB_INDEX);
-            close();
-          }}
-        />
-      ),
-    });
-  };
-
   const openCategoryFilterSheet = () => {
     open({
       header: <SheetHeader title="음식 종류 선택" onClose={close} />,
@@ -2059,10 +2015,7 @@ function App() {
           onMarkVisited={openAddSheetFromPlannedVisit}
         />
       ) : (
-        <TodayMealBoard
-          onOpenRestaurantSearch={openSearchSheet}
-          onRecordFromPost={openAddSheetFromPost}
-        />
+        <TodayMealBoard onOpenRestaurantSearch={openSearchSheet} />
       )}
     </>
   );

@@ -10,7 +10,7 @@ import {
   useBottomSheet,
   useDialog,
 } from "@toss/tds-mobile";
-import { Heart, MessageCircle, NotebookPen } from "lucide-react";
+import { Heart, MessageCircle } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -765,12 +765,8 @@ function CommentsSheetContent({
 
 function TodayMealBoard({
   onOpenRestaurantSearch,
-  onRecordFromPost,
 }: {
   onOpenRestaurantSearch: () => void;
-  // 게시글의 "나도 기록할래요"를 누르면 실행돼요. 맛있는 하루 등록폼으로
-  // 이동하면서 이름 필드를 이 글 내용으로 미리 채워줘요(App.tsx가 구현).
-  onRecordFromPost: (post: ThreadPost) => void;
 }) {
   // 탭에 들어올 때마다(컴포넌트가 새로 마운트될 때마다) 랜덤으로 하나 골라요.
   const [searchEntryLabel] = useState(() =>
@@ -1350,23 +1346,6 @@ function TodayMealBoard({
                     </button>
                   </div>
                   <div style={{ display: "flex", gap: "6px" }}>
-                    <Button
-                      size="small"
-                      variant="fill"
-                      style={PRIMARY_FILL_BUTTON_TEXT_STYLE}
-                      onClick={() => onRecordFromPost(post)}
-                    >
-                      <span
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "4px",
-                        }}
-                      >
-                        <NotebookPen size={14} />
-                        나도 기록할래요
-                      </span>
-                    </Button>
                     {post.userId === currentUserId && (
                       <Button
                         size="small"
