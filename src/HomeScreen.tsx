@@ -24,6 +24,14 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
+import { PhotoSticker } from "./components/scrapbook/PhotoSticker";
+import { ScrapbookCard } from "./components/scrapbook/ScrapbookCard";
+import { WashiTape, type WashiTapeColor } from "./components/scrapbook/WashiTape";
+import {
+  SparkleIcon,
+  SparkleStarIcon,
+  SwashUnderline,
+} from "./components/scrapbook/decorations";
 import CustomerSupportView from "./CustomerSupportView";
 import FoodTestModal from "./FoodTestView";
 import {
@@ -125,6 +133,7 @@ function StatsCard({ isLoaded, count }: { isLoaded: boolean; count: number }) {
     <div style={{ padding: "0 24px" }}>
       <div
         style={{
+          position: "relative",
           display: "flex",
           alignItems: "center",
           gap: "12px",
@@ -133,6 +142,14 @@ function StatsCard({ isLoaded, count }: { isLoaded: boolean; count: number }) {
           backgroundColor: THEME_YELLOW_BG,
         }}
       >
+        {/* 스크랩북 카드에 스티커를 붙여둔 느낌을 주는 장식이에요. 여러 카드에
+            다 붙이면 산만해져서, 카드 하나(통계 카드)에만 1개 얹었어요. */}
+        <span
+          style={{ position: "absolute", top: "-10px", right: "12px" }}
+          aria-hidden="true"
+        >
+          <SparkleStarIcon size={22} />
+        </span>
         <div
           style={{
             width: "36px",
@@ -657,201 +674,247 @@ export default function HomeScreen({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-      <div style={{ padding: "0 24px" }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-            fontSize: "20px",
-            fontWeight: 700,
-            color: "#191f28",
-          }}
-        >
-          안녕하세요, {nickname ?? "회원"}님
-          {/* 프로필 화면의 계절 스탬프(SeasonStampRow)와 같은 배경(SAGE_GREEN_BG)
-              + 아이콘 색(SAGE_GREEN_DARK) 조합으로 맞춰서, 같은 계절 아이콘
-              세트가 두 화면에서 같은 방식으로 표현되도록 했어요. */}
-          <span
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "26px",
-              height: "26px",
-              borderRadius: "50%",
-              backgroundColor: SAGE_GREEN_BG,
-              flexShrink: 0,
-            }}
-          >
-            <SeasonIcon size={16} color={SAGE_GREEN_DARK} />
-          </span>
-        </div>
-        <div style={{ marginTop: "4px", fontSize: "14px", color: "#8b95a1" }}>
-          {formatTodayGreetingDate()}
-        </div>
-      </div>
+      {/* 인사말부터 "최근 맛있는 하루" 미리보기까지를 스크랩북 카드 한 장으로
+          감싸서, 크림색 종이 + 좌측 바인더 링 톤을 입혔어요. 아래쪽 "최근
+          오늘의 한 입"/먹보조사/고객센터는 기존처럼 카드 밖에 남겨둬요. */}
+      <ScrapbookCard showRings style={{ padding: "16px 0 16px 32px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          <div style={{ position: "relative", padding: "0 24px" }}>
+            {/* 인사말 영역에 흩뿌린 작은 반짝임 스티커예요. */}
+            <span
+              style={{ position: "absolute", top: "-4px", right: "16px" }}
+              aria-hidden="true"
+            >
+              <SparkleIcon size={14} />
+            </span>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                fontSize: "20px",
+                fontWeight: 700,
+                color: "#191f28",
+              }}
+            >
+              안녕하세요, {nickname ?? "회원"}님
+              {/* 프로필 화면의 계절 스탬프(SeasonStampRow)와 같은 배경(SAGE_GREEN_BG)
+                  + 아이콘 색(SAGE_GREEN_DARK) 조합으로 맞춰서, 같은 계절 아이콘
+                  세트가 두 화면에서 같은 방식으로 표현되도록 했어요. */}
+              <span
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "26px",
+                  height: "26px",
+                  borderRadius: "50%",
+                  backgroundColor: SAGE_GREEN_BG,
+                  flexShrink: 0,
+                }}
+              >
+                <SeasonIcon size={16} color={SAGE_GREEN_DARK} />
+              </span>
+              <SparkleIcon size={12} />
+            </div>
+            <SwashUnderline width={150} />
+            <div style={{ marginTop: "2px", fontSize: "14px", color: "#8b95a1" }}>
+              {formatTodayGreetingDate()}
+            </div>
+          </div>
 
-      {isRestaurantsLoaded && oneYearAgoRestaurants.length > 0 && (
-        <AnniversaryCard
-          restaurants={oneYearAgoRestaurants}
-          onSelectRestaurant={onSelectRestaurant}
-          onViewMore={openAnniversarySheet}
-        />
-      )}
-
-      <StatsCard isLoaded={isRestaurantsLoaded} count={restaurants.length} />
-
-      <VisitSummaryCard
-        isLoaded={isRestaurantsLoaded}
-        restaurants={restaurants}
-      />
-
-      <DDayCard
-        isLoaded={isPlannedVisitsLoaded}
-        plannedVisits={plannedVisits}
-        onClick={onViewCalendar}
-      />
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          columnGap: "8px",
-          padding: "0 24px",
-        }}
-      >
-        <QuickActionButton
-          icon={
-            <RiceBowlIcon size={26} color={QUICK_ACTION_ACTIVE_ICON_COLOR} />
-          }
-          label="오늘의 식사"
-          onClick={onWriteRestaurant}
-        />
-        <QuickActionButton
-          icon={
-            <ChatHeartIcon size={26} color={QUICK_ACTION_ACTIVE_ICON_COLOR} />
-          }
-          label="오늘의 한 입"
-          onClick={onViewTodayMeal}
-        />
-        <QuickActionButton
-          icon={
-            <FoldedMapPinIcon
-              size={26}
-              color={QUICK_ACTION_ACTIVE_ICON_COLOR}
+          {isRestaurantsLoaded && oneYearAgoRestaurants.length > 0 && (
+            <AnniversaryCard
+              restaurants={oneYearAgoRestaurants}
+              onSelectRestaurant={onSelectRestaurant}
+              onViewMore={openAnniversarySheet}
             />
-          }
-          label="지도"
-          onClick={onViewMap}
-        />
-        <QuickActionButton
-          icon={
-            <BookmarkRibbonIcon
-              size={26}
-              color={QUICK_ACTION_ACTIVE_ICON_COLOR}
-            />
-          }
-          label="스크랩"
-          onClick={onViewScraps}
-        />
-      </div>
+          )}
 
-      <div>
-        <SectionLabel>최근 맛있는 하루</SectionLabel>
-        {!isRestaurantsLoaded ? (
-          <div style={{ padding: "0 24px" }}>
-            <Skeleton
-              custom={["listWithIcon"]}
-              repeatLastItemCount={RECENT_RESTAURANT_LIMIT}
+          <StatsCard isLoaded={isRestaurantsLoaded} count={restaurants.length} />
+
+          <VisitSummaryCard
+            isLoaded={isRestaurantsLoaded}
+            restaurants={restaurants}
+          />
+
+          <DDayCard
+            isLoaded={isPlannedVisitsLoaded}
+            plannedVisits={plannedVisits}
+            onClick={onViewCalendar}
+          />
+
+          {/* 퀵액션 영역 시작을 알려주는 테이프 — 섹션 구분처럼 가로로
+              걸쳐놨어요. */}
+          <div style={{ position: "relative", height: "18px", margin: "0 24px" }}>
+            <WashiTape
+              color="sage"
+              rotation={-1}
+              width={220}
+              height={18}
+              style={{ top: 0, left: 0 }}
             />
           </div>
-        ) : recentRestaurants.length === 0 ? (
-          <EmptyPreview>아직 기록이 없어요.</EmptyPreview>
-        ) : (
-          <List>
-            {recentRestaurants.map((restaurant) => (
-              <div
-                key={restaurant.id}
-                onClick={() => onSelectRestaurant(restaurant)}
-                style={{ cursor: "pointer" }}
-              >
-                <ListRow
-                  withTouchEffect
-                  left={
-                    restaurant.photos && restaurant.photos.length > 0 ? (
-                      <ListRow.AssetImage
-                        src={restaurant.photos[0]}
-                        shape="squircle"
-                        size="medium"
-                      />
-                    ) : (
-                      <ListRow.AssetText shape="squircle" size="medium">
-                        {restaurant.name.slice(0, 1)}
-                      </ListRow.AssetText>
-                    )
-                  }
-                  contents={
-                    <ListRow.Texts
-                      type="2RowTypeA"
-                      top={
-                        <span
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            width: "100%",
-                            minWidth: 0,
-                          }}
-                        >
-                          <span style={NAME_ELLIPSIS_STYLE}>
-                            {restaurant.name}
-                          </span>
-                          {(restaurant.isReservation ||
-                            restaurant.isSpecialDay) && (
-                            <span
-                              style={{
-                                display: "flex",
-                                gap: "6px",
-                                flexShrink: 0,
-                              }}
-                            >
-                              {restaurant.isReservation && (
-                                <Badge
-                                  size="xsmall"
-                                  variant="weak"
-                                  color="green"
-                                >
-                                  예약
-                                </Badge>
-                              )}
-                              {restaurant.isSpecialDay && (
-                                <Badge
-                                  size="xsmall"
-                                  variant="weak"
-                                  color="yellow"
-                                >
-                                  ⭐ 특별한 날
-                                </Badge>
-                              )}
-                            </span>
-                          )}
-                        </span>
-                      }
-                      bottom={[
-                        restaurant.neighborhood,
-                        `★ ${restaurant.rating}`,
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    />
-                  }
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(4, 1fr)",
+              columnGap: "8px",
+              padding: "0 24px",
+            }}
+          >
+            <QuickActionButton
+              icon={
+                <RiceBowlIcon size={26} color={QUICK_ACTION_ACTIVE_ICON_COLOR} />
+              }
+              label="오늘의 식사"
+              onClick={onWriteRestaurant}
+            />
+            <QuickActionButton
+              icon={
+                <ChatHeartIcon size={26} color={QUICK_ACTION_ACTIVE_ICON_COLOR} />
+              }
+              label="오늘의 한 입"
+              onClick={onViewTodayMeal}
+            />
+            <QuickActionButton
+              icon={
+                <FoldedMapPinIcon
+                  size={26}
+                  color={QUICK_ACTION_ACTIVE_ICON_COLOR}
+                />
+              }
+              label="지도"
+              onClick={onViewMap}
+            />
+            <QuickActionButton
+              icon={
+                <BookmarkRibbonIcon
+                  size={26}
+                  color={QUICK_ACTION_ACTIVE_ICON_COLOR}
+                />
+              }
+              label="스크랩"
+              onClick={onViewScraps}
+            />
+          </div>
+
+          <div>
+            <SectionLabel>최근 맛있는 하루</SectionLabel>
+            {!isRestaurantsLoaded ? (
+              <div style={{ padding: "0 24px" }}>
+                <Skeleton
+                  custom={["listWithIcon"]}
+                  repeatLastItemCount={RECENT_RESTAURANT_LIMIT}
                 />
               </div>
-            ))}
-          </List>
-        )}
-      </div>
+            ) : recentRestaurants.length === 0 ? (
+              <EmptyPreview>아직 기록이 없어요.</EmptyPreview>
+            ) : (
+              <List>
+                {recentRestaurants.map((restaurant, index) => {
+                  // id는 Date.now() 기반이라, 짝/홀 여부가 기록마다 달라져서
+                  // 매번 다시 렌더링해도 같은 기록은 항상 같은 색 테이프가
+                  // 붙어요(재렌더링될 때마다 색이 바뀌는 깜빡임을 피해요).
+                  const tapeColor: WashiTapeColor =
+                    Number(restaurant.id) % 2 === 0 ? "sage" : "pink";
+                  return (
+                    <div
+                      key={restaurant.id}
+                      onClick={() => onSelectRestaurant(restaurant)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <ListRow
+                        withTouchEffect
+                        left={
+                          <div
+                            style={{ position: "relative", width: 48, height: 48 }}
+                          >
+                            {/* 최근 기록 2개까지만 모서리에 테이프를 살짝
+                                걸쳐서, 사진이 많아져도 화면이 산만해지지
+                                않게 해요. */}
+                            {index < 2 && (
+                              <WashiTape
+                                color={tapeColor}
+                                rotation={-20}
+                                width={30}
+                                height={11}
+                                style={{ top: -6, left: -4, zIndex: 1 }}
+                              />
+                            )}
+                            <PhotoSticker
+                              src={restaurant.photos?.[0]}
+                              rotation={index % 2 === 0 ? -5 : 5}
+                              size={48}
+                              style={{ position: "relative", zIndex: 2 }}
+                            />
+                          </div>
+                        }
+                        contents={
+                          <ListRow.Texts
+                            type="2RowTypeA"
+                            top={
+                              <span
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "6px",
+                                  width: "100%",
+                                  minWidth: 0,
+                                }}
+                              >
+                                <span style={NAME_ELLIPSIS_STYLE}>
+                                  {restaurant.name}
+                                </span>
+                                {(restaurant.isReservation ||
+                                  restaurant.isSpecialDay) && (
+                                  <span
+                                    style={{
+                                      display: "flex",
+                                      gap: "6px",
+                                      flexShrink: 0,
+                                    }}
+                                  >
+                                    {restaurant.isReservation && (
+                                      <Badge
+                                        size="xsmall"
+                                        variant="weak"
+                                        color="green"
+                                      >
+                                        예약
+                                      </Badge>
+                                    )}
+                                    {restaurant.isSpecialDay && (
+                                      <Badge
+                                        size="xsmall"
+                                        variant="weak"
+                                        color="yellow"
+                                      >
+                                        ⭐ 특별한 날
+                                      </Badge>
+                                    )}
+                                  </span>
+                                )}
+                              </span>
+                            }
+                            bottom={[
+                              restaurant.neighborhood,
+                              `★ ${restaurant.rating}`,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          />
+                        }
+                      />
+                    </div>
+                  );
+                })}
+              </List>
+            )}
+          </div>
+        </div>
+      </ScrapbookCard>
 
       <div>
         <SectionLabel>최근 오늘의 한 입</SectionLabel>
