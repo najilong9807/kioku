@@ -26,8 +26,7 @@ import {
 import "./App.css";
 import BottomNavigation from "./BottomNavigation";
 import CalendarView, { type PlannedVisitFormValues } from "./CalendarView";
-import { PhotoSticker } from "./components/scrapbook/PhotoSticker";
-import { SwashUnderline } from "./components/scrapbook/decorations";
+import { WashiTape } from "./components/scrapbook/WashiTape";
 import FoodDexView from "./FoodDexView";
 import HomeScreen from "./HomeScreen";
 import {
@@ -79,7 +78,15 @@ import RestaurantDetailView from "./RestaurantDetailView";
 import { RestaurantSearchSheetContent } from "./RestaurantSearchOverlay";
 import ScrapsView from "./ScrapsView";
 import SplashScreen from "./SplashScreen";
-import { HANDWRITING_TEXT_STYLE, THEME_YELLOW } from "./theme";
+import {
+  BRAND_DISPLAY_FONT_FAMILY,
+  CORAL_RED,
+  DARK_NAVY,
+  HANDWRITING_TEXT_STYLE,
+  PAPER_CREAM,
+  SAGE_GREEN_DARK,
+  THEME_YELLOW,
+} from "./theme";
 import {
   CATEGORIES,
   formatDisplayDate,
@@ -1901,18 +1908,62 @@ function App() {
           onViewScraps={openScrapsSheet}
         />
       ) : selectedTab === RESTAURANT_TAB_INDEX ? (
-        <>
-          <div style={{ padding: "0 24px 12px" }}>
+        <div style={{ backgroundColor: PAPER_CREAM }}>
+          {/* "AUGUST FOOD ARCHIVE" 매거진 헤더예요(레퍼런스
+              "02_맛있는_하루.png" 기준). 연도 배지 + 초록 체크 워시테이프로
+              장식은 이 두 개만 뒀어요. */}
+          <div style={{ position: "relative", padding: "16px 24px 12px" }}>
+            <WashiTape
+              color="sage"
+              rotation={-3}
+              width={64}
+              height={18}
+              style={{ top: "6px", left: "0px" }}
+            />
             <div
               style={{
-                fontSize: "18px",
-                fontWeight: 700,
-                color: "#191f28",
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
               }}
             >
-              맛있는 하루
+              <div>
+                <div
+                  style={{
+                    fontFamily: BRAND_DISPLAY_FONT_FAMILY,
+                    fontSize: "26px",
+                    color: CORAL_RED,
+                    lineHeight: 1.1,
+                  }}
+                >
+                  AUGUST
+                </div>
+                <div
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    color: DARK_NAVY,
+                    letterSpacing: "2px",
+                    marginTop: "2px",
+                  }}
+                >
+                  FOOD ARCHIVE
+                </div>
+              </div>
+              <span
+                style={{
+                  marginTop: "4px",
+                  padding: "3px 10px",
+                  borderRadius: "999px",
+                  border: `1.5px solid ${SAGE_GREEN_DARK}`,
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  color: SAGE_GREEN_DARK,
+                }}
+              >
+                {new Date().getFullYear()}
+              </span>
             </div>
-            <SwashUnderline width={110} />
           </div>
 
           <div style={{ padding: "0 24px 16px" }}>
@@ -2017,70 +2068,119 @@ function App() {
               }
             />
           ) : (
-            <List>
+            // "Magazine Archive Index"예요(레퍼런스 "02_맛있는_하루.png"
+            // 기준). TDS List/ListRow의 카드형 리스트 대신, 왼쪽에 큰
+            // 아카이브 번호(01/02/03…)를 두고 얇은 구분선만 긋는 인덱스형
+            // 레이아웃으로 바꿨어요. 클릭/삭제/메모 미리보기 등 기존 동작은
+            // 전부 그대로예요.
+            <div style={{ padding: "0 24px" }}>
               {visibleRestaurants.map((restaurant, index) => (
-                <div
-                  key={restaurant.id}
-                  onClick={() => openDetailSheet(restaurant)}
-                  style={{ cursor: "pointer" }}
-                >
-                  <ListRow
-                    withTouchEffect
-                    left={
-                      <PhotoSticker
-                        src={restaurant.photos?.[0]}
-                        rotation={index % 2 === 0 ? -5 : 5}
-                        size={48}
-                      />
-                    }
-                    contents={
-                      <ListRow.Texts
-                        type="2RowTypeA"
-                        top={
+                <div key={restaurant.id}>
+                  <div
+                    onClick={() => openDetailSheet(restaurant)}
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: "12px",
+                      padding: "16px 0",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: "20px",
+                        fontWeight: 700,
+                        color: SAGE_GREEN_DARK,
+                        minWidth: "30px",
+                        fontVariantNumeric: "tabular-nums",
+                      }}
+                    >
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <div
+                      style={{
+                        width: "56px",
+                        height: "56px",
+                        borderRadius: "10px",
+                        overflow: "hidden",
+                        border: "2px solid #ffffff",
+                        boxShadow: "0 2px 6px rgba(24, 35, 56, 0.15)",
+                        flexShrink: 0,
+                        backgroundColor: "#EAF0EA",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {restaurant.photos && restaurant.photos.length > 0 ? (
+                        <img
+                          src={restaurant.photos[0]}
+                          alt=""
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            display: "block",
+                          }}
+                        />
+                      ) : (
+                        <span
+                          style={{
+                            fontSize: "18px",
+                            fontWeight: 700,
+                            color: SAGE_GREEN_DARK,
+                          }}
+                        >
+                          {restaurant.name.slice(0, 1)}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ flex: "1 1 auto", minWidth: 0 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          width: "100%",
+                          minWidth: 0,
+                        }}
+                      >
+                        <span
+                          style={{
+                            ...NAME_ELLIPSIS_STYLE,
+                            fontSize: "15px",
+                            fontWeight: 700,
+                            color: DARK_NAVY,
+                          }}
+                        >
+                          {restaurant.name}
+                        </span>
+                        {(restaurant.isReservation ||
+                          restaurant.isSpecialDay) && (
                           <span
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "6px",
-                              width: "100%",
-                              minWidth: 0,
-                            }}
+                            style={{ display: "flex", gap: "6px", flexShrink: 0 }}
                           >
-                            <span style={NAME_ELLIPSIS_STYLE}>
-                              {restaurant.name}
-                            </span>
-                            {(restaurant.isReservation ||
-                              restaurant.isSpecialDay) && (
-                              <span
-                                style={{
-                                  display: "flex",
-                                  gap: "6px",
-                                  flexShrink: 0,
-                                }}
-                              >
-                                {restaurant.isReservation && (
-                                  <Badge
-                                    size="xsmall"
-                                    variant="weak"
-                                    color="green"
-                                  >
-                                    예약
-                                  </Badge>
-                                )}
-                                {restaurant.isSpecialDay && (
-                                  <Badge
-                                    size="xsmall"
-                                    variant="weak"
-                                    color="yellow"
-                                  >
-                                    ⭐ 특별한 날
-                                  </Badge>
-                                )}
-                              </span>
+                            {restaurant.isReservation && (
+                              <Badge size="xsmall" variant="weak" color="green">
+                                예약
+                              </Badge>
+                            )}
+                            {restaurant.isSpecialDay && (
+                              <Badge size="xsmall" variant="weak" color="yellow">
+                                ⭐ 특별한 날
+                              </Badge>
                             )}
                           </span>
-                        }
-                        bottom={[
+                        )}
+                      </div>
+                      <div
+                        style={{
+                          marginTop: "2px",
+                          fontSize: "12px",
+                          color: "#8b95a1",
+                        }}
+                      >
+                        {[
                           restaurant.category,
                           summarizeMenus(restaurant.menus),
                           formatDisplayDate(restaurant.visitDate),
@@ -2088,53 +2188,57 @@ function App() {
                         ]
                           .filter(Boolean)
                           .join(" · ")}
-                      />
-                    }
-                    right={
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "flex-end",
-                          gap: "8px",
-                        }}
-                      >
-                        <RatingStars value={restaurant.rating} size={14} />
-                        <Button
-                          size="small"
-                          variant="weak"
-                          color="danger"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            handleDelete(restaurant);
+                      </div>
+                      {restaurant.memo.trim() && (
+                        <div
+                          style={{
+                            marginTop: "4px",
+                            fontSize: "13px",
+                            lineHeight: 1.4,
+                            color: "#8b95a1",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
                           }}
                         >
-                          삭제
-                        </Button>
-                      </div>
-                    }
-                  />
-                  {restaurant.memo.trim() && (
+                          {restaurant.memo.trim()}
+                        </div>
+                      )}
+                    </div>
                     <div
                       style={{
-                        padding: "0 24px 12px 76px",
-                        fontSize: "13px",
-                        lineHeight: 1.4,
-                        color: "#8b95a1",
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "flex-end",
+                        gap: "8px",
+                        flexShrink: 0,
                       }}
                     >
-                      {restaurant.memo.trim()}
+                      <RatingStars value={restaurant.rating} size={14} />
+                      <Button
+                        size="small"
+                        variant="weak"
+                        color="danger"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleDelete(restaurant);
+                        }}
+                      >
+                        삭제
+                      </Button>
                     </div>
+                  </div>
+                  {index < visibleRestaurants.length - 1 && (
+                    <div
+                      style={{ height: "1px", backgroundColor: "#E5DFC9" }}
+                    />
                   )}
                 </div>
               ))}
-            </List>
+            </div>
           )}
-        </>
+        </div>
       ) : selectedTab === CALENDAR_TAB_INDEX ? (
         <CalendarView
           plannedVisits={plannedVisits}
