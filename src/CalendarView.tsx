@@ -22,6 +22,7 @@ import {
   todayDateInputValue,
 } from "./restaurantStorage";
 import { SheetHeader } from "./lib/SheetHeader";
+import { THEME_YELLOW } from "./theme";
 
 const WEEKDAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -483,7 +484,7 @@ export default function CalendarView({
                   fontSize: "13px",
                   fontWeight: isToday ? 700 : 400,
                   color: isToday ? "#000000" : "#191f28",
-                  backgroundColor: isToday ? "#FFC107" : "transparent",
+                  backgroundColor: isToday ? THEME_YELLOW : "transparent",
                 }}
               >
                 {dayNumber}

@@ -45,6 +45,7 @@ import { renderVisitSummaryCard } from "./lib/shareCard";
 import { SheetHeader } from "./lib/SheetHeader";
 import { fetchTodayMealPosts, type ThreadPost } from "./lib/threadPosts";
 import { oneYearAgoDateInputValue, type Restaurant } from "./restaurantStorage";
+import { SAGE_GREEN_BG, THEME_YELLOW_BG } from "./theme";
 
 const RECENT_RESTAURANT_LIMIT = 2;
 const RECENT_POST_LIMIT = 2;
@@ -53,7 +54,7 @@ const POST_PREVIEW_MAX_LENGTH = 40;
 // 퀵 액션 아이콘 타일의 공통 톤이에요. 아바타/문항 일러스트에서 쓰는 세이지그린
 // 계열(#9CAF9A)로 통일해서, 차분하고 정갈한 느낌을 줘요. 준비중(비활성) 타일은
 // 기존과 같이 중립 회색 톤을 유지해서 "아직 쓸 수 없다"는 신호를 그대로 남겨요.
-const QUICK_ACTION_ACTIVE_BG = "#E7EFE6";
+const QUICK_ACTION_ACTIVE_BG = SAGE_GREEN_BG;
 const QUICK_ACTION_ACTIVE_ICON_COLOR = "#4A6350";
 const QUICK_ACTION_DISABLED_BG = "#f2f4f6";
 
@@ -129,7 +130,7 @@ function StatsCard({ isLoaded, count }: { isLoaded: boolean; count: number }) {
           gap: "12px",
           padding: "16px 20px",
           borderRadius: "16px",
-          backgroundColor: "#fff8e1",
+          backgroundColor: THEME_YELLOW_BG,
         }}
       >
         <div
@@ -411,7 +412,7 @@ function AnniversaryCard({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: "#DCE7DB",
+                backgroundColor: SAGE_GREEN_BG,
                 flexShrink: 0,
               }}
             >

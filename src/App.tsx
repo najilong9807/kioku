@@ -63,7 +63,7 @@ import RestaurantDetailView from "./RestaurantDetailView";
 import { RestaurantSearchSheetContent } from "./RestaurantSearchOverlay";
 import ScrapsView from "./ScrapsView";
 import SplashScreen from "./SplashScreen";
-import { HANDWRITING_TEXT_STYLE } from "./theme";
+import { HANDWRITING_TEXT_STYLE, THEME_YELLOW } from "./theme";
 import {
   CATEGORIES,
   formatDisplayDate,
@@ -571,7 +571,7 @@ function RestaurantForm({
                 fontWeight: 500,
               }}
             >
-              <Star size={16} color="#FFC107" fill="#FFC107" />
+              <Star size={16} color={THEME_YELLOW} fill={THEME_YELLOW} />
               특별한 날이었어요
             </span>
             <input

@@ -16,3 +16,24 @@ export const HANDWRITING_TEXT_STYLE: CSSProperties = {
   lineHeight: 1.8,
   letterSpacing: "0.2px",
 };
+
+// 브랜드 "테마 노랑" 색상 토큰이에요. 예전에는 화면마다 #FFC107/#ffc107,
+// #f2a33c, #fff8e1/#fff8e6/#fff4cc, #9a6b00처럼 미묘하게 다른 값이 흩어져
+// 있었어요. 아래 4개로 역할을 나눠서 통일해요.
+// - THEME_YELLOW: 아이콘/포인트에 쓰는 순수 테마 노랑
+// - THEME_YELLOW_ACCENT: 별점처럼 살짝 더 진한 주황 계열 강조색
+// - THEME_YELLOW_BG: 옅은 하이라이트 배경(카드/배지/모달 강조 행 등)
+// - THEME_YELLOW_TEXT: 옅은 노랑 배경 위에 쓰는 진한 텍스트 색
+export const THEME_YELLOW = "#FFC107";
+export const THEME_YELLOW_ACCENT = "#f2a33c";
+export const THEME_YELLOW_BG = "#fff8e1";
+export const THEME_YELLOW_TEXT = "#9a6b00";
+
+// 브랜드 "세이지그린" 색상 토큰이에요. #4A6350(진한 세이지)을 표준으로 삼고,
+// 예전에 일부 화면(먹보조사 등)에 남아있던 #6b8f71은 이걸로 통일해요.
+// - SAGE_GREEN: 아이콘/배지 등에 쓰는 밝은 세이지(기존 #9CAF9A와 동일)
+// - SAGE_GREEN_DARK: 밝은 세이지 배경 위에 쓰는 진한 세이지(텍스트/아이콘)
+// - SAGE_GREEN_BG: 옅은 세이지 배경(원형 배지, 카드 등)
+export const SAGE_GREEN = "#9CAF9A";
+export const SAGE_GREEN_DARK = "#4A6350";
+export const SAGE_GREEN_BG = "#EAF0EA";

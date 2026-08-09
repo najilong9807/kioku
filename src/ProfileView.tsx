@@ -37,6 +37,7 @@ import { computeSeasonStamps } from "./lib/recordSummary";
 import { SEASON_ICONS, SEASON_LABELS, type Season } from "./lib/seasonIcon";
 import { RegionPicker } from "./RegionPicker";
 import type { Restaurant } from "./restaurantStorage";
+import { THEME_YELLOW, THEME_YELLOW_BG, THEME_YELLOW_TEXT } from "./theme";
 
 // 브랜드 색(노란색)이 밝아서 흰 글씨는 가독성이 떨어져요. App.tsx의 동명 상수와
 // 같은 이유로, variant="fill" 버튼의 글자색을 진하게 덮어써요.
@@ -44,7 +45,7 @@ const PRIMARY_FILL_BUTTON_TEXT_STYLE = {
   "--button-color": "#000000",
 } as CSSProperties;
 
-const AVATAR_PICKER_BG = "#fff8e6";
+const AVATAR_PICKER_BG = THEME_YELLOW_BG;
 
 // 프로필 이미지 값(사진 데이터 URL 또는 "avatar:person_short_black" 같은 아바타
 // 식별자)을 받아서 알맞은 모습(사진/아바타/빈 상태)으로 그려주는 원형 미리보기예요.
@@ -202,7 +203,7 @@ function FoodTestResultRow() {
         gap: "6px",
         padding: "6px 14px",
         borderRadius: "999px",
-        backgroundColor: result ? "#fff8e6" : "#f2f4f6",
+        backgroundColor: result ? THEME_YELLOW_BG : "#f2f4f6",
       }}
     >
       <span style={{ fontSize: "13px" }}>🍽️</span>
@@ -210,7 +211,7 @@ function FoodTestResultRow() {
         style={{
           fontSize: "13px",
           fontWeight: 600,
-          color: result ? "#9a6b00" : "#8b95a1",
+          color: result ? THEME_YELLOW_TEXT : "#8b95a1",
         }}
       >
         {result ? result.title : "먹보조사 해보기"}
@@ -382,7 +383,7 @@ function LevelTableModal({
                   gap: "8px",
                   padding: "10px 12px",
                   borderRadius: "12px",
-                  backgroundColor: isCurrent ? "#fff4cc" : "transparent",
+                  backgroundColor: isCurrent ? THEME_YELLOW_BG : "transparent",
                 }}
               >
                 <div
@@ -397,7 +398,7 @@ function LevelTableModal({
                     style={{
                       fontSize: "13px",
                       fontWeight: 700,
-                      color: isCurrent ? "#9a6b00" : "#8b95a1",
+                      color: isCurrent ? THEME_YELLOW_TEXT : "#8b95a1",
                       flexShrink: 0,
                     }}
                   >
@@ -668,7 +669,7 @@ export default function ProfileView({
                         style={{
                           borderRadius: "50%",
                           border: isSelected
-                            ? "2.5px solid #FFC107"
+                            ? `2.5px solid ${THEME_YELLOW}`
                             : "2.5px solid transparent",
                           padding: "2px",
                         }}

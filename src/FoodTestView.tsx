@@ -19,6 +19,13 @@ import { PersonalityIcon } from "./lib/personalityIcons";
 import { QuestionIllustration } from "./lib/questionIcons";
 import { shareImage } from "./lib/share";
 import { renderFoodTestResultCard } from "./lib/shareCard";
+import {
+  SAGE_GREEN,
+  SAGE_GREEN_BG,
+  SAGE_GREEN_DARK,
+  THEME_YELLOW,
+  THEME_YELLOW_TEXT,
+} from "./theme";
 
 const ANSWER_LETTERS: readonly AnswerLetter[] = ["A", "B", "C"];
 
@@ -316,7 +323,7 @@ function QuestionStep({
           <X size={20} color="#8b95a1" />
         </button>
       </div>
-      <ProgressBar progress={index / total} size="normal" color="#ffc107" />
+      <ProgressBar progress={index / total} size="normal" color={THEME_YELLOW} />
       <div
         style={{
           flex: 1,
@@ -357,8 +364,8 @@ function QuestionStep({
               style={{
                 fontSize: "12px",
                 fontWeight: 600,
-                color: "#6b8f71",
-                backgroundColor: "#EAF0EA",
+                color: SAGE_GREEN_DARK,
+                backgroundColor: SAGE_GREEN_BG,
                 borderRadius: "999px",
                 padding: "3px 10px",
               }}
@@ -396,9 +403,9 @@ function QuestionStep({
                   padding: "16px",
                   borderRadius: "14px",
                   border: isSelected
-                    ? "2px solid #9CAF9A"
+                    ? `2px solid ${SAGE_GREEN}`
                     : "1px solid #e5e8eb",
-                  backgroundColor: isSelected ? "#EAF0EA" : "#f9fafb",
+                  backgroundColor: isSelected ? SAGE_GREEN_BG : "#f9fafb",
                   fontSize: "15px",
                   fontWeight: isSelected ? 700 : 400,
                   color: "#191f28",
@@ -411,7 +418,7 @@ function QuestionStep({
                   style={{
                     flexShrink: 0,
                     fontWeight: 700,
-                    color: isSelected ? "#6b8f71" : "#9CAF9A",
+                    color: isSelected ? SAGE_GREEN_DARK : SAGE_GREEN,
                   }}
                 >
                   {letter}.
@@ -500,7 +507,7 @@ function ResultStep({
           gap: "16px",
         }}
       >
-        <div style={{ fontSize: "13px", fontWeight: 600, color: "#9a6b00" }}>
+        <div style={{ fontSize: "13px", fontWeight: 600, color: THEME_YELLOW_TEXT }}>
           먹보조사 결과
         </div>
         <div style={{ position: "relative", width: "96px", height: "96px" }}>

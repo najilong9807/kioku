@@ -3,7 +3,7 @@
 // 실제 공유/저장/폴백 동작은 lib/share.ts가 맡고, 여기서는 순수하게
 // "데이터 → 이미지(Blob)" 변환만 담당해요.
 import { formatFullKoreanDate, type Restaurant } from "../restaurantStorage";
-import { HANDWRITING_FONT_FAMILY } from "../theme";
+import { HANDWRITING_FONT_FAMILY, THEME_YELLOW_ACCENT } from "../theme";
 import {
   canvasToBlob,
   clipRoundedRect,
@@ -279,7 +279,7 @@ export async function renderRestaurantCard(restaurant: Restaurant): Promise<Blob
   const filledStars = Math.max(0, Math.min(5, Math.round(restaurant.rating)));
   const stars = "★".repeat(filledStars) + "☆".repeat(5 - filledStars);
   ctx.textAlign = "left";
-  ctx.fillStyle = "#f2a33c";
+  ctx.fillStyle = THEME_YELLOW_ACCENT;
   ctx.font = sansFont(700, 30);
   ctx.fillText(stars, contentX, cursorY);
 

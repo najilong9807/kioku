@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import { SAGE_GREEN_DARK } from "../theme";
 
 // "먹보조사" 각 문항 상단에 보여줄 미니멀 일러스트예요. 아바타 시스템(lib/avatars.tsx)과
 // 톤을 맞추되, 색은 세이지그린 계열 포인트 하나로 통일해서 문항 일러스트만의
@@ -7,7 +8,7 @@ import type { ReactElement } from "react";
 
 const INK = "#191f28";
 const SAGE = "#9CAF9A";
-const SAGE_DARK = "#6b8f71";
+const SAGE_DARK = SAGE_GREEN_DARK;
 const BG = "#EAF0EA";
 
 function IconBg() {

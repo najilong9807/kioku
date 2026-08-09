@@ -1,4 +1,5 @@
 import { useId, type ReactElement } from "react";
+import { THEME_YELLOW_BG } from "../theme";
 
 // 프로필 사진 대신 고를 수 있는 캐릭터 아바타예요. "사람"과 "음식" 두 카테고리로
 // 나뉘고, 각 캐릭터는 체형 구분 없이 하나씩만 있어요(이모지 같은 단일 캐릭터 느낌).
@@ -2438,7 +2439,7 @@ export function AvatarIcon({
   category,
   style,
   size = 64,
-  backgroundColor = "#fff8e6",
+  backgroundColor = THEME_YELLOW_BG,
 }: {
   category: AvatarCategory;
   style: AvatarStyle;
