@@ -1,6 +1,7 @@
 import { Button, Checkbox, Modal, ProgressBar, useToast } from "@toss/tds-mobile";
 import { ChevronLeft, Share2, X } from "lucide-react";
 import { useEffect, useState, type CSSProperties } from "react";
+import { WashiTape } from "./components/scrapbook/WashiTape";
 import { AvatarIcon } from "./lib/avatars";
 import {
   computeFoodTestResult,
@@ -574,6 +575,15 @@ function ResultStep({
             backgroundColor: SAGE_GREEN_BG,
           }}
         >
+          {/* 이 엽서 카드는 이미 톱니 도장 장식이 있어서, 스크랩북 톤과
+              맞추는 용도로 테이프 하나만 상단에 살짝 얹었어요. */}
+          <WashiTape
+            color="pink"
+            rotation={-3}
+            width={78}
+            height={20}
+            style={{ top: "-10px", left: "22px" }}
+          />
           <ResultStampDecoration />
           <div
             style={{ fontSize: "13px", fontWeight: 600, color: THEME_YELLOW_TEXT }}
