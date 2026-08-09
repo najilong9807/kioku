@@ -6,7 +6,7 @@ import {
   SegmentedControl,
   TextField,
 } from "@toss/tds-mobile";
-import { Info, UserRound, X } from "lucide-react";
+import { BookOpen, Info, UserRound, X } from "lucide-react";
 import {
   useEffect,
   useRef,
@@ -36,6 +36,7 @@ import { LevelStamp } from "./lib/levelStamp";
 import { saveProfile } from "./lib/profile";
 import { computeSeasonStamps } from "./lib/recordSummary";
 import { SEASON_ICONS, SEASON_LABELS, type Season } from "./lib/seasonIcon";
+import MyRecordsView from "./MyRecordsView";
 import { RegionPicker } from "./RegionPicker";
 import type { Restaurant } from "./restaurantStorage";
 import { THEME_YELLOW, THEME_YELLOW_BG, THEME_YELLOW_TEXT } from "./theme";
@@ -465,6 +466,7 @@ export default function ProfileView({
   );
   const [isSaving, setIsSaving] = useState(false);
   const [isTierTableOpen, setIsTierTableOpen] = useState(false);
+  const [isMyRecordsOpen, setIsMyRecordsOpen] = useState(false);
   // TODO: 출시 전 제거 — 개발용 테스트 데이터 주입 확인 다이얼로그 상태예요.
   const [isSeedConfirmOpen, setIsSeedConfirmOpen] = useState(false);
   const [isSeeding, setIsSeeding] = useState(false);
@@ -552,6 +554,19 @@ export default function ProfileView({
           <LevelBadgeRow restaurantCount={restaurantCount} />
           <FoodTestResultRow />
           <SeasonStampRow restaurants={restaurants} />
+          <Button
+            size="small"
+            variant="weak"
+            color="dark"
+            onClick={() => setIsMyRecordsOpen(true)}
+          >
+            <span
+              style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+            >
+              <BookOpen size={15} />
+              나의 기록 모아보기
+            </span>
+          </Button>
 
           <div
             style={{
@@ -780,6 +795,14 @@ export default function ProfileView({
         open={isTierTableOpen}
         onClose={() => setIsTierTableOpen(false)}
         restaurantCount={restaurantCount}
+      />
+
+      <MyRecordsView
+        open={isMyRecordsOpen}
+        onClose={() => setIsMyRecordsOpen(false)}
+        nickname={nickname}
+        restaurantCount={restaurantCount}
+        restaurants={restaurants}
       />
 
       {/* TODO: 출시 전 제거 — 개발용 테스트 데이터 주입 확인 다이얼로그예요. */}
