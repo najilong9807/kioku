@@ -1,5 +1,7 @@
 import { ProgressBar } from "@toss/tds-mobile";
 import { useMemo } from "react";
+import { PhotoSticker } from "./components/scrapbook/PhotoSticker";
+import { WashiTape } from "./components/scrapbook/WashiTape";
 import { computeFoodDexDiscoveries } from "./lib/foodDex";
 import { FOOD_DEX_MASTER, FOOD_DEX_TOTAL_COUNT } from "./lib/foodDexData";
 import { FieldGuideIcon } from "./lib/quickActionIcons";
@@ -32,6 +34,7 @@ export default function FoodDexView({
     <div style={{ padding: "0 24px 24px" }}>
       <div
         style={{
+          position: "relative",
           display: "flex",
           flexDirection: "column",
           gap: "8px",
@@ -41,6 +44,15 @@ export default function FoodDexView({
           marginBottom: "16px",
         }}
       >
+        {/* 진행률 카드에만 붙인 테이프예요. 도감 항목별 사진은 아래에서
+            PhotoSticker로 따로 꾸며서, 장식이 겹치지 않게 했어요. */}
+        <WashiTape
+          color="sage"
+          rotation={-3}
+          width={70}
+          height={20}
+          style={{ top: "-10px", right: "18px" }}
+        />
         <div
           style={{
             display: "flex",
@@ -141,37 +153,22 @@ function DiscoveredCell({
         WebkitTapHighlightColor: "transparent",
       }}
     >
-      <div style={{ position: "relative" }}>
-        {representative.photos?.[0] ? (
-          <img
-            src={representative.photos[0]}
-            alt=""
-            style={{
-              width: "100%",
-              aspectRatio: "1 / 1",
-              borderRadius: "10px",
-              objectFit: "cover",
-              display: "block",
-            }}
-          />
-        ) : (
-          <div
-            style={{
-              width: "100%",
-              aspectRatio: "1 / 1",
-              borderRadius: "10px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: SAGE_GREEN_BG,
-              fontSize: "20px",
-              fontWeight: 700,
-              color: SAGE_GREEN_DARK,
-            }}
-          >
-            {representative.name.slice(0, 1)}
-          </div>
-        )}
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          aspectRatio: "1 / 1",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <PhotoSticker
+          src={representative.photos?.[0]}
+          alt=""
+          size={84}
+          rotation={dexNumber % 2 === 0 ? -5 : 5}
+        />
         <DexNumberBadge dexNumber={dexNumber} />
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
