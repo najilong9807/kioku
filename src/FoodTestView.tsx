@@ -530,7 +530,7 @@ function ResultStep({
             <PersonalityIcon code={result.personalityCode} size={38} />
           </div>
         </div>
-        <div style={{ fontSize: "24px", fontWeight: 800, color: "#191f28" }}>
+        <div style={{ fontSize: "22px", fontWeight: 700, color: "#191f28" }}>
           {result.title}
         </div>
         <div

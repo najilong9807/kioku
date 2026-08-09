@@ -75,21 +75,28 @@ export default function ScrapsView({
   };
 
   return (
-    <div style={{ padding: "0 0 24px" }}>
+    // 다른 화면(RestaurantDetailView, CalendarView 등)과 같은 "0 24px 24px"
+    // 패딩 규칙을 따르되, TDS List/ListRow는 자체적으로 좌우 여백을 이미
+    // 갖고 있어서(다른 화면의 List 사용부와 동일) 여기서 또 24px을 더하면
+    // 두 배로 밀려나요. 그래서 좌우 24px은 List가 아닌 Skeleton/Result
+    // branch에만 개별로 주고, 바깥 wrapper는 하단 여백만 담당해요.
+    <div style={{ paddingBottom: "24px" }}>
       {!isLoaded ? (
         <div style={{ padding: "0 24px" }}>
           <Skeleton custom={["listWithIcon"]} repeatLastItemCount={3} />
         </div>
       ) : posts.length === 0 ? (
-        <Result
-          figure={
-            <EmptyStateFigure
-              icon={<EmptyBookmarkIcon size={32} color="#4A6350" />}
-            />
-          }
-          title="아직 스크랩한 글이 없어요"
-          description={"오늘의 한 입에서 마음에 드는 글을\n스크랩해보세요."}
-        />
+        <div style={{ padding: "0 24px" }}>
+          <Result
+            figure={
+              <EmptyStateFigure
+                icon={<EmptyBookmarkIcon size={32} color="#4A6350" />}
+              />
+            }
+            title="아직 스크랩한 글이 없어요"
+            description={"오늘의 한 입에서 마음에 드는 글을\n스크랩해보세요."}
+          />
+        </div>
       ) : (
         <List>
           {posts.map((post) => (

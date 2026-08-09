@@ -45,7 +45,7 @@ import { renderVisitSummaryCard } from "./lib/shareCard";
 import { SheetHeader } from "./lib/SheetHeader";
 import { fetchTodayMealPosts, type ThreadPost } from "./lib/threadPosts";
 import { oneYearAgoDateInputValue, type Restaurant } from "./restaurantStorage";
-import { SAGE_GREEN_BG, THEME_YELLOW_BG } from "./theme";
+import { SAGE_GREEN_BG, SAGE_GREEN_DARK, THEME_YELLOW_BG } from "./theme";
 
 const RECENT_RESTAURANT_LIMIT = 2;
 const RECENT_POST_LIMIT = 2;
@@ -291,7 +291,7 @@ function VisitSummaryCard({
           gap: "12px",
           padding: "16px 20px",
           borderRadius: "16px",
-          backgroundColor: "#f2effc",
+          backgroundColor: SAGE_GREEN_BG,
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -303,11 +303,11 @@ function VisitSummaryCard({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: "#e0d6f8",
+              backgroundColor: SAGE_GREEN_BG,
               flexShrink: 0,
             }}
           >
-            <TrendingUp size={18} color="#6d4fb1" />
+            <TrendingUp size={18} color={SAGE_GREEN_DARK} />
           </div>
           <span
             style={{
@@ -318,9 +318,9 @@ function VisitSummaryCard({
             }}
           >
             이번 주{" "}
-            <span style={{ color: "#6d4fb1" }}>{summary.weekCount}곳</span>,
+            <span style={{ color: SAGE_GREEN_DARK }}>{summary.weekCount}곳</span>,
             이번 달{" "}
-            <span style={{ color: "#6d4fb1" }}>{summary.monthCount}곳</span>{" "}
+            <span style={{ color: SAGE_GREEN_DARK }}>{summary.monthCount}곳</span>{" "}
             기록했어요
           </span>
         </div>
@@ -669,7 +669,23 @@ export default function HomeScreen({
           }}
         >
           안녕하세요, {nickname ?? "회원"}님
-          <SeasonIcon size={20} color="#9CAF9A" />
+          {/* 프로필 화면의 계절 스탬프(SeasonStampRow)와 같은 배경(SAGE_GREEN_BG)
+              + 아이콘 색(SAGE_GREEN_DARK) 조합으로 맞춰서, 같은 계절 아이콘
+              세트가 두 화면에서 같은 방식으로 표현되도록 했어요. */}
+          <span
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "26px",
+              height: "26px",
+              borderRadius: "50%",
+              backgroundColor: SAGE_GREEN_BG,
+              flexShrink: 0,
+            }}
+          >
+            <SeasonIcon size={16} color={SAGE_GREEN_DARK} />
+          </span>
         </div>
         <div style={{ marginTop: "4px", fontSize: "14px", color: "#8b95a1" }}>
           {formatTodayGreetingDate()}

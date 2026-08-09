@@ -10,7 +10,7 @@ import {
   useBottomSheet,
   useDialog,
 } from "@toss/tds-mobile";
-import { Heart, MessageCircle, NotebookPen, Search } from "lucide-react";
+import { Heart, MessageCircle, NotebookPen } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -1113,7 +1113,15 @@ function TodayMealBoard({
             WebkitTapHighlightColor: "transparent",
           }}
         >
-          <Search size={18} color="#8b95a1" />
+          {/* App.tsx의 실제 SearchField와 같은 TDS 내장 돋보기 아이콘으로
+              맞춰서, lucide 아이콘과 획 굵기가 미묘하게 달라 보이던 문제를
+              없앴어요. */}
+          <Asset.Icon
+            name="icon-search-bold-mono"
+            color="#8b95a1"
+            frameShape={{ width: 18, height: 18 }}
+            backgroundColor="transparent"
+          />
           {searchEntryLabel}
         </button>
       </div>
