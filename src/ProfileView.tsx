@@ -27,6 +27,7 @@ import {
   type AvatarId,
   type AvatarStyle,
 } from "./lib/avatars";
+import { SparkleIcon } from "./components/scrapbook/decorations";
 // TODO: 출시 전 제거 — 개발용 테스트 데이터 주입 버튼 관련 import예요.
 import { applyDevTestSeed } from "./lib/devTestSeed";
 import { loadFoodTestResult, type FoodTestResult } from "./lib/foodTest";
@@ -554,7 +555,23 @@ export default function ProfileView({
             gap: "14px",
           }}
         >
-          <ProfileAvatarPreview profileImage={draftImage} size={96} />
+          <div style={{ position: "relative" }}>
+            {/* 아바타 주변에만 붙인 작은 반짝임이에요. 등급 배지·계절 스탬프는
+                이미 스탬프 형태로 꾸며져 있어서 그대로 뒀어요. */}
+            <span
+              style={{ position: "absolute", top: "-6px", right: "-8px" }}
+              aria-hidden="true"
+            >
+              <SparkleIcon size={16} />
+            </span>
+            <span
+              style={{ position: "absolute", bottom: "2px", left: "-10px" }}
+              aria-hidden="true"
+            >
+              <SparkleIcon size={12} />
+            </span>
+            <ProfileAvatarPreview profileImage={draftImage} size={96} />
+          </div>
           <LevelBadgeRow restaurantCount={restaurantCount} />
           <FoodTestResultRow />
           <SeasonStampRow restaurants={restaurants} />
