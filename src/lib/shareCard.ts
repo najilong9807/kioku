@@ -18,6 +18,7 @@ import {
 } from "./canvasCard";
 import type { FoodCategory, FoodTestResult } from "./foodTest";
 import type { VisitSummary } from "./recordSummary";
+import { getCurrentSeason, type Season } from "./seasonIcon";
 
 const SAGE_GREEN = "#9CAF9A";
 const INK = "#191f28";
@@ -68,23 +69,183 @@ function drawBrandMark(ctx: CanvasRenderingContext2D, x: number, y: number, size
   ctx.restore();
 }
 
-// 카드 하단에 "이 앱에서 만든 이미지"라는 걸 알아볼 수 있게 작은 워터마크를 그려요.
+// 카드 가장자리에서 margin만큼 안쪽으로 얇은 테두리를 둘러요. 실물 엽서처럼
+// "사진(내용) - 흰 여백 - 테두리" 느낌을 주는 장식이자, 인쇄 시 잘려나가기 쉬운
+// 가장자리보다 안쪽에 내용이 오도록 만드는 안전 여백의 기준선이기도 해요.
+function drawPostcardFrame(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  margin: number,
+) {
+  strokeRoundedRect(
+    ctx,
+    margin,
+    margin,
+    w - margin * 2,
+    h - margin * 2,
+    24,
+    "rgba(255, 255, 255, 0.55)",
+    2,
+  );
+}
+
+// 우표/도장을 흉내 낸 작은 장식이에요. 톱니(퍼포레이션) 모양 테두리를 점선
+// 원으로 표현하고, 그 안에 별 하나를 그려요. 카드 한쪽 모서리에 작게만
+// 붙여서, 이 결과가 "발급된 카드"처럼 느껴지도록 해요.
+function drawStampBadge(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  radius: number,
+) {
+  // 톱니(퍼포레이션): 원 둘레를 따라 작은 점을 고르게 찍어요.
+  const perforationCount = 18;
+  const perforationRadius = 2.6;
+  ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
+  for (let i = 0; i < perforationCount; i++) {
+    const angle = (i / perforationCount) * Math.PI * 2;
+    const px = cx + Math.cos(angle) * radius;
+    const py = cy + Math.sin(angle) * radius;
+    ctx.beginPath();
+    ctx.arc(px, py, perforationRadius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 안쪽 원판
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius - 9, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(255, 255, 255, 0.16)";
+  ctx.fill();
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+  ctx.stroke();
+
+  // 중앙 별
+  ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+  ctx.font = `${Math.round(radius * 0.9)}px ${SANS_FONT_STACK}`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("★", cx, cy + 1);
+  ctx.textBaseline = "alphabetic";
+}
+
+// seasonIcon.tsx의 손그림 라인아트를 캔버스에서도 그리기 위한 경로예요.
+// seasonIcon.tsx는 React 컴포넌트라 캔버스에 그대로 쓸 수 없어서, 같은 SVG
+// path 문자열을 Path2D로 옮겼어요. 아주 작게(워터마크용) 쓰이는 만큼, 저채도
+// 보조 장식(빗방울 등)은 생략하고 주요 윤곽만 남겼어요.
+const SAKURA_PETAL_PATH = new Path2D(
+  "M0,-1 Q-3.2,-3 -2.6,-6.2 Q-2.2,-8.4 0,-9.2 Q2.2,-8.4 2.6,-6.2 Q3.2,-3 0,-1 Z",
+);
+const MAPLE_LEAF_PATH = new Path2D(
+  "M14 4 L15.6 8.4 L19.6 6.3 L18 10.4 L22.6 10.7 L19 13.4 L22.9 16.6 L18.3 16.3 L19.5 20.6 L15.8 18 L14.6 22.6 L13.4 18 L9.7 20.6 L10.9 16.3 L6.3 16.6 L10.2 13.4 L6.6 10.7 L11.2 10.4 L9.6 6.3 L13.6 8.4 Z",
+);
+
+// 현재 계절 아이콘을 (x, y)를 좌상단으로 하는 size x size 영역에 그려요.
+// seasonIcon.tsx와 같은 28x28 기준 좌표를 그대로 쓰고 scale로 크기를 맞춰요.
+function drawSeasonIcon(
+  ctx: CanvasRenderingContext2D,
+  season: Season,
+  x: number,
+  y: number,
+  size: number,
+  color: string,
+) {
+  const scale = size / 28;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+  ctx.strokeStyle = color;
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+
+  if (season === "spring") {
+    ctx.save();
+    ctx.translate(14, 14);
+    ctx.lineWidth = 1.3;
+    for (const angle of [0, 72, 144, 216, 288]) {
+      ctx.save();
+      ctx.rotate((angle * Math.PI) / 180);
+      ctx.stroke(SAKURA_PETAL_PATH);
+      ctx.restore();
+    }
+    ctx.beginPath();
+    ctx.arc(0, 0, 1.5, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.restore();
+  } else if (season === "summer") {
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.arc(18.2, 9, 3.2, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(6, 18);
+    ctx.quadraticCurveTo(3.5, 18, 3.5, 15.3);
+    ctx.quadraticCurveTo(3.5, 12.8, 6.3, 12.6);
+    ctx.quadraticCurveTo(7, 9.8, 10, 9.8);
+    ctx.quadraticCurveTo(13.3, 9.8, 14, 12.7);
+    ctx.quadraticCurveTo(17, 12.5, 17, 15.5);
+    ctx.quadraticCurveTo(17, 18, 14, 18);
+    ctx.closePath();
+    ctx.stroke();
+  } else if (season === "autumn") {
+    ctx.lineWidth = 1.4;
+    ctx.stroke(MAPLE_LEAF_PATH);
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.moveTo(14, 13);
+    ctx.lineTo(14, 24.3);
+    ctx.stroke();
+  } else {
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(14, 4);
+    ctx.lineTo(14, 24);
+    ctx.moveTo(5.7, 9);
+    ctx.lineTo(22.3, 19);
+    ctx.moveTo(22.3, 9);
+    ctx.lineTo(5.7, 19);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+// 카드 하단에 "이 앱에서 만든 이미지"라는 걸 알아볼 수 있게 작은 워터마크를
+// 그려요. 로고 + 앱 이름 옆에, 지금 계절을 나타내는 작은 아이콘도 함께
+// 곁들여서(카드 전체 크기의 5% 미만, 반투명) 계절감이 있는 카드처럼 보이게 해요.
 function drawWatermark(ctx: CanvasRenderingContext2D, centerX: number, bottomY: number) {
   const markSize = 18;
+  const seasonIconSize = 14;
   const gap = 7;
+  const seasonGap = 8;
 
   ctx.font = sansFont(700, 17);
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
   const textWidth = ctx.measureText(APP_NAME).width;
-  const totalWidth = markSize + gap + textWidth;
+  const totalWidth = markSize + gap + textWidth + seasonGap + seasonIconSize;
   const startX = centerX - totalWidth / 2;
   const iconY = bottomY - markSize;
 
   drawBrandMark(ctx, startX, iconY, markSize);
 
   ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
-  ctx.fillText(APP_NAME, startX + markSize + gap, bottomY - 3);
+  const textX = startX + markSize + gap;
+  ctx.fillText(APP_NAME, textX, bottomY - 3);
+
+  const seasonX = textX + textWidth + seasonGap;
+  const seasonY = bottomY - markSize / 2 - seasonIconSize / 2;
+  drawSeasonIcon(
+    ctx,
+    getCurrentSeason(),
+    seasonX,
+    seasonY,
+    seasonIconSize,
+    "rgba(255, 255, 255, 0.6)",
+  );
 }
 
 const FOOD_TEST_CARD_WIDTH = 720;
@@ -111,6 +272,13 @@ export async function renderFoodTestResultCard(
   ctx.beginPath();
   ctx.arc(w * 0.08, h * 0.92, 140, 0, Math.PI * 2);
   ctx.fill();
+
+  // 엽서 느낌의 얇은 테두리 + 오른쪽 위 작은 도장 장식. 실제로 인쇄해도
+  // 잘리지 않도록, 이후 제목/설명의 최대 너비(titleMaxWidth 등)는 항상 이
+  // 테두리보다 안쪽에 오도록 여유 있게 잡아요.
+  const frameMargin = 28;
+  drawPostcardFrame(ctx, w, h, frameMargin);
+  drawStampBadge(ctx, w - frameMargin - 46, frameMargin + 46, 34);
 
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";

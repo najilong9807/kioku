@@ -35,6 +35,59 @@ const PRIMARY_FILL_BUTTON_TEXT_STYLE = {
   "--button-color": "#000000",
 } as CSSProperties;
 
+// 결과 카드 이미지(shareCard.ts의 drawStampBadge)와 같은 톱니 원 + 별 모양을
+// 화면에도 작게 넣어서, 저장한 이미지와 화면이 같은 느낌을 갖게 해요.
+function ResultStampDecoration() {
+  const size = 40;
+  const center = size / 2;
+  const perforationRadius = size / 2 - 1;
+  const dots = Array.from({ length: 14 }, (_, index) => {
+    const angle = (index / 14) * Math.PI * 2;
+    return {
+      cx: center + Math.cos(angle) * perforationRadius,
+      cy: center + Math.sin(angle) * perforationRadius,
+    };
+  });
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      style={{ position: "absolute", top: "12px", right: "12px" }}
+      aria-hidden="true"
+    >
+      {dots.map((dot) => (
+        <circle
+          key={`${dot.cx}-${dot.cy}`}
+          cx={dot.cx}
+          cy={dot.cy}
+          r={1.3}
+          fill={SAGE_GREEN}
+        />
+      ))}
+      <circle
+        cx={center}
+        cy={center}
+        r={center - 6}
+        fill="#ffffff"
+        stroke={SAGE_GREEN}
+        strokeWidth="1.2"
+      />
+      <text
+        x={center}
+        y={center + 1}
+        textAnchor="middle"
+        dominantBaseline="middle"
+        fontSize={size * 0.4}
+        fill={SAGE_GREEN_DARK}
+      >
+        ★
+      </text>
+    </svg>
+  );
+}
+
 type Step = "intro" | "questions" | "result";
 
 // "먹보조사" 전체 흐름(안내 → 문항 → 결과)을 하나의 전체 화면 모달로 관리해요.
@@ -507,41 +560,59 @@ function ResultStep({
           gap: "16px",
         }}
       >
-        <div style={{ fontSize: "13px", fontWeight: 600, color: THEME_YELLOW_TEXT }}>
-          먹보조사 결과
-        </div>
-        <div style={{ position: "relative", width: "96px", height: "96px" }}>
-          <AvatarIcon
-            category="food"
-            style={FOOD_CATEGORY_AVATAR_STYLE[result.foodCategory]}
-            size={96}
-          />
-          <div
-            style={{
-              position: "absolute",
-              bottom: -4,
-              right: -6,
-              borderRadius: "50%",
-              border: "3px solid #ffffff",
-              boxShadow: "0 2px 6px rgba(0, 0, 0, 0.18)",
-              lineHeight: 0,
-            }}
-          >
-            <PersonalityIcon code={result.personalityCode} size={38} />
-          </div>
-        </div>
-        <div style={{ fontSize: "22px", fontWeight: 700, color: "#191f28" }}>
-          {result.title}
-        </div>
         <div
           style={{
-            fontSize: "15px",
-            color: "#4e5968",
-            lineHeight: 1.6,
-            padding: "0 8px",
+            position: "relative",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "16px",
+            width: "100%",
+            padding: "28px 20px 24px",
+            borderRadius: "20px",
+            border: `1.5px solid ${SAGE_GREEN}`,
+            backgroundColor: SAGE_GREEN_BG,
           }}
         >
-          {result.description}
+          <ResultStampDecoration />
+          <div
+            style={{ fontSize: "13px", fontWeight: 600, color: THEME_YELLOW_TEXT }}
+          >
+            먹보조사 결과
+          </div>
+          <div style={{ position: "relative", width: "96px", height: "96px" }}>
+            <AvatarIcon
+              category="food"
+              style={FOOD_CATEGORY_AVATAR_STYLE[result.foodCategory]}
+              size={96}
+            />
+            <div
+              style={{
+                position: "absolute",
+                bottom: -4,
+                right: -6,
+                borderRadius: "50%",
+                border: "3px solid #ffffff",
+                boxShadow: "0 2px 6px rgba(0, 0, 0, 0.18)",
+                lineHeight: 0,
+              }}
+            >
+              <PersonalityIcon code={result.personalityCode} size={38} />
+            </div>
+          </div>
+          <div style={{ fontSize: "22px", fontWeight: 700, color: "#191f28" }}>
+            {result.title}
+          </div>
+          <div
+            style={{
+              fontSize: "15px",
+              color: "#4e5968",
+              lineHeight: 1.6,
+              padding: "0 8px",
+            }}
+          >
+            {result.description}
+          </div>
         </div>
         <Button
           display="block"
