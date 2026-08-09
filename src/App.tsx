@@ -820,15 +820,15 @@ function RestaurantForm({
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: "6px",
-                    padding: "6px 10px",
-                    borderRadius: "16px",
-                    backgroundColor: "#f2f4f6",
-                    fontSize: "14px",
-                    color: "#191f28",
+                    gap: "4px",
                   }}
                 >
-                  <span>{menu}</span>
+                  {/* 상세보기(RestaurantDetailView)의 메뉴 태그 칩과 같은 스타일로
+                      맞춰서, 등록 폼에서 붙인 태그가 상세보기에서도 똑같은
+                      모양으로 보이도록 했어요. */}
+                  <Badge size="small" variant="weak" color="elephant">
+                    #{menu}
+                  </Badge>
                   <button
                     type="button"
                     onClick={() => removeMenu(index)}
@@ -836,7 +836,7 @@ function RestaurantForm({
                     style={{
                       border: "none",
                       background: "none",
-                      padding: 0,
+                      padding: "2px",
                       cursor: "pointer",
                       color: "#8b95a1",
                       fontSize: "14px",
