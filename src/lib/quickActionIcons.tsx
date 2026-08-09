@@ -117,6 +117,45 @@ export function FoldedMapPinIcon({
   );
 }
 
+// 맛집 도감: 펼쳐진 책(양쪽 페이지 + 가운데 책등) + 오른쪽 위 작은 별로,
+// "모아서 정리해 둔 기록집" 느낌을 줘요.
+export function FieldGuideIcon({
+  size = 24,
+  color = "#191f28",
+}: QuickActionIconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 28 28" fill="none">
+      <path
+        d="M14 9.2 C11.5 7.4 8 6.8 5 7.6 Q4.3 7.8 4.3 8.6 L4.3 19.6 Q4.3 20.4 5 20.2 C8 19.4 11.5 20 14 21.8"
+        stroke={color}
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M14 9.2 C16.5 7.4 20 6.8 23 7.6 Q23.7 7.8 23.7 8.6 L23.7 19.6 Q23.7 20.4 23 20.2 C20 19.4 16.5 20 14 21.8"
+        stroke={color}
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <line
+        x1="14"
+        y1="9.2"
+        x2="14"
+        y2="21.8"
+        stroke={color}
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+      <path
+        d="M21.5 4.3 L22.2 5.9 L23.9 6.1 L22.6 7.2 L23 8.9 L21.5 8 L20 8.9 L20.4 7.2 L19.1 6.1 L20.8 5.9 Z"
+        fill={color}
+      />
+    </svg>
+  );
+}
+
 // 스크랩: 리본형 북마크예요. 아래쪽 V자 노치를 좀 더 뾰족하게, 안쪽 텍스트
 // 줄(굵기 다른 두 줄)을 더해서 "저장해 둔 글" 느낌을 또렷하게 살렸어요.
 export function BookmarkRibbonIcon({

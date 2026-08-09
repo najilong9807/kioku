@@ -28,6 +28,7 @@ import {
 import "./App.css";
 import { BrandMarkIcon } from "./BrandMarkIcon";
 import CalendarView, { type PlannedVisitFormValues } from "./CalendarView";
+import FoodDexView from "./FoodDexView";
 import HomeScreen from "./HomeScreen";
 import {
   EmptyDiaryIcon,
@@ -1238,11 +1239,13 @@ const MAIN_TABS = [
   "맛있는 하루",
   "오늘의 한 입",
   "다가올 한 입",
+  "맛집 도감",
 ] as const;
 const HOME_TAB_INDEX = 0;
 const RESTAURANT_TAB_INDEX = 1;
 const TODAY_MEAL_TAB_INDEX = 2;
 const CALENDAR_TAB_INDEX = 3;
+const FOOD_DEX_TAB_INDEX = 4;
 
 // "맛있는 하루" 탭 검색창 placeholder예요. 탭에 들어갈 때마다 랜덤으로 하나
 // 골라서 보여줘요(하루 고정 같은 건 필요 없어요).
@@ -1918,13 +1921,15 @@ function App() {
                     : "다녀온 맛집을 기록하고 모아보세요."
                   : selectedTab === CALENDAR_TAB_INDEX
                     ? "다음 맛집 방문을 미리 계획해보세요."
-                    : "오늘 먹은 메뉴를 자유롭게 나눠보세요."}
+                    : selectedTab === FOOD_DEX_TAB_INDEX
+                      ? "먹어본 메뉴를 하나씩 채워보세요."
+                      : "오늘 먹은 메뉴를 자유롭게 나눠보세요."}
             </Top.SubtitleParagraph>
           }
         />
       </div>
 
-      <div className="kioku-main-tabs" style={{ padding: "0 8px 16px" }}>
+      <div className="kioku-main-tabs" style={{ padding: "0 4px 16px" }}>
         <Tab size="small" onChange={(index) => setSelectedTab(index)}>
           {MAIN_TABS.map((label, index) => (
             <Tab.Item key={label} selected={selectedTab === index}>
@@ -2190,6 +2195,11 @@ function App() {
           onUpdate={handleUpdatePlannedVisit}
           onDelete={handleDeletePlannedVisit}
           onMarkVisited={openAddSheetFromPlannedVisit}
+        />
+      ) : selectedTab === FOOD_DEX_TAB_INDEX ? (
+        <FoodDexView
+          restaurants={restaurants}
+          onSelectTag={(tag) => openTagSheet(tag)}
         />
       ) : (
         <TodayMealBoard onOpenRestaurantSearch={openSearchSheet} />
