@@ -20,6 +20,8 @@ import {
   type ChangeEvent,
   type CSSProperties,
 } from "react";
+import { PhotoSticker } from "./components/scrapbook/PhotoSticker";
+import { WashiTape } from "./components/scrapbook/WashiTape";
 import { fetchLikedCommentIds, toggleCommentLike } from "./lib/commentLikes";
 import { EmptyChatIcon, EmptyStateFigure } from "./lib/emptyStateIcons";
 import { resizeImageFile } from "./lib/imageResize";
@@ -326,6 +328,17 @@ function AuthorPostsSheetContent({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+      {/* 이 화면(누군가의 글 모아보기)에서만 붙이는 테이프예요. 다른 장식은
+          더하지 않았어요. */}
+      <div style={{ position: "relative", height: "18px", margin: "0 24px" }}>
+        <WashiTape
+          color="sage"
+          rotation={-2}
+          width={110}
+          height={18}
+          style={{ top: 0, left: 0 }}
+        />
+      </div>
       {!isLoaded ? null : posts.length === 0 ? (
         <Result
           title="아직 쓴 글이 없어요"
@@ -379,12 +392,7 @@ function AuthorPostsSheetContent({
                 </span>
               </div>
               {post.photoUrl && (
-                <Asset.Image
-                  src={post.photoUrl}
-                  alt="게시글 사진"
-                  scaleType="crop"
-                  frameShape={{ width: 140, height: 140, radius: 14 }}
-                />
+                <PhotoSticker src={post.photoUrl} alt="게시글 사진" size={120} />
               )}
               <div
                 style={{
@@ -1232,11 +1240,10 @@ function TodayMealBoard({
                   </span>
                 </div>
                 {post.photoUrl && (
-                  <Asset.Image
+                  <PhotoSticker
                     src={post.photoUrl}
                     alt="게시글 사진"
-                    scaleType="crop"
-                    frameShape={{ width: 160, height: 160, radius: 16 }}
+                    size={140}
                   />
                 )}
                 <div
