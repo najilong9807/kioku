@@ -1,6 +1,7 @@
 import {
   Badge,
   Border,
+  Button,
   List,
   ListRow,
   Skeleton,
@@ -21,7 +22,6 @@ import {
   useMemo,
   useState,
   type CSSProperties,
-  type MouseEvent,
   type ReactNode,
 } from "react";
 import CustomerSupportView from "./CustomerSupportView";
@@ -251,8 +251,7 @@ function VisitSummaryCard({
     return null;
   }
 
-  const handleShare = async (event: MouseEvent) => {
-    event.stopPropagation();
+  const handleShare = async () => {
     if (isSharing) {
       return;
     }
@@ -288,61 +287,60 @@ function VisitSummaryCard({
       <div
         style={{
           display: "flex",
-          alignItems: "center",
+          flexDirection: "column",
           gap: "12px",
           padding: "16px 20px",
           borderRadius: "16px",
           backgroundColor: "#f2effc",
         }}
       >
-        <div
-          style={{
-            width: "36px",
-            height: "36px",
-            borderRadius: "12px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: "#e0d6f8",
-            flexShrink: 0,
-          }}
-        >
-          <TrendingUp size={18} color="#6d4fb1" />
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div
+            style={{
+              width: "36px",
+              height: "36px",
+              borderRadius: "12px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "#e0d6f8",
+              flexShrink: 0,
+            }}
+          >
+            <TrendingUp size={18} color="#6d4fb1" />
+          </div>
+          <span
+            style={{
+              flex: "1 1 auto",
+              fontSize: "14px",
+              fontWeight: 600,
+              color: "#333d4b",
+            }}
+          >
+            이번 주{" "}
+            <span style={{ color: "#6d4fb1" }}>{summary.weekCount}곳</span>,
+            이번 달{" "}
+            <span style={{ color: "#6d4fb1" }}>{summary.monthCount}곳</span>{" "}
+            기록했어요
+          </span>
         </div>
-        <span
-          style={{
-            flex: "1 1 auto",
-            fontSize: "14px",
-            fontWeight: 600,
-            color: "#333d4b",
-          }}
-        >
-          이번 주 <span style={{ color: "#6d4fb1" }}>{summary.weekCount}곳</span>,
-          이번 달 <span style={{ color: "#6d4fb1" }}>{summary.monthCount}곳</span>{" "}
-          기록했어요
-        </span>
-        <button
-          type="button"
+        {/* RestaurantDetailView/FoodTestView의 "공유하기" 버튼과 같은 패턴(라벨
+            있는 전체 폭 버튼)으로 맞춰서, 카드 이미지 공유 기능이 어디서나
+            같은 모양으로 보이도록 했어요. */}
+        <Button
+          display="block"
+          variant="weak"
+          color="dark"
           onClick={handleShare}
-          disabled={isSharing}
-          aria-label="기록 요약 이미지로 공유하기"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "32px",
-            height: "32px",
-            borderRadius: "10px",
-            border: "none",
-            background: "rgba(255, 255, 255, 0.6)",
-            flexShrink: 0,
-            cursor: isSharing ? "default" : "pointer",
-            opacity: isSharing ? 0.5 : 1,
-            WebkitTapHighlightColor: "transparent",
-          }}
+          loading={isSharing}
         >
-          <Share2 size={15} color="#6d4fb1" />
-        </button>
+          <span
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+          >
+            <Share2 size={16} />
+            공유하기
+          </span>
+        </Button>
       </div>
     </div>
   );

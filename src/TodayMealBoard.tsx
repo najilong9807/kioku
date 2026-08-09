@@ -1344,8 +1344,8 @@ function TodayMealBoard({
                   <div style={{ display: "flex", gap: "6px" }}>
                     <Button
                       size="small"
-                      variant="weak"
-                      color="dark"
+                      variant="fill"
+                      style={PRIMARY_FILL_BUTTON_TEXT_STYLE}
                       onClick={() => onRecordFromPost(post)}
                     >
                       <span

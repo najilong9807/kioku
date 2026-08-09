@@ -343,7 +343,7 @@ function LevelTableModal({
             justifyContent: "space-between",
           }}
         >
-          <span style={{ fontSize: "17px", fontWeight: 700, color: "#191f28" }}>
+          <span style={{ fontSize: "20px", fontWeight: 700, color: "#191f28" }}>
             등급표
           </span>
           <button

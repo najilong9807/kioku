@@ -154,12 +154,12 @@ export default function RestaurantDetailView({
                   WebkitTapHighlightColor: "transparent",
                 }}
               >
-                <Badge size="small" variant="weak" color="green">
+                <Badge size="small" variant="weak" color="elephant">
                   #{menu}
                 </Badge>
               </button>
             ) : (
-              <Badge key={menu} size="small" variant="weak" color="green">
+              <Badge key={menu} size="small" variant="weak" color="elephant">
                 #{menu}
               </Badge>
             ),
