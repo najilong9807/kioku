@@ -209,6 +209,7 @@ function DDayCard({
       <div
         onClick={onClick}
         style={{
+          position: "relative",
           display: "flex",
           alignItems: "center",
           gap: "12px",
@@ -218,6 +219,14 @@ function DDayCard({
           cursor: "pointer",
         }}
       >
+        {/* 통계 카드와 동일한 방식(같은 아이콘·같은 위치)으로 붙인 스티커예요.
+            이 카드에도 장식은 이거 하나뿐이에요. */}
+        <span
+          style={{ position: "absolute", top: "-10px", right: "12px" }}
+          aria-hidden="true"
+        >
+          <SparkleStarIcon size={22} />
+        </span>
         <div
           style={{
             width: "36px",
