@@ -71,6 +71,10 @@ export interface Restaurant {
   visitDate: string; // "YYYY-MM-DD"
   receiptImage?: string; // base64 데이터 URL
   photos?: string[]; // 음식/가게 사진, base64 데이터 URL 배열 (최대 4장)
+  // photos와 같은 순서의 lib/photoArchive.ts 보관 키예요. 화면에는 안 쓰고,
+  // 나중에 인쇄물 제작 등에서 고화질 원본을 다시 꺼낼 때만 필요해요. 이
+  // 필드가 생기기 전 기록에는 없을 수 있어요(옵셔널).
+  photoArchiveKeys?: string[];
   isReservation: boolean; // 예약하고 갔는지 여부, 기본값 false
   isSpecialDay: boolean; // 특별한 날이었는지 여부, 기본값 false
 }

@@ -47,6 +47,10 @@ import {
 } from "./lib/koreanRegions";
 import { countUnreadNotifications } from "./lib/notifications";
 import {
+  archivePhotoOriginal,
+  createPhotoArchiveKey,
+} from "./lib/photoArchive";
+import {
   loadPlannedVisits,
   savePlannedVisits,
   type PlannedVisit,
@@ -292,6 +296,7 @@ interface AddRestaurantFormValues {
   visitDate: string;
   receiptImage?: string;
   photos: string[];
+  photoArchiveKeys?: string[];
   isReservation: boolean;
   isSpecialDay: boolean;
 }
@@ -473,6 +478,11 @@ function RestaurantForm({
   const [isReceiptProcessing, setIsReceiptProcessing] = useState(false);
   const receiptInputRef = useRef<HTMLInputElement>(null);
   const [photos, setPhotos] = useState<string[]>(initialValues?.photos ?? []);
+  // photos와 같은 순서로, 각 사진의 고화질 원본이 lib/photoArchive.ts에
+  // 저장된 키예요. 화면에는 안 쓰고 제출할 때만 함께 넘겨요.
+  const [photoArchiveKeys, setPhotoArchiveKeys] = useState<string[]>(
+    initialValues?.photoArchiveKeys ?? [],
+  );
   const [isPhotoProcessing, setIsPhotoProcessing] = useState(false);
   const photosInputRef = useRef<HTMLInputElement>(null);
   const [isReservation, setIsReservation] = useState(
@@ -549,9 +559,17 @@ function RestaurantForm({
     setIsPhotoProcessing(true);
     try {
       const resized = await resizeImageFile(file);
-      setPhotos((prev) =>
-        prev.length >= MAX_PHOTOS ? prev : [...prev, resized],
-      );
+      if (photos.length >= MAX_PHOTOS) {
+        return;
+      }
+      setPhotos((prev) => [...prev, resized]);
+
+      // 화면에 쓰는 리사이즈본과 별개로, 고화질 원본을 IndexedDB에 조용히
+      // 보관해요. 실패해도(용량 초과 등) 기록 저장 자체는 막지 않으니 await
+      // 하지 않고 백그라운드로 진행해요.
+      const archiveKey = createPhotoArchiveKey();
+      setPhotoArchiveKeys((prev) => [...prev, archiveKey]);
+      void archivePhotoOriginal(archiveKey, file);
     } catch (error) {
       console.error("사진을 처리하지 못했어요.", error);
     } finally {
@@ -561,6 +579,7 @@ function RestaurantForm({
 
   const removePhoto = (index: number) => {
     setPhotos((prev) => prev.filter((_, i) => i !== index));
+    setPhotoArchiveKeys((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = () => {
@@ -581,6 +600,7 @@ function RestaurantForm({
       visitDate,
       receiptImage,
       photos,
+      photoArchiveKeys,
       isReservation,
       isSpecialDay,
     });
@@ -1756,6 +1776,7 @@ function App() {
             visitDate: restaurant.visitDate,
             receiptImage: restaurant.receiptImage,
             photos: restaurant.photos ?? [],
+            photoArchiveKeys: restaurant.photoArchiveKeys ?? [],
             isReservation: restaurant.isReservation,
             isSpecialDay: restaurant.isSpecialDay,
           }}
