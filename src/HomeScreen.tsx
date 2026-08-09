@@ -34,6 +34,8 @@ import {
 } from "./components/scrapbook/decorations";
 import CustomerSupportView from "./CustomerSupportView";
 import FoodTestModal from "./FoodTestView";
+import { NotificationBellButton } from "./NotificationsView";
+import { ProfileIconButton } from "./ProfileView";
 import {
   formatDDay,
   getDaysUntil,
@@ -568,6 +570,10 @@ export default function HomeScreen({
   isRestaurantsLoaded,
   plannedVisits,
   isPlannedVisitsLoaded,
+  profileImage,
+  hasUnreadNotifications,
+  onOpenProfile,
+  onOpenNotifications,
   onWriteRestaurant,
   onSelectRestaurant,
   onViewTodayMeal,
@@ -580,6 +586,13 @@ export default function HomeScreen({
   isRestaurantsLoaded: boolean;
   plannedVisits: PlannedVisit[];
   isPlannedVisitsLoaded: boolean;
+  // 리디자인 이후 프로필/알림 진입점은 홈 화면에만 남아있어요(다른 화면의
+  // 공용 상단바가 사라지고 하단 아이콘 네비로 대체됐어요). 기능 자체는 그대로,
+  // 진입 위치만 홈으로 모았어요.
+  profileImage: string | null;
+  hasUnreadNotifications: boolean;
+  onOpenProfile: () => void;
+  onOpenNotifications: () => void;
   onWriteRestaurant: () => void;
   onSelectRestaurant: (restaurant: Restaurant) => void;
   onViewTodayMeal: () => void;
@@ -688,6 +701,30 @@ export default function HomeScreen({
           오늘의 한 입"/먹보조사/고객센터는 기존처럼 카드 밖에 남겨둬요. */}
       <ScrapbookCard showRings style={{ padding: "16px 0 16px 32px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          {/* 상단 공용 탭바(이게맛다 로고+프로필/알림)가 사라지면서, 그
+              자리에 있던 것들을 홈 화면으로 옮겨왔어요(기능은 그대로, 위치만
+              이동). 홈 히어로를 새로 그릴 때(다음 단계) 이 자리를 파란
+              배경+로고 폰트로 마저 다듬을 예정이라, 지금은 기능만 살아있는
+              최소 형태예요. */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "0 24px",
+            }}
+          >
+            <span style={{ fontSize: "20px", fontWeight: 700, color: "#191f28" }}>
+              이게맛다
+            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              <ProfileIconButton profileImage={profileImage} onClick={onOpenProfile} />
+              <NotificationBellButton
+                hasUnread={hasUnreadNotifications}
+                onClick={onOpenNotifications}
+              />
+            </div>
+          </div>
           <div style={{ position: "relative", padding: "0 24px" }}>
             {/* 인사말 영역에 흩뿌린 작은 반짝임 스티커예요. */}
             <span

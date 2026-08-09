@@ -6,6 +6,11 @@ import type { CSSProperties } from "react";
 export const HANDWRITING_FONT_FAMILY =
   "'GriunXHangeul_DAHL', 'Pretendard', sans-serif";
 
+// index.css에 등록한 브랜드 디스플레이 폰트(잘난체)예요. 로고/큰 타이틀
+// ("이게맛다", "AUGUST", "TODAY'S BITE", "NEXT BITE" 등) 전용이고, 본문에는
+// 쓰지 않아요. Bold 계열 폰트라 fontWeight는 700으로 둬요.
+export const BRAND_DISPLAY_FONT_FAMILY = "'Jalnan', 'Pretendard', sans-serif";
+
 // 감성 메모(맛집 기록의 "메모" 필드, 오늘뭐먹 글 등)에 적용하는 손글씨 스타일이에요.
 // 손글씨 폰트는 획이 성글고 커 보여서, 본문 폰트보다 살짝 크게 + 줄간격을 넉넉하게 줘야
 // 답답해 보이지 않아요.
@@ -50,3 +55,18 @@ export const PAPER_GRID_LINE = "#ECE0C7";
 export const WASHI_SAGE = SAGE_GREEN;
 export const WASHI_PINK = "#E3B7AE";
 export const RING_METAL = "#B5BAC2";
+
+// 2026-08 리디자인("뜸부기" 레퍼런스)에서 도입한 브랜드 색상 토큰이에요.
+// 기존 THEME_YELLOW/SAGE_GREEN 계열과 함께 쓰되, 아래 4개는 새 브랜드 톤
+// (Pastel Sky Blue + Warm Cream + Dark Navy + Coral 포인트) 전용이에요.
+// - SKY_BLUE: 홈/스플래시 배경의 대표 색
+// - SKY_BLUE_BG: 스카이블루보다 옅은, 카드 등에 쓰는 배경
+// - DARK_NAVY: 로고/제목/핵심 텍스트·아이콘. 기존 코드 곳곳의 #191f28과는
+//   별개 토큰이에요 — 이번에 새로 손대는 화면에서만 점진적으로 적용해요.
+// - CORAL_RED: CTA/좋아요/삭제 등 강조색(기존 THEME_YELLOW의 강조 역할 대체)
+// - DUSTY_PINK: 테이프/작은 장식용 핑크(기존 WASHI_PINK와 거의 동일한 톤)
+export const SKY_BLUE = "#B8CCE8";
+export const SKY_BLUE_BG = "#E3ECF7";
+export const DARK_NAVY = "#182338";
+export const CORAL_RED = "#D95145";
+export const DUSTY_PINK = "#E7B6B1";
