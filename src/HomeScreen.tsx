@@ -24,8 +24,8 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
+import catPizzaHero from "./assets/cat-pizza-hero.png";
 import { PhotoSticker } from "./components/scrapbook/PhotoSticker";
-import { ScrapbookCard } from "./components/scrapbook/ScrapbookCard";
 import { WashiTape, type WashiTapeColor } from "./components/scrapbook/WashiTape";
 import {
   SparkleIcon,
@@ -55,17 +55,25 @@ import { renderVisitSummaryCard } from "./lib/shareCard";
 import { SheetHeader } from "./lib/SheetHeader";
 import { fetchTodayMealPosts, type ThreadPost } from "./lib/threadPosts";
 import { oneYearAgoDateInputValue, type Restaurant } from "./restaurantStorage";
-import { SAGE_GREEN_BG, SAGE_GREEN_DARK, THEME_YELLOW_BG } from "./theme";
+import {
+  BRAND_DISPLAY_FONT_FAMILY,
+  DARK_NAVY,
+  SAGE_GREEN_BG,
+  SAGE_GREEN_DARK,
+  SKY_BLUE,
+  THEME_YELLOW_BG,
+} from "./theme";
 
 const RECENT_RESTAURANT_LIMIT = 2;
 const RECENT_POST_LIMIT = 2;
 const POST_PREVIEW_MAX_LENGTH = 40;
 
-// 퀵 액션 아이콘 타일의 공통 톤이에요. 아바타/문항 일러스트에서 쓰는 세이지그린
-// 계열(#9CAF9A)로 통일해서, 차분하고 정갈한 느낌을 줘요. 준비중(비활성) 타일은
-// 기존과 같이 중립 회색 톤을 유지해서 "아직 쓸 수 없다"는 신호를 그대로 남겨요.
-const QUICK_ACTION_ACTIVE_BG = SAGE_GREEN_BG;
-const QUICK_ACTION_ACTIVE_ICON_COLOR = "#4A6350";
+// 퀵 액션 아이콘 타일의 공통 톤이에요. 리디자인 이후 흰 종이 스티커 카드 위에
+// Dark Navy 손그림 아이콘을 얹는 톤으로 바꿨어요(기존 세이지그린 채움 배경 대신).
+// 준비중(비활성) 타일은 기존과 같이 중립 회색 톤을 유지해서 "아직 쓸 수 없다"는
+// 신호를 그대로 남겨요.
+const QUICK_ACTION_ACTIVE_BG = "#ffffff";
+const QUICK_ACTION_ACTIVE_ICON_COLOR = DARK_NAVY;
 const QUICK_ACTION_DISABLED_BG = "#f2f4f6";
 
 // 이름이 아무리 길어도 옆에 나란히 있는 배지가 밀려나지 않도록, 이름 쪽에만
@@ -110,6 +118,21 @@ function SectionLabel({ children }: { children: string }) {
     >
       {children}
     </div>
+  );
+}
+
+// 히어로 영역에 흩뿌린 손그림 하트 도들이에요. 별(SparkleStarIcon/SparkleIcon)과
+// 함께 써서 장식 종류를 2가지로만 제한했어요.
+function HeartDoodle() {
+  return (
+    <svg width="16" height="14" viewBox="0 0 20 18" fill="none">
+      <path
+        d="M10 17 C3 12.5 1 8.5 3.2 5.6 C5 3.2 8.4 3.6 10 6.5 C11.6 3.6 15 3.2 16.8 5.6 C19 8.5 17 12.5 10 17 Z"
+        stroke={DARK_NAVY}
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 
@@ -538,7 +561,7 @@ function QuickActionButton({
             backgroundColor: comingSoon
               ? QUICK_ACTION_DISABLED_BG
               : QUICK_ACTION_ACTIVE_BG,
-            boxShadow: comingSoon ? "none" : "0 3px 8px rgba(74, 99, 80, 0.16)",
+            boxShadow: comingSoon ? "none" : "0 3px 8px rgba(24, 35, 56, 0.14)",
           }}
         >
           {icon}
@@ -695,81 +718,164 @@ export default function HomeScreen({
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-      {/* 인사말부터 "최근 맛있는 하루" 미리보기까지를 스크랩북 카드 한 장으로
-          감싸서, 크림색 종이 + 좌측 바인더 링 톤을 입혔어요. 아래쪽 "최근
-          오늘의 한 입"/먹보조사/고객센터는 기존처럼 카드 밖에 남겨둬요. */}
-      <ScrapbookCard showRings style={{ padding: "16px 0 16px 32px" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-          {/* 상단 공용 탭바(이게맛다 로고+프로필/알림)가 사라지면서, 그
-              자리에 있던 것들을 홈 화면으로 옮겨왔어요(기능은 그대로, 위치만
-              이동). 홈 히어로를 새로 그릴 때(다음 단계) 이 자리를 파란
-              배경+로고 폰트로 마저 다듬을 예정이라, 지금은 기능만 살아있는
-              최소 형태예요. */}
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      {/* Sky Blue 히어로예요. 브랜드 포스터에 가깝게, 카드 프레임 없이
+          배경과 고양이 컷아웃이 그대로 이어지도록 했어요(레퍼런스
+          "01_홈.png"/"홈화면.png" 기준). 장식은 별 2개 + 하트 1개만 둬서
+          과하지 않게 했어요. */}
+      <div
+        style={{
+          position: "relative",
+          overflow: "hidden",
+          backgroundColor: SKY_BLUE,
+          backgroundImage:
+            "radial-gradient(120% 70% at 50% 0%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 60%)",
+          padding: "20px 24px 0",
+        }}
+      >
+        <span
+          style={{ position: "absolute", top: "18px", left: "20px" }}
+          aria-hidden="true"
+        >
+          <SparkleStarIcon size={16} color={DARK_NAVY} />
+        </span>
+        <span
+          style={{ position: "absolute", top: "64px", right: "28px" }}
+          aria-hidden="true"
+        >
+          <SparkleIcon size={14} color={DARK_NAVY} />
+        </span>
+        <span
+          style={{ position: "absolute", top: "104px", left: "12px" }}
+          aria-hidden="true"
+        >
+          <HeartDoodle />
+        </span>
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+          }}
+        >
+          <div>
+            <div
+              style={{
+                fontFamily: BRAND_DISPLAY_FONT_FAMILY,
+                fontSize: "30px",
+                color: DARK_NAVY,
+                letterSpacing: "0.5px",
+              }}
+            >
+              이게맛다
+            </div>
+            <div
+              style={{
+                marginTop: "2px",
+                fontSize: "13px",
+                fontWeight: 600,
+                color: DARK_NAVY,
+                opacity: 0.75,
+              }}
+            >
+              오늘도 맛있는 하루 보내세요.
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            <ProfileIconButton profileImage={profileImage} onClick={onOpenProfile} />
+            <NotificationBellButton
+              hasUnread={hasUnreadNotifications}
+              onClick={onOpenNotifications}
+            />
+          </div>
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <img
+            src={catPizzaHero}
+            alt=""
+            aria-hidden="true"
+            style={{
+              width: "82%",
+              maxWidth: "300px",
+              height: "auto",
+              display: "block",
+              marginTop: "4px",
+            }}
+          />
+        </div>
+      </div>
+
+      {/* 히어로 아래부터는 Functional UI로 전환해요. 흰 종이 위에 카드들이
+          놓인 느낌으로, 두꺼운 스크랩북 프레임(바인더 링 등)은 걷어내고 얇은
+          그림자만 남겼어요. */}
+      <div
+        style={{
+          position: "relative",
+          backgroundColor: "#ffffff",
+          borderTopLeftRadius: "24px",
+          borderTopRightRadius: "24px",
+          paddingTop: "20px",
+          paddingBottom: "4px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "24px",
+        }}
+      >
+        {/* 히어로와 콘텐츠 영역 사이 이음매에 걸쳐둔 체크 워시테이프예요. */}
+        <WashiTape
+          color="sage"
+          rotation={-4}
+          width={90}
+          height={24}
+          style={{ top: "-12px", left: "20px" }}
+        />
+
+        <div style={{ position: "relative", padding: "0 24px" }}>
+          {/* 인사말 영역에 흩뿌린 작은 반짝임 스티커예요. */}
+          <span
+            style={{ position: "absolute", top: "-4px", right: "16px" }}
+            aria-hidden="true"
+          >
+            <SparkleIcon size={14} />
+          </span>
           <div
             style={{
               display: "flex",
-              justifyContent: "space-between",
               alignItems: "center",
-              padding: "0 24px",
+              gap: "6px",
+              fontSize: "18px",
+              fontWeight: 700,
+              color: "#191f28",
             }}
           >
-            <span style={{ fontSize: "20px", fontWeight: 700, color: "#191f28" }}>
-              이게맛다
-            </span>
-            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-              <ProfileIconButton profileImage={profileImage} onClick={onOpenProfile} />
-              <NotificationBellButton
-                hasUnread={hasUnreadNotifications}
-                onClick={onOpenNotifications}
-              />
-            </div>
-          </div>
-          <div style={{ position: "relative", padding: "0 24px" }}>
-            {/* 인사말 영역에 흩뿌린 작은 반짝임 스티커예요. */}
+            안녕하세요, {nickname ?? "회원"}님
+            {/* 프로필 화면의 계절 스탬프(SeasonStampRow)와 같은 배경(SAGE_GREEN_BG)
+                + 아이콘 색(SAGE_GREEN_DARK) 조합으로 맞춰서, 같은 계절 아이콘
+                세트가 두 화면에서 같은 방식으로 표현되도록 했어요. */}
             <span
-              style={{ position: "absolute", top: "-4px", right: "16px" }}
-              aria-hidden="true"
-            >
-              <SparkleIcon size={14} />
-            </span>
-            <div
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "6px",
-                fontSize: "20px",
-                fontWeight: 700,
-                color: "#191f28",
+                justifyContent: "center",
+                width: "24px",
+                height: "24px",
+                borderRadius: "50%",
+                backgroundColor: SAGE_GREEN_BG,
+                flexShrink: 0,
               }}
             >
-              안녕하세요, {nickname ?? "회원"}님
-              {/* 프로필 화면의 계절 스탬프(SeasonStampRow)와 같은 배경(SAGE_GREEN_BG)
-                  + 아이콘 색(SAGE_GREEN_DARK) 조합으로 맞춰서, 같은 계절 아이콘
-                  세트가 두 화면에서 같은 방식으로 표현되도록 했어요. */}
-              <span
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: "26px",
-                  height: "26px",
-                  borderRadius: "50%",
-                  backgroundColor: SAGE_GREEN_BG,
-                  flexShrink: 0,
-                }}
-              >
-                <SeasonIcon size={16} color={SAGE_GREEN_DARK} />
-              </span>
-              <SparkleIcon size={12} />
-            </div>
-            <SwashUnderline width={150} />
-            <div style={{ marginTop: "2px", fontSize: "14px", color: "#8b95a1" }}>
-              {formatTodayGreetingDate()}
-            </div>
+              <SeasonIcon size={14} color={SAGE_GREEN_DARK} />
+            </span>
           </div>
+          <SwashUnderline width={130} />
+          <div style={{ marginTop: "2px", fontSize: "13px", color: "#8b95a1" }}>
+            {formatTodayGreetingDate()}
+          </div>
+        </div>
 
-          {isRestaurantsLoaded && oneYearAgoRestaurants.length > 0 && (
+        {isRestaurantsLoaded && oneYearAgoRestaurants.length > 0 && (
             <AnniversaryCard
               restaurants={oneYearAgoRestaurants}
               onSelectRestaurant={onSelectRestaurant}
@@ -959,10 +1065,9 @@ export default function HomeScreen({
               </List>
             )}
           </div>
-        </div>
-      </ScrapbookCard>
+      </div>
 
-      <div>
+      <div style={{ marginTop: "24px" }}>
         <SectionLabel>최근 오늘의 한 입</SectionLabel>
         {!isPostsLoaded ? (
           <div style={{ padding: "0 24px" }}>
