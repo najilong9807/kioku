@@ -1,6 +1,9 @@
 import { Asset, Badge, Button, useToast } from "@toss/tds-mobile";
 import { Share2 } from "lucide-react";
 import { useState, type CSSProperties } from "react";
+import { PhotoSticker } from "./components/scrapbook/PhotoSticker";
+import { HandDrawnHeartIcon } from "./components/scrapbook/decorations";
+import { WashiTape } from "./components/scrapbook/WashiTape";
 import { shareImage } from "./lib/share";
 import { renderRestaurantCard } from "./lib/shareCard";
 import type { Restaurant } from "./restaurantStorage";
@@ -93,7 +96,16 @@ export default function RestaurantDetailView({
         padding: "0 24px 24px",
       }}
     >
-      <div>
+      <div style={{ position: "relative" }}>
+        {/* 일기장 맨 위 모서리에 살짝 걸쳐둔 테이프 한 장이에요. 이 화면
+            전체에서 붙이는 테이프/스티커는 이거 하나뿐이에요. */}
+        <WashiTape
+          color="pink"
+          rotation={-4}
+          width={80}
+          height={22}
+          style={{ top: "-10px", right: "8px" }}
+        />
         <div
           style={{
             marginBottom: "12px",
@@ -111,23 +123,33 @@ export default function RestaurantDetailView({
         <div style={{ fontSize: "13px", color: "#8b95a1" }}>{infoLine}</div>
       )}
 
-      <div
-        style={{
-          minHeight: "140px",
-          whiteSpace: "pre-wrap",
-          wordBreak: "break-word",
-          ...HANDWRITING_TEXT_STYLE,
-          fontSize: "20px",
-          // 이 화면(상세보기)에서만, 손글씨 폰트 특유의 "짜치는" 느낌을 줄이려고
-          // 기본값(theme.ts의 letterSpacing 0.2px)보다 자간은 살짝 좁히고, 줄간격은
-          // 기존 이 화면의 2보다 살짝 더 넓혔어요. 다른 화면(오늘의 한 입 등)의
-          // HANDWRITING_TEXT_STYLE 사용부는 그대로예요.
-          letterSpacing: "-0.2px",
-          lineHeight: 2.15,
-          color: restaurant.memo ? "#191f28" : "#b0b8c1",
-        }}
-      >
-        {restaurant.memo || "기록된 메모가 없어요."}
+      <div style={{ position: "relative" }}>
+        {restaurant.memo && (
+          <span
+            style={{ position: "absolute", top: "-4px", right: "0px" }}
+            aria-hidden="true"
+          >
+            <HandDrawnHeartIcon size={20} />
+          </span>
+        )}
+        <div
+          style={{
+            minHeight: "140px",
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
+            ...HANDWRITING_TEXT_STYLE,
+            fontSize: "20px",
+            // 이 화면(상세보기)에서만, 손글씨 폰트 특유의 "짜치는" 느낌을 줄이려고
+            // 기본값(theme.ts의 letterSpacing 0.2px)보다 자간은 살짝 좁히고, 줄간격은
+            // 기존 이 화면의 2보다 살짝 더 넓혔어요. 다른 화면(오늘의 한 입 등)의
+            // HANDWRITING_TEXT_STYLE 사용부는 그대로예요.
+            letterSpacing: "-0.2px",
+            lineHeight: 2.15,
+            color: restaurant.memo ? "#191f28" : "#b0b8c1",
+          }}
+        >
+          {restaurant.memo || "기록된 메모가 없어요."}
+        </div>
       </div>
 
       {restaurant.menus.length > 0 && (
@@ -174,22 +196,21 @@ export default function RestaurantDetailView({
             // 다른 화면의 기본 flex gap(20px)보다 조금 더 여유 있게 둬요. 이
             // marginTop은 부모의 flex gap 위에 "추가로" 더해지는 간격이에요.
             marginTop: "16px",
-            display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
-            gap: "8px",
+            paddingBottom: "8px",
+            display: "flex",
+            flexWrap: "wrap",
+            rowGap: "12px",
           }}
         >
           {photos.map((photo, index) => (
-            <img
+            <PhotoSticker
               key={index}
               src={photo}
               alt={`${restaurant.name} 사진 ${index + 1}`}
-              style={{
-                width: "100%",
-                aspectRatio: "1 / 1",
-                objectFit: "cover",
-                borderRadius: "12px",
-              }}
+              size={92}
+              rotation={index % 2 === 0 ? -6 : 6}
+              zIndex={index}
+              style={{ marginLeft: index === 0 ? 0 : "-18px" }}
             />
           ))}
         </div>
