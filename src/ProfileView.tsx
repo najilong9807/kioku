@@ -32,6 +32,7 @@ import { applyDevTestSeed } from "./lib/devTestSeed";
 import { loadFoodTestResult, type FoodTestResult } from "./lib/foodTest";
 import { resizeImageFile } from "./lib/imageResize";
 import { formatTierRange, getLevelInfo, LEVEL_TIERS } from "./lib/levels";
+import { LevelStamp } from "./lib/levelStamp";
 import { saveProfile } from "./lib/profile";
 import { computeSeasonStamps } from "./lib/recordSummary";
 import { SEASON_ICONS, SEASON_LABELS, type Season } from "./lib/seasonIcon";
@@ -156,9 +157,7 @@ function LevelBadgeRow({ restaurantCount }: { restaurantCount: number }) {
         justifyContent: "center",
       }}
     >
-      <Badge size="small" variant="fill" color="yellow">
-        Lv.{tier.level}
-      </Badge>
+      <LevelStamp level={tier.level} size={40} />
       <span style={{ fontSize: "14px", fontWeight: 700, color: "#191f28" }}>
         {tier.name}
       </span>
@@ -394,16 +393,7 @@ function LevelTableModal({
                     minWidth: 0,
                   }}
                 >
-                  <span
-                    style={{
-                      fontSize: "13px",
-                      fontWeight: 700,
-                      color: isCurrent ? THEME_YELLOW_TEXT : "#8b95a1",
-                      flexShrink: 0,
-                    }}
-                  >
-                    Lv.{tier.level}
-                  </span>
+                  <LevelStamp level={tier.level} size={28} active={isCurrent} />
                   <span
                     style={{
                       fontSize: "14px",
