@@ -52,7 +52,13 @@ import {
 } from "./lib/threadPosts";
 import { getUserIdentityHash } from "./lib/userIdentity";
 import { RegionFilterSheetContent, RegionPicker } from "./RegionPicker";
-import { HANDWRITING_TEXT_STYLE } from "./theme";
+import {
+  BRAND_DISPLAY_FONT_FAMILY,
+  CORAL_RED,
+  DARK_NAVY,
+  HANDWRITING_TEXT_STYLE,
+  PAPER_CREAM,
+} from "./theme";
 
 // 첨부 사진은 가로 폭 기준 이 값 이하로 리사이즈해서 저장해요.
 const MAX_PHOTO_WIDTH = 800;
@@ -71,6 +77,14 @@ type CommentSortOption = "latest" | "popular";
 // variant="fill" + color="primary"(기본값) 버튼은 이 스타일로 글자색을 진하게 덮어써요.
 const PRIMARY_FILL_BUTTON_TEXT_STYLE = {
   "--button-color": "#000000",
+} as CSSProperties;
+
+// 메인 피드의 "글쓰기" CTA만 리디자인 브랜드 컬러(Coral Red)로 강조해요.
+// 다른 화면(작성 시트 제출 버튼 등)의 노란 버튼은 이번 스코프에서는
+// 그대로 둬요.
+const CORAL_FILL_BUTTON_STYLE = {
+  "--button-background-color": CORAL_RED,
+  "--button-color": "#ffffff",
 } as CSSProperties;
 
 // 닉네임이 아무리 길어도 옆에 나란히 있는 배지·시간이 밀려나지 않도록, 닉네임
@@ -1096,7 +1110,34 @@ function TodayMealBoard({
   };
 
   return (
-    <>
+    <div style={{ backgroundColor: PAPER_CREAM }}>
+      {/* "TODAY'S BITE" 헤더예요(레퍼런스 "03_오늘의_한입.png" 기준). 이
+          화면은 피드라 장식은 헤더 문구 톤 정도로만 최소화했어요. */}
+      <div style={{ padding: "16px 24px 12px" }}>
+        <div
+          style={{
+            fontFamily: BRAND_DISPLAY_FONT_FAMILY,
+            fontSize: "26px",
+            color: DARK_NAVY,
+            lineHeight: 1.1,
+          }}
+        >
+          TODAY&apos;S BITE
+        </div>
+        <div
+          style={{
+            marginTop: "2px",
+            fontSize: "12px",
+            fontWeight: 700,
+            color: DARK_NAVY,
+            opacity: 0.65,
+            letterSpacing: "1px",
+          }}
+        >
+          SHORT NOTES, BIG MEMORIES.
+        </div>
+      </div>
+
       <div style={{ padding: "0 24px 12px" }}>
         <button
           type="button"
@@ -1134,7 +1175,7 @@ function TodayMealBoard({
         <Button
           display="block"
           variant="fill"
-          style={PRIMARY_FILL_BUTTON_TEXT_STYLE}
+          style={CORAL_FILL_BUTTON_STYLE}
           onClick={openWriteSheet}
         >
           글쓰기
@@ -1371,7 +1412,7 @@ function TodayMealBoard({
           ))}
         </div>
       )}
-    </>
+    </div>
   );
 }
 
