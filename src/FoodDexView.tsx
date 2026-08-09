@@ -1,13 +1,23 @@
 import { ProgressBar } from "@toss/tds-mobile";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { PhotoSticker } from "./components/scrapbook/PhotoSticker";
+import { SparkleStarIcon } from "./components/scrapbook/decorations";
 import { WashiTape } from "./components/scrapbook/WashiTape";
 import { computeFoodDexDiscoveries } from "./lib/foodDex";
 import { FOOD_DEX_MASTER, FOOD_DEX_TOTAL_COUNT } from "./lib/foodDexData";
 import { FieldGuideIcon } from "./lib/quickActionIcons";
 import { RatingStars } from "./lib/rating";
 import type { Restaurant } from "./restaurantStorage";
-import { SAGE_GREEN, SAGE_GREEN_BG, SAGE_GREEN_DARK } from "./theme";
+import {
+  BRAND_DISPLAY_FONT_FAMILY,
+  DARK_NAVY,
+  PAPER_CREAM,
+  SAGE_GREEN,
+  SAGE_GREEN_BG,
+  SAGE_GREEN_DARK,
+} from "./theme";
+
+type DexFilter = "all" | "discovered" | "undiscovered";
 
 // 맛있는 하루 기록에 붙인 메뉴 태그를 "도감"처럼 모아 보여줘요. 도감
 // 항목(번호/이름)은 lib/foodDexData.ts에 70개 고정되어 있고, 그중 사용자가
@@ -30,8 +40,34 @@ export default function FoodDexView({
   const progress =
     FOOD_DEX_TOTAL_COUNT > 0 ? discoveredCount / FOOD_DEX_TOTAL_COUNT : 0;
 
+  const [filter, setFilter] = useState<DexFilter>("all");
+  const visibleEntries = useMemo(
+    () =>
+      FOOD_DEX_MASTER.filter((entry) => {
+        if (filter === "all") {
+          return true;
+        }
+        const isDiscovered = discoveries.has(entry.name);
+        return filter === "discovered" ? isDiscovered : !isDiscovered;
+      }),
+    [discoveries, filter],
+  );
+
   return (
-    <div style={{ padding: "0 24px 24px" }}>
+    <div style={{ backgroundColor: PAPER_CREAM, padding: "0 24px 24px" }}>
+      {/* "맛집 도감" 타이틀이에요. 탭이라 뒤로가기 화살표는 두지 않았어요. */}
+      <div style={{ padding: "16px 0 12px" }}>
+        <div
+          style={{
+            fontFamily: BRAND_DISPLAY_FONT_FAMILY,
+            fontSize: "24px",
+            color: DARK_NAVY,
+          }}
+        >
+          맛집 도감
+        </div>
+      </div>
+
       <div
         style={{
           position: "relative",
@@ -72,35 +108,85 @@ export default function FoodDexView({
             {discoveredCount}/{FOOD_DEX_TOTAL_COUNT}개 발견
           </span>
         </div>
-        <ProgressBar progress={progress} size="normal" color={SAGE_GREEN_DARK} />
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div style={{ flex: "1 1 auto" }}>
+            <ProgressBar progress={progress} size="normal" color={SAGE_GREEN_DARK} />
+          </div>
+          <SparkleStarIcon size={16} color={SAGE_GREEN_DARK} />
+        </div>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: "10px",
-        }}
-      >
-        {FOOD_DEX_MASTER.map((entry) => {
-          const representative = discoveries.get(entry.name);
-          return representative ? (
-            <DiscoveredCell
-              key={entry.name}
-              dexNumber={entry.dexNumber}
-              name={entry.name}
-              representative={representative}
-              onClick={() => onSelectTag(entry.name)}
-            />
-          ) : (
-            <UndiscoveredCell
-              key={entry.name}
-              dexNumber={entry.dexNumber}
-              name={entry.name}
-            />
+      <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+        {(
+          [
+            { value: "all", label: "전체" },
+            { value: "discovered", label: "발견됨" },
+            { value: "undiscovered", label: "미발견" },
+          ] as const
+        ).map((option) => {
+          const selected = filter === option.value;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => setFilter(option.value)}
+              style={{
+                padding: "7px 14px",
+                borderRadius: "999px",
+                border: selected ? "none" : "1.5px solid #E5DFC9",
+                backgroundColor: selected ? SAGE_GREEN_DARK : "transparent",
+                color: selected ? "#ffffff" : DARK_NAVY,
+                fontSize: "13px",
+                fontWeight: 700,
+                cursor: "pointer",
+                WebkitTapHighlightColor: "transparent",
+              }}
+            >
+              {option.label}
+            </button>
           );
         })}
       </div>
+
+      {visibleEntries.length === 0 ? (
+        <div
+          style={{
+            padding: "40px 0",
+            textAlign: "center",
+            fontSize: "13px",
+            color: "#8b95a1",
+          }}
+        >
+          해당하는 항목이 없어요.
+        </div>
+      ) : (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: "10px",
+          }}
+        >
+          {visibleEntries.map((entry) => {
+            const representative = discoveries.get(entry.name);
+            return representative ? (
+              <DiscoveredCell
+                key={entry.name}
+                dexNumber={entry.dexNumber}
+                name={entry.name}
+                representative={representative}
+                onClick={() => onSelectTag(entry.name)}
+              />
+            ) : (
+              <UndiscoveredCell
+                key={entry.name}
+                dexNumber={entry.dexNumber}
+                name={entry.name}
+              />
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -170,6 +256,34 @@ function DiscoveredCell({
           rotation={dexNumber % 2 === 0 ? -5 : 5}
         />
         <DexNumberBadge dexNumber={dexNumber} />
+        {/* 발견 완료 배지예요. No. 배지(왼쪽 위)와 겹치지 않게 오른쪽
+            위에 뒀어요. */}
+        <span
+          style={{
+            position: "absolute",
+            top: "6px",
+            right: "6px",
+            width: "18px",
+            height: "18px",
+            borderRadius: "50%",
+            backgroundColor: SAGE_GREEN_DARK,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 1px 3px rgba(24, 35, 56, 0.3)",
+          }}
+          aria-hidden="true"
+        >
+          <svg width="10" height="8" viewBox="0 0 12 10" fill="none">
+            <path
+              d="M1.5 5.2 L4.3 8 L10.5 1.5"
+              stroke="#ffffff"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
         <span style={{ fontSize: "12px", fontWeight: 700, color: SAGE_GREEN_DARK }}>
