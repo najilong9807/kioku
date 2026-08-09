@@ -1,6 +1,7 @@
-import { List, ListRow, Rating, Result } from "@toss/tds-mobile";
+import { List, ListRow, Result } from "@toss/tds-mobile";
 import { useMemo, type CSSProperties } from "react";
 import { EmptyDiaryIcon, EmptyStateFigure } from "./lib/emptyStateIcons";
+import { RatingStars } from "./lib/rating";
 import { formatDisplayDate, type Restaurant } from "./restaurantStorage";
 
 // 이름이 아무리 길어도 옆에 나란히 있는 배지가 밀려나지 않도록, 이름 쪽에만
@@ -98,15 +99,7 @@ export function TagRestaurantsSheetContent({
                       .join(" · ")}
                   />
                 }
-                right={
-                  <Rating
-                    readOnly
-                    value={restaurant.rating}
-                    max={5}
-                    size="small"
-                    variant="iconOnly"
-                  />
-                }
+                right={<RatingStars value={restaurant.rating} size={14} />}
               />
             </div>
           ))}

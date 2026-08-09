@@ -6,7 +6,6 @@ import {
   Button,
   List,
   ListRow,
-  Rating,
   Result,
   SearchField,
   Tab,
@@ -48,6 +47,12 @@ import {
 import { guessRestaurantNameFromPost } from "./lib/postToRestaurant";
 import { fetchProfile, saveProfile } from "./lib/profile";
 import { pickRandomItem } from "./lib/random";
+import {
+  clampToHalfStepRating,
+  RatingStars,
+  RatingStarsInput,
+  type Rating,
+} from "./lib/rating";
 import { SheetHeader } from "./lib/SheetHeader";
 import type { ThreadPost } from "./lib/threadPosts";
 import { getUserIdentityHash } from "./lib/userIdentity";
@@ -317,7 +322,9 @@ function RestaurantForm({
     initialValues?.neighborhood ?? "",
   );
   const [memo, setMemo] = useState(initialValues?.memo ?? "");
-  const [rating, setRating] = useState(initialValues?.rating ?? 5);
+  const [rating, setRating] = useState<Rating>(
+    clampToHalfStepRating(initialValues?.rating ?? 5),
+  );
   const [visitDate, setVisitDate] = useState(
     initialValues?.visitDate ?? todayDateInputValue(),
   );
@@ -954,13 +961,7 @@ function RestaurantForm({
             별점
           </div>
           <div style={{ display: "flex", justifyContent: "center" }}>
-            <Rating
-              readOnly={false}
-              value={rating}
-              max={5}
-              size="large"
-              onValueChange={setRating}
-            />
+            <RatingStarsInput value={rating} onChange={setRating} size={32} />
           </div>
         </div>
       </div>
@@ -2012,13 +2013,7 @@ function App() {
                           gap: "8px",
                         }}
                       >
-                        <Rating
-                          readOnly
-                          value={restaurant.rating}
-                          max={5}
-                          size="small"
-                          variant="iconOnly"
-                        />
+                        <RatingStars value={restaurant.rating} size={14} />
                         <Button
                           size="small"
                           variant="weak"

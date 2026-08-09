@@ -248,6 +248,43 @@ function drawWatermark(ctx: CanvasRenderingContext2D, centerX: number, bottomY: 
   );
 }
 
+// 별 5개를 그려요. lib/rating.tsx의 RatingStars(DOM 버전)와 같은 방식으로,
+// 별마다 빈 별을 먼저 그리고 그 위에 fillRatio(0~1)만큼만 클립해서 채워진
+// 별을 겹쳐 그려요. 0.5 단위 별점(예: 3.5)의 반쪽 별을 표현하기 위해서예요.
+function drawRatingStars(
+  ctx: CanvasRenderingContext2D,
+  rating: number,
+  x: number,
+  y: number,
+  starSize: number,
+  gap: number,
+  filledColor: string,
+  emptyColor: string,
+) {
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+  ctx.font = sansFont(700, starSize);
+  let cursorX = x;
+  for (let i = 0; i < 5; i++) {
+    const fillRatio = Math.max(0, Math.min(1, rating - i));
+
+    ctx.fillStyle = emptyColor;
+    ctx.fillText("★", cursorX, y);
+
+    if (fillRatio > 0) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(cursorX, y - starSize, starSize * fillRatio, starSize * 1.3);
+      ctx.clip();
+      ctx.fillStyle = filledColor;
+      ctx.fillText("★", cursorX, y);
+      ctx.restore();
+    }
+
+    cursorX += starSize + gap;
+  }
+}
+
 const FOOD_TEST_CARD_WIDTH = 720;
 const FOOD_TEST_CARD_HEIGHT = 960;
 
@@ -444,12 +481,7 @@ export async function renderRestaurantCard(restaurant: Restaurant): Promise<Blob
   cursorY = titleWrap.endY + 46;
 
   // 별점(왼쪽) + 방문일(오른쪽)
-  const filledStars = Math.max(0, Math.min(5, Math.round(restaurant.rating)));
-  const stars = "★".repeat(filledStars) + "☆".repeat(5 - filledStars);
-  ctx.textAlign = "left";
-  ctx.fillStyle = THEME_YELLOW_ACCENT;
-  ctx.font = sansFont(700, 30);
-  ctx.fillText(stars, contentX, cursorY);
+  drawRatingStars(ctx, restaurant.rating, contentX, cursorY, 30, 2, THEME_YELLOW_ACCENT, "#e2ddc8");
 
   ctx.textAlign = "right";
   ctx.fillStyle = "#8b95a1";

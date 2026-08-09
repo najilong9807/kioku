@@ -1,5 +1,6 @@
-import { Badge, List, ListRow, Rating, SearchField } from "@toss/tds-mobile";
+import { Badge, List, ListRow, SearchField } from "@toss/tds-mobile";
 import { useMemo, useState, type CSSProperties } from "react";
+import { RatingStars } from "./lib/rating";
 import { formatDisplayDate, type Restaurant } from "./restaurantStorage";
 
 // 이름이 아무리 길어도 옆에 나란히 있는 배지가 밀려나지 않도록, 이름 쪽에만
@@ -150,15 +151,7 @@ export function RestaurantSearchSheetContent({
                       .join(" · ")}
                   />
                 }
-                right={
-                  <Rating
-                    readOnly
-                    value={restaurant.rating}
-                    max={5}
-                    size="small"
-                    variant="iconOnly"
-                  />
-                }
+                right={<RatingStars value={restaurant.rating} size={14} />}
               />
             </div>
           ))}
