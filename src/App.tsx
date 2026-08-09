@@ -28,6 +28,8 @@ import {
 import "./App.css";
 import { BrandMarkIcon } from "./BrandMarkIcon";
 import CalendarView, { type PlannedVisitFormValues } from "./CalendarView";
+import { PhotoSticker } from "./components/scrapbook/PhotoSticker";
+import { SwashUnderline } from "./components/scrapbook/decorations";
 import FoodDexView from "./FoodDexView";
 import HomeScreen from "./HomeScreen";
 import {
@@ -1961,6 +1963,19 @@ function App() {
         />
       ) : selectedTab === RESTAURANT_TAB_INDEX ? (
         <>
+          <div style={{ padding: "0 24px 12px" }}>
+            <div
+              style={{
+                fontSize: "18px",
+                fontWeight: 700,
+                color: "#191f28",
+              }}
+            >
+              맛있는 하루
+            </div>
+            <SwashUnderline width={110} />
+          </div>
+
           <div style={{ padding: "0 24px 16px" }}>
             <Button
               display="block"
@@ -2064,7 +2079,7 @@ function App() {
             />
           ) : (
             <List>
-              {visibleRestaurants.map((restaurant) => (
+              {visibleRestaurants.map((restaurant, index) => (
                 <div
                   key={restaurant.id}
                   onClick={() => openDetailSheet(restaurant)}
@@ -2073,17 +2088,11 @@ function App() {
                   <ListRow
                     withTouchEffect
                     left={
-                      restaurant.photos && restaurant.photos.length > 0 ? (
-                        <ListRow.AssetImage
-                          src={restaurant.photos[0]}
-                          shape="squircle"
-                          size="medium"
-                        />
-                      ) : (
-                        <ListRow.AssetText shape="squircle" size="medium">
-                          {restaurant.name.slice(0, 1)}
-                        </ListRow.AssetText>
-                      )
+                      <PhotoSticker
+                        src={restaurant.photos?.[0]}
+                        rotation={index % 2 === 0 ? -5 : 5}
+                        size={48}
+                      />
                     }
                     contents={
                       <ListRow.Texts
