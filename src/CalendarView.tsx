@@ -22,9 +22,59 @@ import {
   todayDateInputValue,
 } from "./restaurantStorage";
 import { SheetHeader } from "./lib/SheetHeader";
-import { THEME_YELLOW } from "./theme";
+import {
+  BRAND_DISPLAY_FONT_FAMILY,
+  CORAL_RED,
+  DARK_NAVY,
+  PAPER_CREAM,
+  SAGE_GREEN,
+} from "./theme";
 
 const WEEKDAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
+
+// "NEXT BITE" 헤더의 "AUG. 2026" 같은 영문 월 표기용이에요.
+const MONTH_ABBREVIATIONS = [
+  "JAN",
+  "FEB",
+  "MAR",
+  "APR",
+  "MAY",
+  "JUN",
+  "JUL",
+  "AUG",
+  "SEP",
+  "OCT",
+  "NOV",
+  "DEC",
+];
+
+// 헤더에 놓는 작은 손그림 노트 도들이에요. 이 화면(캘린더)은 기능성이
+// 강해서 장식을 이거 하나로만 제한했어요.
+function NotebookDoodle() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+      <rect
+        x="5"
+        y="4"
+        width="18"
+        height="20"
+        rx="2.5"
+        stroke={DARK_NAVY}
+        strokeWidth="1.6"
+      />
+      <path d="M5 9.5 L23 9.5" stroke={DARK_NAVY} strokeWidth="1.4" />
+      <path d="M9 4.5 L9 7" stroke={DARK_NAVY} strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M19 4.5 L19 7" stroke={DARK_NAVY} strokeWidth="1.6" strokeLinecap="round" />
+      <path
+        d="M9.5 15 L12.5 18 L18.5 12"
+        stroke={SAGE_GREEN}
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 // 브랜드 색(노란색)이 밝아서 흰 글씨는 가독성이 떨어져요. App.tsx의 동명
 // 상수와 같은 이유로, variant="fill" 버튼의 글자색을 진하게 덮어써요.
@@ -360,7 +410,53 @@ export default function CalendarView({
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "16px",
+        backgroundColor: PAPER_CREAM,
+        paddingBottom: "8px",
+      }}
+    >
+      {/* "NEXT BITE" 헤더예요(레퍼런스 "04_다가올_한입.png" 기준). 이
+          화면은 기능성이 강한 캘린더라, 장식은 헤더의 작은 노트 도들
+          하나로 최소화했어요. */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          padding: "16px 24px 0",
+        }}
+      >
+        <div>
+          <div
+            style={{
+              fontFamily: BRAND_DISPLAY_FONT_FAMILY,
+              fontSize: "26px",
+              color: DARK_NAVY,
+              lineHeight: 1.1,
+            }}
+          >
+            NEXT BITE
+          </div>
+          <div
+            style={{
+              marginTop: "2px",
+              fontSize: "12px",
+              fontWeight: 700,
+              color: DARK_NAVY,
+              opacity: 0.65,
+              letterSpacing: "1px",
+            }}
+          >
+            {MONTH_ABBREVIATIONS[cursor.month]}. {cursor.year}
+          </div>
+        </div>
+        <NotebookDoodle />
+      </div>
+
       <div
         style={{
           display: "flex",
@@ -483,8 +579,8 @@ export default function CalendarView({
                   borderRadius: "14px",
                   fontSize: "13px",
                   fontWeight: isToday ? 700 : 400,
-                  color: isToday ? "#000000" : "#191f28",
-                  backgroundColor: isToday ? THEME_YELLOW : "transparent",
+                  color: isToday ? "#ffffff" : "#191f28",
+                  backgroundColor: isToday ? SAGE_GREEN : "transparent",
                 }}
               >
                 {dayNumber}
@@ -494,7 +590,7 @@ export default function CalendarView({
                   width: "4px",
                   height: "4px",
                   borderRadius: "2px",
-                  backgroundColor: hasPlan ? "#f04452" : "transparent",
+                  backgroundColor: hasPlan ? CORAL_RED : "transparent",
                 }}
               />
             </button>
