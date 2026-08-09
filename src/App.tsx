@@ -4,6 +4,7 @@ import {
   BottomSheet,
   Border,
   Button,
+  Checkbox,
   List,
   ListRow,
   Result,
@@ -32,6 +33,12 @@ import {
   EmptyDiaryIcon,
   EmptyStateFigure,
 } from "./lib/emptyStateIcons";
+import {
+  FOOD_DEX_CATEGORIES,
+  FOOD_DEX_MASTER,
+  type FoodDexCategory,
+  type FoodDexMasterEntry,
+} from "./lib/foodDexData";
 import { resizeImageFile } from "./lib/imageResize";
 import {
   buildRegionFilterOptions,
@@ -292,6 +299,141 @@ interface AddRestaurantFormValues {
 // 음식/가게 사진은 최대 이만큼만 첨부할 수 있어요.
 const MAX_PHOTOS = 4;
 
+// 도감에 있는 이름만 모은 집합이에요. menus 배열 중 "도감에 없는" 이름(예전
+// 자유 텍스트 태그)을 가려낼 때 써요.
+const FOOD_DEX_NAME_SET = new Set(FOOD_DEX_MASTER.map((entry) => entry.name));
+
+// 메뉴 태그를 "도감(FOOD_DEX_MASTER)"에서 골라 담는 바텀시트의 내용이에요.
+// RestaurantForm 자신도 이미 useBottomSheet()로 연 바텀시트라(싱글턴이라
+// 또 열면 이 폼이 그 내용으로 통째로 바뀌어요) 카테고리 선택 바텀시트와
+// 같은 방법으로, <BottomSheet> 컴포넌트를 로컬 상태로 직접 다뤄서 폼 위에
+// 겹쳐 뜨는 별개의 바텀시트로 만들어요.
+//
+// 선택 완료(onConfirm)는 "이 화면이 아는 도감 항목들"만 교체해요. 기존
+// menus 배열에 도감에 없는 옛날 자유 텍스트 태그가 남아 있어도 그대로
+// 보존돼요(RestaurantForm 쪽에서 병합).
+function FoodDexPickerSheetContent({
+  selectedNames,
+  onConfirm,
+}: {
+  selectedNames: string[];
+  onConfirm: (names: string[]) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [draftSelected, setDraftSelected] = useState<Set<string>>(
+    () => new Set(selectedNames),
+  );
+
+  const groupedEntries = useMemo(() => {
+    const trimmedQuery = query.trim();
+    const filtered = trimmedQuery
+      ? FOOD_DEX_MASTER.filter((entry) => entry.name.includes(trimmedQuery))
+      : FOOD_DEX_MASTER;
+
+    const groups = new Map<FoodDexCategory, FoodDexMasterEntry[]>();
+    for (const entry of filtered) {
+      const list = groups.get(entry.category) ?? [];
+      list.push(entry);
+      groups.set(entry.category, list);
+    }
+    return FOOD_DEX_CATEGORIES.map((category) => ({
+      category,
+      items: groups.get(category) ?? [],
+    })).filter((group) => group.items.length > 0);
+  }, [query]);
+
+  const toggle = (name: string) => {
+    setDraftSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) {
+        next.delete(name);
+      } else {
+        next.add(name);
+      }
+      return next;
+    });
+  };
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "12px",
+        padding: "0 24px 16px",
+      }}
+    >
+      <TextField
+        variant="box"
+        placeholder="메뉴 이름으로 검색"
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+      />
+
+      {groupedEntries.length === 0 ? (
+        <div
+          style={{
+            padding: "40px 0",
+            textAlign: "center",
+            fontSize: "14px",
+            color: "#8b95a1",
+          }}
+        >
+          검색 결과가 없어요.
+        </div>
+      ) : (
+        groupedEntries.map((group) => (
+          <div key={group.category}>
+            <div
+              style={{
+                fontSize: "13px",
+                fontWeight: 700,
+                color: "#8b95a1",
+                marginBottom: "2px",
+              }}
+            >
+              {group.category}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              {group.items.map((entry) => (
+                <label
+                  key={entry.name}
+                  onClick={() => toggle(entry.name)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    padding: "9px 4px",
+                    cursor: "pointer",
+                  }}
+                >
+                  <Checkbox.Circle
+                    checked={draftSelected.has(entry.name)}
+                    onCheckedChange={() => toggle(entry.name)}
+                    aria-label={entry.name}
+                  />
+                  <span style={{ fontSize: "15px", color: "#191f28" }}>
+                    {entry.name}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+        ))
+      )}
+
+      <Button
+        display="block"
+        variant="fill"
+        style={PRIMARY_FILL_BUTTON_TEXT_STYLE}
+        onClick={() => onConfirm(Array.from(draftSelected))}
+      >
+        {draftSelected.size > 0 ? `${draftSelected.size}개 담기` : "담기"}
+      </Button>
+    </div>
+  );
+}
+
 // 바텀시트에 넘기는 children은 open() 호출 시점에 한 번 고정돼요.
 // 그래서 입력 상태는 바깥 App이 아니라 이 컴포넌트 자신이 들고 있어야
 // 타이핑/별점 선택마다 이 컴포넌트만 다시 렌더링되어 반영돼요.
@@ -314,7 +456,7 @@ function RestaurantForm({
   );
   const [isCategorySheetOpen, setIsCategorySheetOpen] = useState(false);
   const [menus, setMenus] = useState<string[]>(initialValues?.menus ?? []);
-  const [menuInput, setMenuInput] = useState("");
+  const [isDexPickerOpen, setIsDexPickerOpen] = useState(false);
   const [companion, setCompanion] = useState(initialValues?.companion ?? "");
   const [weather, setWeather] = useState(initialValues?.weather ?? "");
   const [neighborhood, setNeighborhood] = useState(
@@ -353,17 +495,18 @@ function RestaurantForm({
   const requiresReceipt = isPastVisit && !receiptImage;
   const hasNoMenu = menus.length === 0;
 
-  const addMenu = () => {
-    const trimmed = menuInput.trim();
-    if (!trimmed) {
-      return;
-    }
-    setMenus((prev) => [...prev, trimmed]);
-    setMenuInput("");
-  };
-
   const removeMenu = (index: number) => {
     setMenus((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // 도감 피커에서 "담기"를 누르면 호출돼요. 도감에 있는 이름들은 피커가 돌려준
+  // 선택 결과로 완전히 교체하고(체크 해제하면 빠지도록), 도감에 없는 예전
+  // 자유 텍스트 태그는 건드리지 않고 그대로 남겨둬요.
+  const handleDexPickerConfirm = (selectedDexNames: string[]) => {
+    setMenus((prev) => [
+      ...prev.filter((menu) => !FOOD_DEX_NAME_SET.has(menu)),
+      ...selectedDexNames,
+    ]);
   };
 
   // 날씨 아이콘을 누르면 기존에 입력해 둔 텍스트는 지우지 않고, emoji만 맨 앞에
@@ -793,24 +936,15 @@ function RestaurantForm({
           >
             먹은 메뉴
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <TextField
-              variant="box"
-              placeholder="예) 짜장면"
-              value={menuInput}
-              onChange={(e) => setMenuInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  addMenu();
-                }
-              }}
-              style={{ flex: 1 }}
-            />
-            <Button size="large" variant="weak" color="dark" onClick={addMenu}>
-              추가
-            </Button>
-          </div>
+          <Button
+            display="block"
+            size="large"
+            variant="weak"
+            color="dark"
+            onClick={() => setIsDexPickerOpen(true)}
+          >
+            📖 도감에서 담기
+          </Button>
           {menus.length > 0 && (
             <div
               style={{
@@ -1004,6 +1138,28 @@ function RestaurantForm({
           onSelect={(value) => {
             setCategory(value);
             setIsCategorySheetOpen(false);
+          }}
+        />
+      </BottomSheet>
+
+      <BottomSheet
+        open={isDexPickerOpen}
+        onClose={() => setIsDexPickerOpen(false)}
+        header={
+          <SheetHeader
+            title="도감에서 담기"
+            onClose={() => setIsDexPickerOpen(false)}
+          />
+        }
+      >
+        {/* key로 열 때마다 새로 마운트해서, 지난번 검색어/체크 상태가 남지
+            않고 매번 현재 menus 기준으로 다시 시작하게 해요. */}
+        <FoodDexPickerSheetContent
+          key={String(isDexPickerOpen)}
+          selectedNames={menus}
+          onConfirm={(names) => {
+            handleDexPickerConfirm(names);
+            setIsDexPickerOpen(false);
           }}
         />
       </BottomSheet>
