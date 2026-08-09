@@ -37,3 +37,16 @@ export const THEME_YELLOW_TEXT = "#9a6b00";
 export const SAGE_GREEN = "#9CAF9A";
 export const SAGE_GREEN_DARK = "#4A6350";
 export const SAGE_GREEN_BG = "#EAF0EA";
+
+// "스크랩북 다이어리" 디자인 시스템(components/scrapbook/) 전용 색상 토큰이에요.
+// 실물 다이어리 질감(크림색 종이, 그리드 노트, 워시테이프, 스프링 바인더)을
+// 표현하는 재사용 컴포넌트 세트에서 함께 써요.
+// - PAPER_CREAM: 스크랩북 카드 바탕에 쓰는 크림색 종이
+// - PAPER_GRID_LINE: 종이 위에 옅게 깔리는 격자선
+// - WASHI_SAGE / WASHI_PINK: 워시테이프 2종 색상(세이지그린은 기존 SAGE_GREEN과 동일)
+// - RING_METAL: 스프링 바인더 링 색
+export const PAPER_CREAM = "#FDF6E9";
+export const PAPER_GRID_LINE = "#ECE0C7";
+export const WASHI_SAGE = SAGE_GREEN;
+export const WASHI_PINK = "#E3B7AE";
+export const RING_METAL = "#B5BAC2";

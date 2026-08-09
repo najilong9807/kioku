@@ -39,6 +39,8 @@ import { SEASON_ICONS, SEASON_LABELS, type Season } from "./lib/seasonIcon";
 import MyRecordsView from "./MyRecordsView";
 import { RegionPicker } from "./RegionPicker";
 import type { Restaurant } from "./restaurantStorage";
+// TODO: 출시 전 제거 — "스크랩북 다이어리" 디자인 시스템 미리보기 관련 import예요.
+import ScrapbookPreviewView from "./ScrapbookPreviewView";
 import { THEME_YELLOW, THEME_YELLOW_BG, THEME_YELLOW_TEXT } from "./theme";
 
 // 브랜드 색(노란색)이 밝아서 흰 글씨는 가독성이 떨어져요. App.tsx의 동명 상수와
@@ -470,6 +472,8 @@ export default function ProfileView({
   // TODO: 출시 전 제거 — 개발용 테스트 데이터 주입 확인 다이얼로그 상태예요.
   const [isSeedConfirmOpen, setIsSeedConfirmOpen] = useState(false);
   const [isSeeding, setIsSeeding] = useState(false);
+  // TODO: 출시 전 제거 — 스크랩북 디자인 시스템 미리보기 상태예요.
+  const [isScrapbookPreviewOpen, setIsScrapbookPreviewOpen] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   const canSave =
@@ -769,6 +773,16 @@ export default function ProfileView({
           >
             테스트 데이터 넣기
           </Button>
+          <div style={{ marginTop: "8px" }}>
+            <Button
+              display="block"
+              variant="weak"
+              color="dark"
+              onClick={() => setIsScrapbookPreviewOpen(true)}
+            >
+              스크랩북 컴포넌트 미리보기
+            </Button>
+          </div>
         </div>
 
         <div style={{ display: "flex", gap: "8px" }}>
@@ -804,6 +818,56 @@ export default function ProfileView({
         restaurantCount={restaurantCount}
         restaurants={restaurants}
       />
+
+      {/* TODO: 출시 전 제거 — 스크랩북 디자인 시스템 미리보기 모달이에요. */}
+      <Modal
+        open={isScrapbookPreviewOpen}
+        onOpenChange={(next) => !next && setIsScrapbookPreviewOpen(false)}
+      >
+        <Modal.Overlay onClick={() => setIsScrapbookPreviewOpen(false)} />
+        <Modal.Content
+          style={{
+            width: "min(92vw, 420px)",
+            maxHeight: "86vh",
+            padding: "20px 0",
+            display: "flex",
+            flexDirection: "column",
+            gap: "16px",
+            boxSizing: "border-box",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "0 24px",
+            }}
+          >
+            <span style={{ fontSize: "20px", fontWeight: 700, color: "#191f28" }}>
+              스크랩북 컴포넌트 미리보기
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsScrapbookPreviewOpen(false)}
+              aria-label="닫기"
+              style={{
+                display: "flex",
+                border: "none",
+                background: "none",
+                padding: "4px",
+                cursor: "pointer",
+                color: "#8b95a1",
+              }}
+            >
+              <X size={20} />
+            </button>
+          </div>
+          <div style={{ overflowY: "auto" }}>
+            <ScrapbookPreviewView />
+          </div>
+        </Modal.Content>
+      </Modal>
 
       {/* TODO: 출시 전 제거 — 개발용 테스트 데이터 주입 확인 다이얼로그예요. */}
       <ConfirmDialog
