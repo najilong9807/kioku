@@ -1,4 +1,11 @@
-import { Button, Checkbox, Modal, ProgressBar, useToast } from "@toss/tds-mobile";
+import {
+  Button,
+  Checkbox,
+  Modal,
+  ProgressBar,
+  useDialog,
+  useToast,
+} from "@toss/tds-mobile";
 import { ChevronLeft, Share2, X } from "lucide-react";
 import { useEffect, useState, type CSSProperties } from "react";
 import { WashiTape } from "./components/scrapbook/WashiTape";
@@ -109,6 +116,29 @@ export default function FoodTestModal({
   const [answers, setAnswers] = useState<Answers>({});
   const [result, setResult] = useState<FoodTestResult | null>(null);
 
+  const { openConfirm } = useDialog();
+
+  // 오버레이(딤) 클릭 시: 문항에 하나라도 답한 상태면(진행 중이면) 확인을
+  // 거치고, 아직 시작 전(intro)이거나 이미 결과까지 다 봤으면 바로 닫아요.
+  const handleOverlayClick = async () => {
+    const hasProgress =
+      step === "questions" && Object.keys(answers).length > 0;
+    if (!hasProgress) {
+      onClose();
+      return;
+    }
+    const confirmed = await openConfirm({
+      title: "먹보조사를 그만둘까요?",
+      description: "지금까지 답한 내용이 사라져요. 닫으시겠어요?",
+      confirmButton: "닫기",
+      cancelButton: "계속하기",
+      closeOnDimmerClick: true,
+    });
+    if (confirmed) {
+      onClose();
+    }
+  };
+
   useEffect(() => {
     if (!open) {
       return;
@@ -184,7 +214,7 @@ export default function FoodTestModal({
         }
       }}
     >
-      <Modal.Overlay />
+      <Modal.Overlay onClick={handleOverlayClick} />
       <Modal.Content
         style={{
           width: "min(92vw, 440px)",

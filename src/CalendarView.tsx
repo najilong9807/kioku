@@ -8,7 +8,13 @@ import {
   useDialog,
 } from "@toss/tds-mobile";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import { useMemo, useState, type CSSProperties } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { EmptyCalendarIcon, EmptyStateFigure } from "./lib/emptyStateIcons";
 import {
   formatDDay,
@@ -24,10 +30,16 @@ import {
 import { SheetHeader } from "./lib/SheetHeader";
 import {
   BRAND_DISPLAY_FONT_FAMILY,
+  CARD_RADIUS,
   CORAL_RED,
   DARK_NAVY,
-  PAPER_CREAM,
+  DIVIDER_COLOR,
+  LIST_TITLE_TEXT_STYLE,
+  META_TEXT_STYLE,
   SAGE_GREEN,
+  SECTION_TITLE_TEXT_STYLE,
+  SKY_BLUE_BG,
+  WARM_PAPER,
 } from "./theme";
 
 const WEEKDAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -114,17 +126,33 @@ function PlannedVisitForm({
   submitLabel,
   onSubmit,
   onCancel,
+  onDirtyChange,
 }: {
   initialValues?: PlannedVisitFormValues;
   submitLabel: string;
   onSubmit: (values: PlannedVisitFormValues) => void;
   onCancel: () => void;
+  onDirtyChange?: (isDirty: boolean) => void;
 }) {
   const [name, setName] = useState(initialValues?.name ?? "");
   const [visitDate, setVisitDate] = useState(
     initialValues?.visitDate ?? todayDateInputValue(),
   );
   const [memo, setMemo] = useState(initialValues?.memo ?? "");
+
+  const initialSnapshotRef = useRef(
+    JSON.stringify({
+      name: initialValues?.name ?? "",
+      visitDate: initialValues?.visitDate ?? todayDateInputValue(),
+      memo: initialValues?.memo ?? "",
+    }),
+  );
+
+  useEffect(() => {
+    const currentSnapshot = JSON.stringify({ name, visitDate, memo });
+    onDirtyChange?.(currentSnapshot !== initialSnapshotRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [name, visitDate, memo]);
 
   const canSubmit = name.trim().length > 0 && visitDate.length > 0;
 
@@ -262,7 +290,7 @@ function PlannedVisitRow({
         flexDirection: "column",
         gap: "8px",
         padding: "16px 24px",
-        borderBottom: "1px solid #f2f4f6",
+        borderBottom: `1px solid ${DIVIDER_COLOR}`,
       }}
     >
       <div
@@ -272,14 +300,12 @@ function PlannedVisitRow({
           alignItems: "center",
         }}
       >
-        <span style={{ fontSize: "15px", fontWeight: 700, color: "#191f28" }}>
-          {visit.name}
-        </span>
+        <span style={LIST_TITLE_TEXT_STYLE}>{visit.name}</span>
         <Badge size="small" variant="weak" color={isPast ? "red" : "blue"}>
           {formatDDay(daysUntil)}
         </Badge>
       </div>
-      <div style={{ fontSize: "13px", color: "#8b95a1" }}>
+      <div style={META_TEXT_STYLE}>
         {formatDisplayDate(visit.visitDate)}
         {visit.memo ? ` · ${visit.memo}` : ""}
       </div>
@@ -341,6 +367,27 @@ export default function CalendarView({
   const { open, close } = useBottomSheet();
   const { openConfirm } = useDialog();
 
+  // App.tsx의 동명 패턴과 같아요: 폼 바텀시트가 열려있는 동안 입력값이
+  // 있는지 ref로 추적해서, 오버레이 클릭 시 최신 상태를 읽어요.
+  const isFormDirtyRef = useRef(false);
+
+  const handleGuardedDimmerClick = async () => {
+    if (!isFormDirtyRef.current) {
+      close();
+      return;
+    }
+    const confirmed = await openConfirm({
+      title: "작성 중인 내용이 있어요",
+      description: "지금 닫으면 입력한 내용이 사라져요. 닫으시겠어요?",
+      confirmButton: "닫기",
+      cancelButton: "계속 작성",
+      closeOnDimmerClick: true,
+    });
+    if (confirmed) {
+      close();
+    }
+  };
+
   const cells = useMemo(
     () => getMonthCells(cursor.year, cursor.month),
     [cursor],
@@ -361,6 +408,7 @@ export default function CalendarView({
   const openAddSheet = (defaultDate?: string) => {
     open({
       header: <SheetHeader title="방문 예정 등록" onClose={close} />,
+      onDimmerClick: handleGuardedDimmerClick,
       children: (
         <PlannedVisitForm
           submitLabel="등록"
@@ -370,6 +418,9 @@ export default function CalendarView({
               : undefined
           }
           onCancel={close}
+          onDirtyChange={(dirty) => {
+            isFormDirtyRef.current = dirty;
+          }}
           onSubmit={(values) => {
             onAdd(values);
             close();
@@ -382,11 +433,15 @@ export default function CalendarView({
   const openEditSheet = (visit: PlannedVisit) => {
     open({
       header: <SheetHeader title="방문 예정 수정" onClose={close} />,
+      onDimmerClick: handleGuardedDimmerClick,
       children: (
         <PlannedVisitForm
           submitLabel="저장"
           initialValues={visit}
           onCancel={close}
+          onDirtyChange={(dirty) => {
+            isFormDirtyRef.current = dirty;
+          }}
           onSubmit={(values) => {
             onUpdate(visit.id, values);
             close();
@@ -402,6 +457,7 @@ export default function CalendarView({
       description: "취소한 방문 예정은 다시 되돌릴 수 없어요.",
       confirmButton: "취소하기",
       cancelButton: "닫기",
+      closeOnDimmerClick: true,
     });
 
     if (confirmed) {
@@ -410,13 +466,17 @@ export default function CalendarView({
   };
 
   return (
+    <div style={{ display: "flex", flexDirection: "column" }}>
+    {/* 캘린더 영역(헤더+달력)이에요. 아래 "다가오는 예정" 리스트 영역과
+        배경 톤을 다르게 둬서 두 영역을 시각적으로 분리해요 — 캘린더는
+        기존 Warm Paper, 리스트는 스카이블루 옅은 톤(SKY_BLUE_BG)이에요. */}
     <div
       style={{
         display: "flex",
         flexDirection: "column",
         gap: "16px",
-        backgroundColor: PAPER_CREAM,
-        paddingBottom: "8px",
+        backgroundColor: WARM_PAPER,
+        paddingBottom: "20px",
       }}
     >
       {/* "NEXT BITE" 헤더예요(레퍼런스 "04_다가올_한입.png" 기준). 이
@@ -597,18 +657,32 @@ export default function CalendarView({
           );
         })}
       </div>
+    </div>
 
+    {/* "다가오는 예정" 리스트 영역이에요. 캘린더 영역과 배경 톤을 다르게
+        (스카이블루 옅은 톤) 두고, 위쪽 모서리를 둥글려서 캘린더 위에 얹힌
+        카드처럼 보이게 했어요. */}
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        flex: "1 1 auto",
+        backgroundColor: SKY_BLUE_BG,
+        borderTopLeftRadius: CARD_RADIUS,
+        borderTopRightRadius: CARD_RADIUS,
+        paddingTop: "16px",
+        paddingBottom: "8px",
+      }}
+    >
       <div
         style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "8px 24px 0",
+          padding: "0 24px",
         }}
       >
-        <span style={{ fontSize: "16px", fontWeight: 700, color: "#191f28" }}>
-          다가오는 예정
-        </span>
+        <span style={SECTION_TITLE_TEXT_STYLE}>다가오는 예정</span>
         <Button
           size="small"
           variant="weak"
@@ -633,7 +707,7 @@ export default function CalendarView({
           description={"달력에서 날짜를 눌러\n다음 맛집 방문을 계획해보세요."}
         />
       ) : (
-        <div>
+        <div style={{ marginTop: "8px" }}>
           {sortedVisits.map((visit) => (
             <PlannedVisitRow
               key={visit.id}
@@ -645,6 +719,7 @@ export default function CalendarView({
           ))}
         </div>
       )}
+    </div>
     </div>
   );
 }

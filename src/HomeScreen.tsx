@@ -17,14 +17,12 @@ import {
   TrendingUp,
   UtensilsCrossed,
 } from "lucide-react";
-import {
-  useEffect,
-  useMemo,
-  useState,
-  type CSSProperties,
-  type ReactNode,
-} from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import catPizzaHero from "./assets/cat-pizza-hero.png";
+import mapMenuImage from "./assets/images/menu/map.png";
+import todayBiteMenuImage from "./assets/images/menu/today-bite.png";
+import todayMealMenuImage from "./assets/images/menu/today-meal.png";
+import upcomingBiteMenuImage from "./assets/images/menu/upcoming-bite.png";
 import { PhotoSticker } from "./components/scrapbook/PhotoSticker";
 import { WashiTape, type WashiTapeColor } from "./components/scrapbook/WashiTape";
 import {
@@ -42,12 +40,6 @@ import {
   sortPlannedVisitsByDate,
   type PlannedVisit,
 } from "./lib/plannedVisitStorage";
-import {
-  BookmarkRibbonIcon,
-  ChatHeartIcon,
-  FoldedMapPinIcon,
-  RiceBowlIcon,
-} from "./lib/quickActionIcons";
 import { computeVisitSummary } from "./lib/recordSummary";
 import { SeasonIcon } from "./lib/seasonIcon";
 import { shareImage } from "./lib/share";
@@ -58,23 +50,21 @@ import { oneYearAgoDateInputValue, type Restaurant } from "./restaurantStorage";
 import {
   BRAND_DISPLAY_FONT_FAMILY,
   DARK_NAVY,
+  LIST_THUMBNAIL_RADIUS,
+  LIST_THUMBNAIL_SIZE,
+  LIST_TITLE_TEXT_STYLE,
+  META_TEXT_STYLE,
   SAGE_GREEN_BG,
   SAGE_GREEN_DARK,
+  SECTION_TITLE_TEXT_STYLE,
   SKY_BLUE,
+  SKY_BLUE_BG,
   THEME_YELLOW_BG,
 } from "./theme";
 
 const RECENT_RESTAURANT_LIMIT = 2;
 const RECENT_POST_LIMIT = 2;
 const POST_PREVIEW_MAX_LENGTH = 40;
-
-// 퀵 액션 아이콘 타일의 공통 톤이에요. 리디자인 이후 흰 종이 스티커 카드 위에
-// Dark Navy 손그림 아이콘을 얹는 톤으로 바꿨어요(기존 세이지그린 채움 배경 대신).
-// 준비중(비활성) 타일은 기존과 같이 중립 회색 톤을 유지해서 "아직 쓸 수 없다"는
-// 신호를 그대로 남겨요.
-const QUICK_ACTION_ACTIVE_BG = "#ffffff";
-const QUICK_ACTION_ACTIVE_ICON_COLOR = DARK_NAVY;
-const QUICK_ACTION_DISABLED_BG = "#f2f4f6";
 
 // 이름이 아무리 길어도 옆에 나란히 있는 배지가 밀려나지 않도록, 이름 쪽에만
 // 한 줄 말줄임을 적용해요. white-space: nowrap 대신 -webkit-line-clamp를 쓰는
@@ -106,17 +96,92 @@ function truncateForPreview(text: string, maxLength: number): string {
     : singleLine;
 }
 
-function SectionLabel({ children }: { children: string }) {
+// "최근 맛있는 하루"/"최근 오늘의 한 입" 섹션 제목이에요. 예전엔 PNG
+// 일러스트(워시테이프+카메라+진행바 장식) 배너를 썼는데, 배너 안 숫자가
+// 실제 데이터가 아닌 장식이라 혼동을 줄 수 있어서 텍스트+SwashUnderline과
+// 실제 개수를 보여주는 카운트 배지로 바꿨어요. 배지의 숫자는 항상 실제
+// 데이터(전체 기록/작성 개수)예요 — 목표치 같은 가짜 분모는 넣지 않아요.
+function SectionHeader({
+  title,
+  count,
+  unit,
+}: {
+  title: string;
+  count: number;
+  unit: string;
+}) {
   return (
     <div
       style={{
-        padding: "0 24px 8px",
-        fontSize: "16px",
-        fontWeight: 700,
-        color: "#191f28",
+        padding: "0 24px 12px",
+        display: "flex",
+        alignItems: "flex-end",
+        justifyContent: "space-between",
+        gap: "8px",
       }}
     >
-      {children}
+      <div>
+        <div style={SECTION_TITLE_TEXT_STYLE}>{title}</div>
+        <SwashUnderline width={title.length * 11} color={SKY_BLUE} />
+      </div>
+      <span
+        style={{
+          flexShrink: 0,
+          padding: "4px 10px",
+          borderRadius: "999px",
+          backgroundColor: SKY_BLUE_BG,
+          color: DARK_NAVY,
+          fontSize: "12px",
+          fontWeight: 700,
+        }}
+      >
+        총 {count}{unit}
+      </span>
+    </div>
+  );
+}
+
+// 당근마켓 스타일 리스트의 공통 정사각형 썸네일이에요(고정 72x72, radius
+// 12px). 사진이 없으면 이름 첫 글자를 옅은 세이지 배경 위에 보여줘요. 예전
+// 리스트들이 쓰던 PhotoSticker(회전+테이프 장식)는 브랜드 히어로 영역
+// 전용으로 남기고, 리스트 아이템에서는 장식 없이 이 컴포넌트로 통일해요.
+function SimpleListThumbnail({
+  src,
+  fallbackText,
+}: {
+  src: string | null | undefined;
+  fallbackText: string;
+}) {
+  return (
+    <div
+      style={{
+        width: `${LIST_THUMBNAIL_SIZE}px`,
+        height: `${LIST_THUMBNAIL_SIZE}px`,
+        borderRadius: LIST_THUMBNAIL_RADIUS,
+        overflow: "hidden",
+        flexShrink: 0,
+        backgroundColor: SAGE_GREEN_BG,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      {src ? (
+        <img
+          src={src}
+          alt=""
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            display: "block",
+          }}
+        />
+      ) : (
+        <span style={{ fontSize: "22px", fontWeight: 700, color: SAGE_GREEN_DARK }}>
+          {fallbackText}
+        </span>
+      )}
     </div>
   );
 }
@@ -522,67 +587,48 @@ function AnniversaryCard({
   );
 }
 
+// 퀵액션 4개는 확정 PNG 에셋(카메라·폴라로이드·손글씨 라벨까지 포함된 큰
+// 일러스트)을 그대로 눌러요. 이미지 자체가 이미 스티커 형태라 뒤에 별도
+// 배경 타일이나 라운드 버튼을 만들지 않고, 이미지 하나가 곧 버튼이에요.
+// 라벨도 이미지 안에 이미 있어서 화면에 따로 텍스트를 반복하지 않고,
+// aria-label로만 접근성을 챙겨요.
 function QuickActionButton({
-  icon,
-  label,
-  comingSoon,
+  imageSrc,
+  imageAlt,
+  aspectRatio,
   onClick,
 }: {
-  icon: ReactNode;
-  label: string;
-  comingSoon?: boolean;
+  imageSrc: string;
+  imageAlt: string;
+  aspectRatio: number;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      aria-label={imageAlt}
       style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: "8px",
-        padding: "4px 0 0",
+        display: "block",
+        width: "100%",
         border: "none",
         background: "none",
+        padding: 0,
         WebkitTapHighlightColor: "transparent",
         cursor: "pointer",
       }}
     >
-      <span style={{ position: "relative", display: "inline-flex" }}>
-        <span
-          style={{
-            width: "56px",
-            height: "56px",
-            borderRadius: "18px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: comingSoon
-              ? QUICK_ACTION_DISABLED_BG
-              : QUICK_ACTION_ACTIVE_BG,
-            boxShadow: comingSoon ? "none" : "0 3px 8px rgba(24, 35, 56, 0.14)",
-          }}
-        >
-          {icon}
-        </span>
-        {comingSoon ? (
-          <span style={{ position: "absolute", top: "-6px", right: "-8px" }}>
-            <Badge size="xsmall" color="elephant" variant="weak">
-              준비중
-            </Badge>
-          </span>
-        ) : null}
-      </span>
-      <span
+      <img
+        src={imageSrc}
+        alt=""
+        aria-hidden="true"
         style={{
-          fontSize: "13px",
-          fontWeight: 600,
-          color: comingSoon ? "#b0b8c1" : "#333d4b",
+          display: "block",
+          width: "100%",
+          aspectRatio: String(aspectRatio),
+          objectFit: "contain",
         }}
-      >
-        {label}
-      </span>
+      />
     </button>
   );
 }
@@ -602,7 +648,6 @@ export default function HomeScreen({
   onViewTodayMeal,
   onViewCalendar,
   onViewMap,
-  onViewScraps,
 }: {
   nickname: string | null;
   restaurants: Restaurant[];
@@ -621,9 +666,9 @@ export default function HomeScreen({
   onViewTodayMeal: () => void;
   onViewCalendar: () => void;
   onViewMap: () => void;
-  onViewScraps: () => void;
 }) {
   const [recentPosts, setRecentPosts] = useState<ThreadPost[]>([]);
+  const [postsTotalCount, setPostsTotalCount] = useState(0);
   const [isPostsLoaded, setIsPostsLoaded] = useState(false);
   const [isFoodTestOpen, setIsFoodTestOpen] = useState(false);
   const { open, close } = useBottomSheet();
@@ -636,6 +681,7 @@ export default function HomeScreen({
         return;
       }
       setRecentPosts(posts.slice(0, RECENT_POST_LIMIT));
+      setPostsTotalCount(posts.length);
       setIsPostsLoaded(true);
     });
 
@@ -667,6 +713,7 @@ export default function HomeScreen({
   const openCustomerSupportSheet = () => {
     open({
       header: <SheetHeader title="고객센터" onClose={close} />,
+      onDimmerClick: close,
       children: <CustomerSupportView onClose={close} />,
     });
   };
@@ -674,6 +721,7 @@ export default function HomeScreen({
   const openAnniversarySheet = () => {
     open({
       header: <SheetHeader title="1년 전 오늘" onClose={close} />,
+      onDimmerClick: close,
       children: (
         <List>
           {oneYearAgoRestaurants.map((restaurant) => (
@@ -688,25 +736,22 @@ export default function HomeScreen({
               <ListRow
                 withTouchEffect
                 left={
-                  restaurant.photos && restaurant.photos.length > 0 ? (
-                    <ListRow.AssetImage
-                      src={restaurant.photos[0]}
-                      shape="squircle"
-                      size="medium"
-                    />
-                  ) : (
-                    <ListRow.AssetText shape="squircle" size="medium">
-                      {restaurant.name.slice(0, 1)}
-                    </ListRow.AssetText>
-                  )
+                  <SimpleListThumbnail
+                    src={restaurant.photos?.[0]}
+                    fallbackText={restaurant.name.slice(0, 1)}
+                  />
                 }
                 contents={
                   <ListRow.Texts
                     type="2RowTypeA"
-                    top={restaurant.name}
-                    bottom={[restaurant.neighborhood, `★ ${restaurant.rating}`]
-                      .filter(Boolean)
-                      .join(" · ")}
+                    top={<span style={LIST_TITLE_TEXT_STYLE}>{restaurant.name}</span>}
+                    bottom={
+                      <span style={META_TEXT_STYLE}>
+                        {[restaurant.neighborhood, `★ ${restaurant.rating}`]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </span>
+                    }
                   />
                 }
               />
@@ -908,52 +953,51 @@ export default function HomeScreen({
             />
           </div>
 
+          {/* 퀵액션 4개는 카메라·폴라로이드까지 담긴 큰 일러스트라 기존
+              56px 아이콘 타일(4열)로는 알아보기 어려워서, 2x2로 키웠어요.
+              4번째 자리는 원래 "스크랩"이었는데, 받은 에셋이 "다가올
+              한입"이라 라우팅도 캘린더 탭으로 바꿨어요(스크랩 화면은 이제
+              홈에서 바로 가는 길이 없어요 — 사용자 확인 완료). */}
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
-              columnGap: "8px",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "12px",
               padding: "0 24px",
             }}
           >
             <QuickActionButton
-              icon={
-                <RiceBowlIcon size={26} color={QUICK_ACTION_ACTIVE_ICON_COLOR} />
-              }
-              label="오늘의 식사"
+              imageSrc={todayMealMenuImage}
+              imageAlt="오늘의 식사"
+              aspectRatio={1}
               onClick={onWriteRestaurant}
             />
             <QuickActionButton
-              icon={
-                <ChatHeartIcon size={26} color={QUICK_ACTION_ACTIVE_ICON_COLOR} />
-              }
-              label="오늘의 한 입"
+              imageSrc={todayBiteMenuImage}
+              imageAlt="오늘의 한 입"
+              aspectRatio={1.5}
               onClick={onViewTodayMeal}
             />
             <QuickActionButton
-              icon={
-                <FoldedMapPinIcon
-                  size={26}
-                  color={QUICK_ACTION_ACTIVE_ICON_COLOR}
-                />
-              }
-              label="지도"
+              imageSrc={mapMenuImage}
+              imageAlt="지도"
+              aspectRatio={1.5}
               onClick={onViewMap}
             />
             <QuickActionButton
-              icon={
-                <BookmarkRibbonIcon
-                  size={26}
-                  color={QUICK_ACTION_ACTIVE_ICON_COLOR}
-                />
-              }
-              label="스크랩"
-              onClick={onViewScraps}
+              imageSrc={upcomingBiteMenuImage}
+              imageAlt="다가올 한 입"
+              aspectRatio={1.5}
+              onClick={onViewCalendar}
             />
           </div>
 
           <div>
-            <SectionLabel>최근 맛있는 하루</SectionLabel>
+            <SectionHeader
+              title="최근 맛있는 하루"
+              count={restaurants.length}
+              unit="곳"
+            />
             {!isRestaurantsLoaded ? (
               <div style={{ padding: "0 24px" }}>
                 <Skeleton
@@ -965,110 +1009,90 @@ export default function HomeScreen({
               <EmptyPreview>아직 기록이 없어요.</EmptyPreview>
             ) : (
               <List>
-                {recentRestaurants.map((restaurant, index) => {
-                  // id는 Date.now() 기반이라, 짝/홀 여부가 기록마다 달라져서
-                  // 매번 다시 렌더링해도 같은 기록은 항상 같은 색 테이프가
-                  // 붙어요(재렌더링될 때마다 색이 바뀌는 깜빡임을 피해요).
-                  const tapeColor: WashiTapeColor =
-                    Number(restaurant.id) % 2 === 0 ? "sage" : "pink";
-                  return (
-                    <div
-                      key={restaurant.id}
-                      onClick={() => onSelectRestaurant(restaurant)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      <ListRow
-                        withTouchEffect
-                        left={
-                          <div
-                            style={{ position: "relative", width: 48, height: 48 }}
-                          >
-                            {/* 최근 기록 2개까지만 모서리에 테이프를 살짝
-                                걸쳐서, 사진이 많아져도 화면이 산만해지지
-                                않게 해요. */}
-                            {index < 2 && (
-                              <WashiTape
-                                color={tapeColor}
-                                rotation={-20}
-                                width={30}
-                                height={11}
-                                style={{ top: -6, left: -4, zIndex: 1 }}
-                              />
-                            )}
-                            <PhotoSticker
-                              src={restaurant.photos?.[0]}
-                              rotation={index % 2 === 0 ? -5 : 5}
-                              size={48}
-                              style={{ position: "relative", zIndex: 2 }}
-                            />
-                          </div>
-                        }
-                        contents={
-                          <ListRow.Texts
-                            type="2RowTypeA"
-                            top={
-                              <span
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "6px",
-                                  width: "100%",
-                                  minWidth: 0,
-                                }}
-                              >
-                                <span style={NAME_ELLIPSIS_STYLE}>
-                                  {restaurant.name}
-                                </span>
-                                {(restaurant.isReservation ||
-                                  restaurant.isSpecialDay) && (
-                                  <span
-                                    style={{
-                                      display: "flex",
-                                      gap: "6px",
-                                      flexShrink: 0,
-                                    }}
-                                  >
-                                    {restaurant.isReservation && (
-                                      <Badge
-                                        size="xsmall"
-                                        variant="weak"
-                                        color="green"
-                                      >
-                                        예약
-                                      </Badge>
-                                    )}
-                                    {restaurant.isSpecialDay && (
-                                      <Badge
-                                        size="xsmall"
-                                        variant="weak"
-                                        color="yellow"
-                                      >
-                                        ⭐ 특별한 날
-                                      </Badge>
-                                    )}
-                                  </span>
-                                )}
+                {recentRestaurants.map((restaurant) => (
+                  <div
+                    key={restaurant.id}
+                    onClick={() => onSelectRestaurant(restaurant)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <ListRow
+                      withTouchEffect
+                      left={
+                        <SimpleListThumbnail
+                          src={restaurant.photos?.[0]}
+                          fallbackText={restaurant.name.slice(0, 1)}
+                        />
+                      }
+                      contents={
+                        <ListRow.Texts
+                          type="2RowTypeA"
+                          top={
+                            <span
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                width: "100%",
+                                minWidth: 0,
+                              }}
+                            >
+                              <span style={{ ...NAME_ELLIPSIS_STYLE, ...LIST_TITLE_TEXT_STYLE }}>
+                                {restaurant.name}
                               </span>
-                            }
-                            bottom={[
-                              restaurant.neighborhood,
-                              `★ ${restaurant.rating}`,
-                            ]
-                              .filter(Boolean)
-                              .join(" · ")}
-                          />
-                        }
-                      />
-                    </div>
-                  );
-                })}
+                              {(restaurant.isReservation ||
+                                restaurant.isSpecialDay) && (
+                                <span
+                                  style={{
+                                    display: "flex",
+                                    gap: "6px",
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  {restaurant.isReservation && (
+                                    <Badge
+                                      size="xsmall"
+                                      variant="weak"
+                                      color="green"
+                                    >
+                                      예약
+                                    </Badge>
+                                  )}
+                                  {restaurant.isSpecialDay && (
+                                    <Badge
+                                      size="xsmall"
+                                      variant="weak"
+                                      color="yellow"
+                                    >
+                                      ⭐ 특별한 날
+                                    </Badge>
+                                  )}
+                                </span>
+                              )}
+                            </span>
+                          }
+                          bottom={
+                            <span style={META_TEXT_STYLE}>
+                              {[restaurant.neighborhood, `★ ${restaurant.rating}`]
+                                .filter(Boolean)
+                                .join(" · ")}
+                            </span>
+                          }
+                        />
+                      }
+                    />
+                  </div>
+                ))}
               </List>
             )}
           </div>
       </div>
 
       <div style={{ marginTop: "24px" }}>
-        <SectionLabel>최근 오늘의 한 입</SectionLabel>
+        <SectionHeader
+          title="최근 오늘의 한 입"
+          count={postsTotalCount}
+          unit="개"
+        />
         {!isPostsLoaded ? (
           <div style={{ padding: "0 24px" }}>
             <Skeleton
@@ -1089,13 +1113,10 @@ export default function HomeScreen({
                 <ListRow
                   withTouchEffect
                   left={
-                    post.photoUrl ? (
-                      <ListRow.AssetImage
-                        src={post.photoUrl}
-                        shape="squircle"
-                        size="medium"
-                      />
-                    ) : undefined
+                    <SimpleListThumbnail
+                      src={post.photoUrl}
+                      fallbackText={post.authorNickname?.slice(0, 1) ?? "🍚"}
+                    />
                   }
                   contents={
                     <ListRow.Texts
@@ -1108,7 +1129,7 @@ export default function HomeScreen({
                             gap: "6px",
                           }}
                         >
-                          <span>
+                          <span style={LIST_TITLE_TEXT_STYLE}>
                             {truncateForPreview(
                               post.content,
                               POST_PREVIEW_MAX_LENGTH,
@@ -1121,9 +1142,13 @@ export default function HomeScreen({
                           )}
                         </span>
                       }
-                      bottom={[post.authorNickname, post.neighborhood]
-                        .filter(Boolean)
-                        .join(" · ")}
+                      bottom={
+                        <span style={META_TEXT_STYLE}>
+                          {[post.authorNickname, post.neighborhood]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
+                      }
                     />
                   }
                 />

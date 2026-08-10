@@ -167,6 +167,7 @@ function NicknameButton({
 function PostForm({
   onCancel,
   onSubmit,
+  onDirtyChange,
 }: {
   onCancel: () => void;
   onSubmit: (
@@ -175,6 +176,7 @@ function PostForm({
     neighborhood: string,
     isReservation: boolean,
   ) => void;
+  onDirtyChange?: (isDirty: boolean) => void;
 }) {
   const [content, setContent] = useState("");
   const [photo, setPhoto] = useState<string | null>(null);
@@ -183,6 +185,16 @@ function PostForm({
   const [isReservation, setIsReservation] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const trimmed = content.trim();
+
+  useEffect(() => {
+    onDirtyChange?.(
+      trimmed.length > 0 ||
+        photo !== null ||
+        neighborhood.trim().length > 0 ||
+        isReservation,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trimmed, photo, neighborhood, isReservation]);
 
   const handlePhotoChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -440,6 +452,7 @@ function CommentsSheetContent({
   currentUserHash,
   onChanged,
   onOpenAuthorPosts,
+  onDirtyChange,
 }: {
   postId: string;
   postAuthorId: string;
@@ -448,6 +461,7 @@ function CommentsSheetContent({
   currentUserHash: string | null;
   onChanged: () => void;
   onOpenAuthorPosts: (authorId: string, authorNickname: string) => void;
+  onDirtyChange?: (isDirty: boolean) => void;
 }) {
   const [comments, setComments] = useState<ThreadComment[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -460,6 +474,11 @@ function CommentsSheetContent({
     useState<CommentSortOption>("latest");
 
   const { openConfirm, openAlert } = useDialog();
+
+  useEffect(() => {
+    onDirtyChange?.(commentInput.trim().length > 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [commentInput]);
 
   const loadComments = useCallback(async () => {
     const loaded = await fetchComments(postId);
@@ -514,6 +533,7 @@ function CommentsSheetContent({
         title: "닉네임 설정이 필요해요",
         description: "닉네임을 먼저 설정한 뒤에 좋아요를 누를 수 있어요.",
         alertButton: "확인",
+        closeOnDimmerClick: true,
       });
       return;
     }
@@ -524,6 +544,7 @@ function CommentsSheetContent({
         title: "요청에 실패했어요",
         description: "잠시 후 다시 시도해 주세요.",
         alertButton: "확인",
+        closeOnDimmerClick: true,
       });
       return;
     }
@@ -560,6 +581,7 @@ function CommentsSheetContent({
         title: "닉네임 설정이 필요해요",
         description: "닉네임을 먼저 설정한 뒤에 댓글을 쓸 수 있어요.",
         alertButton: "확인",
+        closeOnDimmerClick: true,
       });
       return;
     }
@@ -590,6 +612,7 @@ function CommentsSheetContent({
         title: "댓글 작성에 실패했어요",
         description: "잠시 후 다시 시도해 주세요.",
         alertButton: "확인",
+        closeOnDimmerClick: true,
       });
     }
   };
@@ -600,6 +623,7 @@ function CommentsSheetContent({
       description: "삭제한 댓글은 다시 되돌릴 수 없어요.",
       confirmButton: "삭제",
       cancelButton: "취소",
+      closeOnDimmerClick: true,
     });
 
     if (!confirmed) {
@@ -615,6 +639,7 @@ function CommentsSheetContent({
         title: "삭제에 실패했어요",
         description: "잠시 후 다시 시도해 주세요.",
         alertButton: "확인",
+        closeOnDimmerClick: true,
       });
     }
   };
@@ -811,6 +836,27 @@ function TodayMealBoard({
   const { open, close } = useBottomSheet();
   const { openConfirm, openAlert } = useDialog();
 
+  // App.tsx의 동명 패턴과 같아요: 폼(글쓰기/댓글)이 있는 바텀시트가
+  // 열려있는 동안 입력값이 있는지 ref로 추적해요.
+  const isFormDirtyRef = useRef(false);
+
+  const handleGuardedDimmerClick = async () => {
+    if (!isFormDirtyRef.current) {
+      close();
+      return;
+    }
+    const confirmed = await openConfirm({
+      title: "작성 중인 내용이 있어요",
+      description: "지금 닫으면 입력한 내용이 사라져요. 닫으시겠어요?",
+      confirmButton: "닫기",
+      cancelButton: "계속 작성",
+      closeOnDimmerClick: true,
+    });
+    if (confirmed) {
+      close();
+    }
+  };
+
   const loadPosts = useCallback(async () => {
     const loaded = await fetchTodayMealPosts();
     setPosts(loaded);
@@ -911,9 +957,13 @@ function TodayMealBoard({
   const openWriteSheet = () => {
     open({
       header: <SheetHeader title="오늘 뭐 드셨나요?" onClose={close} />,
+      onDimmerClick: handleGuardedDimmerClick,
       children: (
         <PostForm
           onCancel={close}
+          onDirtyChange={(dirty) => {
+            isFormDirtyRef.current = dirty;
+          }}
           onSubmit={async (content, photoUrl, neighborhood, isReservation) => {
             close();
 
@@ -922,6 +972,7 @@ function TodayMealBoard({
                 title: "닉네임 설정이 필요해요",
                 description: "닉네임을 먼저 설정한 뒤에 글을 쓸 수 있어요.",
                 alertButton: "확인",
+                closeOnDimmerClick: true,
               });
               return;
             }
@@ -940,6 +991,7 @@ function TodayMealBoard({
                 title: "글 작성에 실패했어요",
                 description: "잠시 후 다시 시도해 주세요.",
                 alertButton: "확인",
+                closeOnDimmerClick: true,
               });
             }
           }}
@@ -951,6 +1003,7 @@ function TodayMealBoard({
   const openNeighborhoodFilterSheet = () => {
     open({
       header: <SheetHeader title="동네 선택" onClose={close} />,
+      onDimmerClick: close,
       children: (
         <RegionFilterSheetContent
           regionOptions={regionFilterOptions}
@@ -972,6 +1025,7 @@ function TodayMealBoard({
       description: "삭제한 글은 다시 되돌릴 수 없어요.",
       confirmButton: "삭제",
       cancelButton: "취소",
+      closeOnDimmerClick: true,
     });
 
     if (!confirmed) {
@@ -986,6 +1040,7 @@ function TodayMealBoard({
         title: "삭제에 실패했어요",
         description: "잠시 후 다시 시도해 주세요.",
         alertButton: "확인",
+        closeOnDimmerClick: true,
       });
     }
   };
@@ -993,6 +1048,7 @@ function TodayMealBoard({
   const openCommentsSheet = (post: ThreadPost) => {
     open({
       header: <SheetHeader title="댓글" onClose={close} />,
+      onDimmerClick: handleGuardedDimmerClick,
       children: (
         <CommentsSheetContent
           postId={post.id}
@@ -1002,6 +1058,9 @@ function TodayMealBoard({
           currentUserHash={currentUserHash}
           onChanged={loadPosts}
           onOpenAuthorPosts={openAuthorPostsSheet}
+          onDirtyChange={(dirty) => {
+            isFormDirtyRef.current = dirty;
+          }}
         />
       ),
     });
@@ -1011,10 +1070,14 @@ function TodayMealBoard({
   // 관계를 저장하지 않는 가벼운 방식이라, 바텀시트 내용을 그 사람의 글 목록으로
   // 바꿔치기만 해요(댓글 시트 안에서 눌러도 자연스럽게 그 화면으로 넘어가요).
   const openAuthorPostsSheet = (authorId: string, authorNickname: string) => {
+    // 댓글 시트(폼 있음)에서 넘어올 수도 있는 화면이라, 여기로 넘어오는
+    // 순간 이전 화면의 dirty 상태는 더 이상 유효하지 않아요.
+    isFormDirtyRef.current = false;
     open({
       header: (
         <SheetHeader title={`${authorNickname}님의 글`} onClose={close} />
       ),
+      onDimmerClick: close,
       children: (
         <AuthorPostsSheetContent
           authorId={authorId}
@@ -1030,6 +1093,7 @@ function TodayMealBoard({
         title: "닉네임 설정이 필요해요",
         description: "닉네임을 먼저 설정한 뒤에 좋아요를 누를 수 있어요.",
         alertButton: "확인",
+        closeOnDimmerClick: true,
       });
       return;
     }
@@ -1040,6 +1104,7 @@ function TodayMealBoard({
         title: "요청에 실패했어요",
         description: "잠시 후 다시 시도해 주세요.",
         alertButton: "확인",
+        closeOnDimmerClick: true,
       });
       return;
     }
@@ -1084,6 +1149,7 @@ function TodayMealBoard({
         title: "닉네임 설정이 필요해요",
         description: "닉네임을 먼저 설정한 뒤에 스크랩할 수 있어요.",
         alertButton: "확인",
+        closeOnDimmerClick: true,
       });
       return;
     }
@@ -1094,6 +1160,7 @@ function TodayMealBoard({
         title: "요청에 실패했어요",
         description: "잠시 후 다시 시도해 주세요.",
         alertButton: "확인",
+        closeOnDimmerClick: true,
       });
       return;
     }
@@ -1281,10 +1348,14 @@ function TodayMealBoard({
                   </span>
                 </div>
                 {post.photoUrl && (
+                  // 피드는 반복적으로 스크롤하며 훑어보는 콘텐츠 영역이라,
+                  // 사진마다 기본 -4도 기울임(PhotoSticker 기본값)을 주면
+                  // 산만해져서 rotation={0}으로 평평하게 둬요(가독성 우선).
                   <PhotoSticker
                     src={post.photoUrl}
                     alt="게시글 사진"
                     size={140}
+                    rotation={0}
                   />
                 )}
                 <div

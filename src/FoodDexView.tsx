@@ -1,5 +1,7 @@
 import { ProgressBar } from "@toss/tds-mobile";
 import { useMemo, useState } from "react";
+import dexEmptyStateImage from "./assets/images/archive/dex-empty-state.png";
+import dexProgressBannerImage from "./assets/images/archive/dex-progress-banner.png";
 import { PhotoSticker } from "./components/scrapbook/PhotoSticker";
 import { SparkleStarIcon } from "./components/scrapbook/decorations";
 import { WashiTape } from "./components/scrapbook/WashiTape";
@@ -68,6 +70,24 @@ export default function FoodDexView({
         </div>
       </div>
 
+      {/* 확정 PNG 에셋 장식 배너예요. 안에 박제된 "34/70" 숫자는 예시
+          장식일 뿐이라 실제 발견 개수로 취급하지 않아요 — 진짜 개수는
+          바로 아래 카드의 ProgressBar와 텍스트로 그대로 보여줘요. */}
+      <div style={{ marginBottom: "8px" }}>
+        <img
+          src={dexProgressBannerImage}
+          alt=""
+          aria-hidden="true"
+          style={{
+            display: "block",
+            maxWidth: "320px",
+            width: "100%",
+            height: "auto",
+            objectFit: "contain",
+          }}
+        />
+      </div>
+
       <div
         style={{
           position: "relative",
@@ -116,76 +136,104 @@ export default function FoodDexView({
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
-        {(
-          [
-            { value: "all", label: "전체" },
-            { value: "discovered", label: "발견됨" },
-            { value: "undiscovered", label: "미발견" },
-          ] as const
-        ).map((option) => {
-          const selected = filter === option.value;
-          return (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => setFilter(option.value)}
-              style={{
-                padding: "7px 14px",
-                borderRadius: "999px",
-                border: selected ? "none" : "1.5px solid #E5DFC9",
-                backgroundColor: selected ? SAGE_GREEN_DARK : "transparent",
-                color: selected ? "#ffffff" : DARK_NAVY,
-                fontSize: "13px",
-                fontWeight: 700,
-                cursor: "pointer",
-                WebkitTapHighlightColor: "transparent",
-              }}
-            >
-              {option.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {visibleEntries.length === 0 ? (
+      {discoveredCount === 0 ? (
+        // 발견한 맛집이 하나도 없을 때는 70칸짜리 "?" 그리드를 그대로
+        // 보여주는 대신, 확정 PNG 에셋(전체 화면 empty state 일러스트)으로
+        // 대체해요. 개별 미발견 칸(UndiscoveredCell)의 "?" 표시는 발견한
+        // 항목이 1개 이상 있을 때만 그리드에 등장하므로 그대로 유지돼요.
         <div
           style={{
-            padding: "40px 0",
-            textAlign: "center",
-            fontSize: "13px",
-            color: "#8b95a1",
+            display: "flex",
+            justifyContent: "center",
+            padding: "8px 0 24px",
           }}
         >
-          해당하는 항목이 없어요.
+          <img
+            src={dexEmptyStateImage}
+            alt="아직 기록하지 않은 맛집이에요! 새로운 맛집을 기록해 나만의 도감을 채워보세요."
+            style={{
+              display: "block",
+              maxWidth: "320px",
+              width: "100%",
+              height: "auto",
+              objectFit: "contain",
+            }}
+          />
         </div>
       ) : (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
-            gap: "10px",
-          }}
-        >
-          {visibleEntries.map((entry) => {
-            const representative = discoveries.get(entry.name);
-            return representative ? (
-              <DiscoveredCell
-                key={entry.name}
-                dexNumber={entry.dexNumber}
-                name={entry.name}
-                representative={representative}
-                onClick={() => onSelectTag(entry.name)}
-              />
-            ) : (
-              <UndiscoveredCell
-                key={entry.name}
-                dexNumber={entry.dexNumber}
-                name={entry.name}
-              />
-            );
-          })}
-        </div>
+        <>
+          <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+            {(
+              [
+                { value: "all", label: "전체" },
+                { value: "discovered", label: "발견됨" },
+                { value: "undiscovered", label: "미발견" },
+              ] as const
+            ).map((option) => {
+              const selected = filter === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setFilter(option.value)}
+                  style={{
+                    padding: "7px 14px",
+                    borderRadius: "999px",
+                    border: selected ? "none" : "1.5px solid #E5DFC9",
+                    backgroundColor: selected ? SAGE_GREEN_DARK : "transparent",
+                    color: selected ? "#ffffff" : DARK_NAVY,
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    WebkitTapHighlightColor: "transparent",
+                  }}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {visibleEntries.length === 0 ? (
+            <div
+              style={{
+                padding: "40px 0",
+                textAlign: "center",
+                fontSize: "13px",
+                color: "#8b95a1",
+              }}
+            >
+              해당하는 항목이 없어요.
+            </div>
+          ) : (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(3, 1fr)",
+                gap: "10px",
+              }}
+            >
+              {visibleEntries.map((entry) => {
+                const representative = discoveries.get(entry.name);
+                return representative ? (
+                  <DiscoveredCell
+                    key={entry.name}
+                    dexNumber={entry.dexNumber}
+                    name={entry.name}
+                    representative={representative}
+                    onClick={() => onSelectTag(entry.name)}
+                  />
+                ) : (
+                  <UndiscoveredCell
+                    key={entry.name}
+                    dexNumber={entry.dexNumber}
+                    name={entry.name}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

@@ -22,11 +22,12 @@ import {
   useState,
   type ChangeEvent,
   type CSSProperties,
+  type ReactNode,
 } from "react";
 import "./App.css";
 import BottomNavigation from "./BottomNavigation";
 import CalendarView, { type PlannedVisitFormValues } from "./CalendarView";
-import { WashiTape } from "./components/scrapbook/WashiTape";
+import { SwashUnderline } from "./components/scrapbook/decorations";
 import FoodDexView from "./FoodDexView";
 import HomeScreen from "./HomeScreen";
 import {
@@ -76,16 +77,20 @@ import ProfileView, { ProfileIconButton } from "./ProfileView";
 import { RegionFilterSheetContent, RegionPicker } from "./RegionPicker";
 import RestaurantDetailView from "./RestaurantDetailView";
 import { RestaurantSearchSheetContent } from "./RestaurantSearchOverlay";
-import ScrapsView from "./ScrapsView";
 import SplashScreen from "./SplashScreen";
 import {
   BRAND_DISPLAY_FONT_FAMILY,
   CORAL_RED,
   DARK_NAVY,
+  DIVIDER_COLOR,
   HANDWRITING_TEXT_STYLE,
+  LIST_THUMBNAIL_RADIUS,
+  LIST_THUMBNAIL_SIZE,
+  META_TEXT_COLOR,
   PAPER_CREAM,
   SAGE_GREEN_DARK,
   THEME_YELLOW,
+  WARM_PAPER,
 } from "./theme";
 import {
   CATEGORIES,
@@ -456,11 +461,13 @@ function RestaurantForm({
   submitLabel = "기록하기",
   onSubmit,
   onCancel,
+  onDirtyChange,
 }: {
   initialValues?: AddRestaurantFormValues;
   submitLabel?: string;
   onSubmit: (values: AddRestaurantFormValues) => void;
   onCancel: () => void;
+  onDirtyChange?: (isDirty: boolean) => void;
 }) {
   const [name, setName] = useState(initialValues?.name ?? "");
   const [title, setTitle] = useState(initialValues?.title ?? "");
@@ -499,6 +506,66 @@ function RestaurantForm({
   const [isSpecialDay, setIsSpecialDay] = useState(
     initialValues?.isSpecialDay ?? false,
   );
+
+  // 오버레이(딤) 클릭으로 폼 바텀시트를 닫을 때, 입력값이 있으면 한 번 더
+  // 확인하기 위한 dirty 체크예요. 최초 렌더 시점의 값(=initialValues 또는
+  // 빈 기본값)을 스냅샷으로 고정해두고, 현재 값과 비교해요. 등록/수정 폼
+  // 둘 다 같은 컴포넌트라, "수정" 폼은 initialValues 자체가 이미 채워져
+  // 있어서 그 값을 그대로 스냅샷으로 써야 "열자마자는 dirty 아님"이 맞아요.
+  const initialSnapshotRef = useRef(
+    JSON.stringify({
+      name: initialValues?.name ?? "",
+      title: initialValues?.title ?? "",
+      category: initialValues?.category ?? CATEGORIES[0],
+      menus: initialValues?.menus ?? [],
+      companion: initialValues?.companion ?? "",
+      weather: initialValues?.weather ?? "",
+      neighborhood: initialValues?.neighborhood ?? "",
+      memo: initialValues?.memo ?? "",
+      rating: clampToHalfStepRating(initialValues?.rating ?? 5),
+      visitDate: initialValues?.visitDate ?? todayDateInputValue(),
+      receiptImage: initialValues?.receiptImage ?? null,
+      photos: initialValues?.photos ?? [],
+      isReservation: initialValues?.isReservation ?? false,
+      isSpecialDay: initialValues?.isSpecialDay ?? false,
+    }),
+  );
+
+  useEffect(() => {
+    const currentSnapshot = JSON.stringify({
+      name,
+      title,
+      category,
+      menus,
+      companion,
+      weather,
+      neighborhood,
+      memo,
+      rating,
+      visitDate,
+      receiptImage: receiptImage ?? null,
+      photos,
+      isReservation,
+      isSpecialDay,
+    });
+    onDirtyChange?.(currentSnapshot !== initialSnapshotRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    name,
+    title,
+    category,
+    menus,
+    companion,
+    weather,
+    neighborhood,
+    memo,
+    rating,
+    visitDate,
+    receiptImage,
+    photos,
+    isReservation,
+    isSpecialDay,
+  ]);
 
   // 폼이 열릴 때 한 번만 예시 문장을 골라서, 타이핑 중에 placeholder가 바뀌지 않게 해요.
   const weatherPlaceholder = useMemo(() => {
@@ -1196,8 +1263,19 @@ function RestaurantForm({
 }
 
 // 앱 최초 실행 시 닉네임이 없는 사용자에게 한 번 띄우는 간단한 입력 폼이에요.
-function NicknameForm({ onSubmit }: { onSubmit: (nickname: string) => void }) {
+function NicknameForm({
+  onSubmit,
+  onDirtyChange,
+}: {
+  onSubmit: (nickname: string) => void;
+  onDirtyChange?: (isDirty: boolean) => void;
+}) {
   const [nickname, setNickname] = useState("");
+
+  useEffect(() => {
+    onDirtyChange?.(nickname.trim().length > 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nickname]);
 
   const handleSubmit = () => {
     const trimmed = nickname.trim();
@@ -1237,6 +1315,57 @@ function NicknameForm({ onSubmit }: { onSubmit: (nickname: string) => void }) {
       >
         시작하기
       </Button>
+    </div>
+  );
+}
+
+// "맛있는 하루" 헤더의 영문 월 이름이에요. 원래는 PNG 배너였는데, 매달 자동으로
+// 바뀌도록 순수 코드(SVG+텍스트)로 재구현했어요.
+const MONTH_NAMES_EN = [
+  "JANUARY",
+  "FEBRUARY",
+  "MARCH",
+  "APRIL",
+  "MAY",
+  "JUNE",
+  "JULY",
+  "AUGUST",
+  "SEPTEMBER",
+  "OCTOBER",
+  "NOVEMBER",
+  "DECEMBER",
+] as const;
+
+function getCurrentMonthLabel(): string {
+  return MONTH_NAMES_EN[new Date().getMonth()];
+}
+
+// 살짝 찢어진 종이 태그 모양 배경이에요. viewBox 기준 좌우 테두리에 지그재그
+// 노치를 넣어 "손으로 찢은 라벨" 느낌을 내요. 월 이름 길이(MAY vs SEPTEMBER)에
+// 따라 태그 너비가 달라져도 자연스럽도록 preserveAspectRatio="none"으로 채워요.
+function TornPaperTag({ children }: { children: ReactNode }) {
+  return (
+    <div style={{ position: "relative", display: "inline-block" }}>
+      <svg
+        viewBox="0 0 200 90"
+        preserveAspectRatio="none"
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          filter: "drop-shadow(0 2px 3px rgba(24, 35, 56, 0.18))",
+        }}
+        aria-hidden="true"
+      >
+        <path
+          d="M4 0 L196 0 L192 8 L200 16 L193 26 L200 36 L191 46 L200 56 L194 66 L200 76 L190 84 L196 90 L4 90 L10 82 L2 74 L9 64 L1 54 L8 44 L0 34 L7 24 L1 14 L6 6 Z"
+          fill={WARM_PAPER}
+        />
+      </svg>
+      <div style={{ position: "relative", padding: "10px 22px" }}>
+        {children}
+      </div>
     </div>
   );
 }
@@ -1328,6 +1457,34 @@ function App() {
 
   const { open, close } = useBottomSheet();
   const { openConfirm } = useDialog();
+
+  // 폼이 있는 바텀시트(닉네임/프로필/맛집 등록·수정)가 열려있는 동안, 그 폼에
+  // 입력값이 있는지를 추적해요. ref를 쓰는 이유는 onDimmerClick 콜백이
+  // open()을 호출하는 시점에 한 번만 만들어지는데, 그 안에서 항상 "지금 이
+  // 순간"의 최신 dirty 상태를 읽어야 하기 때문이에요(state였다면 클로저가
+  // open() 호출 시점의 값에 고정돼요). useBottomSheet는 싱글턴이라 한 번에
+  // 폼 시트 하나만 열려있으니, 앱 전체에서 이 ref 하나만 공유해도 안전해요.
+  const isFormDirtyRef = useRef(false);
+
+  // 폼이 있는 바텀시트의 배경(딤) 영역을 클릭했을 때 호출해요. 입력값이
+  // 하나도 없으면 바로 닫고, 입력값이 있으면 "정말 닫을까요?" 확인을 한 번
+  // 거쳐요.
+  const handleGuardedDimmerClick = async () => {
+    if (!isFormDirtyRef.current) {
+      close();
+      return;
+    }
+    const confirmed = await openConfirm({
+      title: "작성 중인 내용이 있어요",
+      description: "지금 닫으면 입력한 내용이 사라져요. 닫으시겠어요?",
+      confirmButton: "닫기",
+      cancelButton: "계속 작성",
+      closeOnDimmerClick: true,
+    });
+    if (confirmed) {
+      close();
+    }
+  };
 
   // 기록에 실제로 등장한 동네들 중, 전국 시/도-시/군/구에 매칭되는 것만 추려서
   // 필터 옵션(시/도 -> 시/군/구 목록)을 만들어요. 예전에 자유 텍스트로 저장된 값도
@@ -1508,8 +1665,12 @@ function App() {
   const openNicknameSheet = (userHash: string) => {
     open({
       header: <SheetHeader title="닉네임을 알려주세요" onClose={close} />,
+      onDimmerClick: handleGuardedDimmerClick,
       children: (
         <NicknameForm
+          onDirtyChange={(dirty) => {
+            isFormDirtyRef.current = dirty;
+          }}
           onSubmit={async (nickname) => {
             await saveProfile(userHash, nickname);
             setNickname(nickname);
@@ -1523,6 +1684,7 @@ function App() {
   const openNotificationsSheet = () => {
     open({
       header: <SheetHeader title="알림" onClose={close} />,
+      onDimmerClick: close,
       children: (
         <NotificationsSheetContent
           userHash={userHash}
@@ -1535,6 +1697,7 @@ function App() {
   const openProfileSheet = () => {
     open({
       header: <SheetHeader title="내 프로필" onClose={close} />,
+      onDimmerClick: handleGuardedDimmerClick,
       children: (
         <ProfileView
           userHash={userHash}
@@ -1543,6 +1706,9 @@ function App() {
           neighborhood={homeNeighborhood}
           restaurantCount={restaurants.length}
           restaurants={restaurants}
+          onDirtyChange={(dirty) => {
+            isFormDirtyRef.current = dirty;
+          }}
           onSaved={(nextNickname, nextProfileImage, nextNeighborhood) => {
             setNickname(nextNickname);
             setProfileImage(nextProfileImage);
@@ -1559,6 +1725,7 @@ function App() {
   const openMapSheet = () => {
     open({
       header: <SheetHeader title="지역별 기록" onClose={close} />,
+      onDimmerClick: close,
       children: (
         <MapView
           restaurants={restaurants}
@@ -1573,27 +1740,13 @@ function App() {
     });
   };
 
-  const openScrapsSheet = () => {
-    open({
-      header: <SheetHeader title="스크랩한 글" onClose={close} />,
-      children: (
-        <ScrapsView
-          userHash={userHash}
-          onViewPost={() => {
-            setSelectedTab(TODAY_MEAL_TAB_INDEX);
-            close();
-          }}
-        />
-      ),
-    });
-  };
-
   const handleDelete = async (restaurant: Restaurant) => {
     const confirmed = await openConfirm({
       title: `${restaurant.name}을(를) 삭제할까요?`,
       description: "삭제한 기록은 다시 되돌릴 수 없어요.",
       confirmButton: "삭제",
       cancelButton: "취소",
+      closeOnDimmerClick: true,
     });
 
     if (!confirmed) {
@@ -1606,10 +1759,14 @@ function App() {
   const openAddSheet = () => {
     open({
       header: <SheetHeader title="오늘의 식사" onClose={close} />,
+      onDimmerClick: handleGuardedDimmerClick,
       children: (
         <RestaurantForm
           submitLabel="기록하기"
           onCancel={close}
+          onDirtyChange={(dirty) => {
+            isFormDirtyRef.current = dirty;
+          }}
           onSubmit={(values) => {
             setRestaurants((prev) => [
               {
@@ -1649,6 +1806,7 @@ function App() {
   const openAddSheetFromPlannedVisit = (visit: PlannedVisit) => {
     open({
       header: <SheetHeader title="오늘의 식사" onClose={close} />,
+      onDimmerClick: handleGuardedDimmerClick,
       children: (
         <RestaurantForm
           submitLabel="기록하기"
@@ -1668,6 +1826,9 @@ function App() {
             isSpecialDay: false,
           }}
           onCancel={close}
+          onDirtyChange={(dirty) => {
+            isFormDirtyRef.current = dirty;
+          }}
           onSubmit={(values) => {
             setRestaurants((prev) => [
               {
@@ -1690,6 +1851,7 @@ function App() {
   const openCategoryFilterSheet = () => {
     open({
       header: <SheetHeader title="음식 종류 선택" onClose={close} />,
+      onDimmerClick: close,
       children: (
         <CategoryListSheetContent
           options={FILTER_CATEGORIES}
@@ -1706,6 +1868,7 @@ function App() {
   const openSortSheet = () => {
     open({
       header: <SheetHeader title="정렬 기준 선택" onClose={close} />,
+      onDimmerClick: close,
       children: (
         <>
           <List>
@@ -1746,6 +1909,7 @@ function App() {
   const openNeighborhoodFilterSheet = () => {
     open({
       header: <SheetHeader title="동네 선택" onClose={close} />,
+      onDimmerClick: close,
       children: (
         <RegionFilterSheetContent
           regionOptions={regionFilterOptions}
@@ -1764,6 +1928,7 @@ function App() {
   const openEditSheet = (restaurant: Restaurant) => {
     open({
       header: <SheetHeader title="맛집 수정하기" onClose={close} />,
+      onDimmerClick: handleGuardedDimmerClick,
       children: (
         <RestaurantForm
           initialValues={{
@@ -1785,6 +1950,9 @@ function App() {
           }}
           submitLabel="수정하기"
           onCancel={close}
+          onDirtyChange={(dirty) => {
+            isFormDirtyRef.current = dirty;
+          }}
           onSubmit={(values) => {
             setRestaurants((prev) =>
               prev.map((item) =>
@@ -1808,6 +1976,7 @@ function App() {
           onClose={close}
         />
       ),
+      onDimmerClick: close,
       children: (
         <RestaurantDetailView
           restaurant={restaurant}
@@ -1826,6 +1995,7 @@ function App() {
   const openTagSheet = (tag: string) => {
     open({
       header: <SheetHeader title={`#${tag}`} onClose={close} />,
+      onDimmerClick: close,
       children: (
         <TagRestaurantsSheetContent
           tag={tag}
@@ -1856,6 +2026,7 @@ function App() {
   const openSearchSheet = () => {
     open({
       header: <SheetHeader title="검색" onClose={close} />,
+      onDimmerClick: close,
       children: (
         <RestaurantSearchSheetContent
           restaurants={restaurants}
@@ -1905,50 +2076,48 @@ function App() {
           onViewTodayMeal={() => setSelectedTab(TODAY_MEAL_TAB_INDEX)}
           onViewCalendar={() => setSelectedTab(CALENDAR_TAB_INDEX)}
           onViewMap={openMapSheet}
-          onViewScraps={openScrapsSheet}
         />
       ) : selectedTab === RESTAURANT_TAB_INDEX ? (
         <div style={{ backgroundColor: PAPER_CREAM }}>
-          {/* "AUGUST FOOD ARCHIVE" 매거진 헤더예요(레퍼런스
-              "02_맛있는_하루.png" 기준). 연도 배지 + 초록 체크 워시테이프로
-              장식은 이 두 개만 뒀어요. */}
-          <div style={{ position: "relative", padding: "16px 24px 12px" }}>
-            <WashiTape
-              color="sage"
-              rotation={-3}
-              width={64}
-              height={18}
-              style={{ top: "6px", left: "0px" }}
-            />
+          {/* "AUGUST FOOD ARCHIVE" 매거진 헤더예요. PNG 대신 순수 코드(SVG
+              찢어진 종이 태그 + 텍스트)로 재구현해서, 월/연도가 항상 오늘
+              날짜 기준으로 자동 갱신돼요. */}
+          <div style={{ padding: "16px 24px 12px" }}>
             <div
               style={{
                 display: "flex",
                 alignItems: "flex-start",
                 justifyContent: "space-between",
+                gap: "12px",
               }}
             >
-              <div>
-                <div
-                  style={{
-                    fontFamily: BRAND_DISPLAY_FONT_FAMILY,
-                    fontSize: "26px",
-                    color: CORAL_RED,
-                    lineHeight: 1.1,
-                  }}
-                >
-                  AUGUST
-                </div>
-                <div
-                  style={{
-                    fontSize: "13px",
-                    fontWeight: 700,
-                    color: DARK_NAVY,
-                    letterSpacing: "2px",
-                    marginTop: "2px",
-                  }}
-                >
-                  FOOD ARCHIVE
-                </div>
+              <div style={{ transform: "rotate(-3deg)" }}>
+                <TornPaperTag>
+                  <div
+                    style={{
+                      fontFamily: BRAND_DISPLAY_FONT_FAMILY,
+                      fontSize: "26px",
+                      color: CORAL_RED,
+                      lineHeight: 1.1,
+                    }}
+                  >
+                    {getCurrentMonthLabel()}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: 700,
+                      color: DARK_NAVY,
+                      letterSpacing: "2px",
+                      marginTop: "4px",
+                    }}
+                  >
+                    FOOD ARCHIVE
+                  </div>
+                  <div style={{ marginTop: "2px" }}>
+                    <SwashUnderline width={104} strokeWidth={1.6} color={DARK_NAVY} />
+                  </div>
+                </TornPaperTag>
               </div>
               <span
                 style={{
@@ -1959,6 +2128,7 @@ function App() {
                   fontSize: "12px",
                   fontWeight: 700,
                   color: SAGE_GREEN_DARK,
+                  flexShrink: 0,
                 }}
               >
                 {new Date().getFullYear()}
@@ -2068,11 +2238,12 @@ function App() {
               }
             />
           ) : (
-            // "Magazine Archive Index"예요(레퍼런스 "02_맛있는_하루.png"
-            // 기준). TDS List/ListRow의 카드형 리스트 대신, 왼쪽에 큰
-            // 아카이브 번호(01/02/03…)를 두고 얇은 구분선만 긋는 인덱스형
-            // 레이아웃으로 바꿨어요. 클릭/삭제/메모 미리보기 등 기존 동작은
-            // 전부 그대로예요.
+            // 당근마켓 스타일 리스트 정리: 정사각형 썸네일(고정 72x72) +
+            // 굵은 제목 + 회색 부가정보 한 줄 + 우측 뱃지, 얇은 구분선으로
+            // 아이템을 나눠요. 예전 "매거진 인덱스 번호(01/02/03…)"와 메모
+            // 2줄 미리보기는 장식성이 강해서 뺐어요 — 목록에서는 가게 이름과
+            // 핵심 정보만 빠르게 훑을 수 있게 하고, 메모는 상세보기에서
+            // 보여줘요. 클릭/삭제 등 기존 동작은 전부 그대로예요.
             <div style={{ padding: "0 24px" }}>
               {visibleRestaurants.map((restaurant, index) => (
                 <div key={restaurant.id}>
@@ -2080,31 +2251,18 @@ function App() {
                     onClick={() => openDetailSheet(restaurant)}
                     style={{
                       display: "flex",
-                      alignItems: "flex-start",
+                      alignItems: "center",
                       gap: "12px",
-                      padding: "16px 0",
+                      padding: "14px 0",
                       cursor: "pointer",
                     }}
                   >
-                    <span
-                      style={{
-                        fontSize: "20px",
-                        fontWeight: 700,
-                        color: SAGE_GREEN_DARK,
-                        minWidth: "30px",
-                        fontVariantNumeric: "tabular-nums",
-                      }}
-                    >
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
                     <div
                       style={{
-                        width: "56px",
-                        height: "56px",
-                        borderRadius: "10px",
+                        width: `${LIST_THUMBNAIL_SIZE}px`,
+                        height: `${LIST_THUMBNAIL_SIZE}px`,
+                        borderRadius: LIST_THUMBNAIL_RADIUS,
                         overflow: "hidden",
-                        border: "2px solid #ffffff",
-                        boxShadow: "0 2px 6px rgba(24, 35, 56, 0.15)",
                         flexShrink: 0,
                         backgroundColor: "#EAF0EA",
                         display: "flex",
@@ -2126,7 +2284,7 @@ function App() {
                       ) : (
                         <span
                           style={{
-                            fontSize: "18px",
+                            fontSize: "22px",
                             fontWeight: 700,
                             color: SAGE_GREEN_DARK,
                           }}
@@ -2175,9 +2333,13 @@ function App() {
                       </div>
                       <div
                         style={{
-                          marginTop: "2px",
-                          fontSize: "12px",
-                          color: "#8b95a1",
+                          marginTop: "3px",
+                          fontSize: "13px",
+                          fontWeight: 500,
+                          color: META_TEXT_COLOR,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
                         }}
                       >
                         {[
@@ -2189,22 +2351,6 @@ function App() {
                           .filter(Boolean)
                           .join(" · ")}
                       </div>
-                      {restaurant.memo.trim() && (
-                        <div
-                          style={{
-                            marginTop: "4px",
-                            fontSize: "13px",
-                            lineHeight: 1.4,
-                            color: "#8b95a1",
-                            display: "-webkit-box",
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: "vertical",
-                            overflow: "hidden",
-                          }}
-                        >
-                          {restaurant.memo.trim()}
-                        </div>
-                      )}
                     </div>
                     <div
                       style={{
@@ -2231,7 +2377,7 @@ function App() {
                   </div>
                   {index < visibleRestaurants.length - 1 && (
                     <div
-                      style={{ height: "1px", backgroundColor: "#E5DFC9" }}
+                      style={{ height: "1px", backgroundColor: DIVIDER_COLOR }}
                     />
                   )}
                 </div>

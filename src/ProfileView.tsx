@@ -442,6 +442,7 @@ export default function ProfileView({
   restaurants,
   onSaved,
   onClose,
+  onDirtyChange,
 }: {
   userHash: string | null;
   nickname: string;
@@ -457,12 +458,25 @@ export default function ProfileView({
     neighborhood: string | null,
   ) => void;
   onClose: () => void;
+  onDirtyChange?: (isDirty: boolean) => void;
 }) {
   const [draftNickname, setDraftNickname] = useState(nickname);
   const [draftImage, setDraftImage] = useState<string | null>(profileImage);
   const [draftNeighborhood, setDraftNeighborhood] = useState(
     neighborhood ?? "",
   );
+
+  // 오버레이(딤) 클릭으로 프로필 바텀시트를 닫을 때, 저장하지 않은 변경사항이
+  // 있으면 한 번 더 확인하기 위한 dirty 체크예요. 닉네임/프로필 이미지/동네
+  // 중 하나라도 원래 값과 달라지면 dirty예요.
+  useEffect(() => {
+    const isDirty =
+      draftNickname !== nickname ||
+      draftImage !== profileImage ||
+      draftNeighborhood !== (neighborhood ?? "");
+    onDirtyChange?.(isDirty);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftNickname, draftImage, draftNeighborhood]);
   const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
   const [avatarCategory, setAvatarCategory] = useState<AvatarCategory>(
     parseAvatarValue(profileImage)?.category ?? "person",
