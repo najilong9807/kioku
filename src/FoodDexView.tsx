@@ -1,10 +1,7 @@
 import { ProgressBar } from "@toss/tds-mobile";
 import { useMemo, useState } from "react";
 import dexEmptyStateImage from "./assets/images/archive/dex-empty-state.png";
-import dexProgressBannerImage from "./assets/images/archive/dex-progress-banner.png";
 import { PhotoSticker } from "./components/scrapbook/PhotoSticker";
-import { SparkleStarIcon } from "./components/scrapbook/decorations";
-import { WashiTape } from "./components/scrapbook/WashiTape";
 import { computeFoodDexDiscoveries } from "./lib/foodDex";
 import { FOOD_DEX_MASTER, FOOD_DEX_TOTAL_COUNT } from "./lib/foodDexData";
 import { FieldGuideIcon } from "./lib/quickActionIcons";
@@ -12,6 +9,7 @@ import { RatingStars } from "./lib/rating";
 import type { Restaurant } from "./restaurantStorage";
 import {
   BRAND_DISPLAY_FONT_FAMILY,
+  CARD_RADIUS,
   DARK_NAVY,
   PAPER_CREAM,
   SAGE_GREEN,
@@ -70,45 +68,21 @@ export default function FoodDexView({
         </div>
       </div>
 
-      {/* 확정 PNG 에셋 장식 배너예요. 안에 박제된 "34/70" 숫자는 예시
-          장식일 뿐이라 실제 발견 개수로 취급하지 않아요 — 진짜 개수는
-          바로 아래 카드의 ProgressBar와 텍스트로 그대로 보여줘요. */}
-      <div style={{ marginBottom: "8px" }}>
-        <img
-          src={dexProgressBannerImage}
-          alt=""
-          aria-hidden="true"
-          style={{
-            display: "block",
-            maxWidth: "320px",
-            width: "100%",
-            height: "auto",
-            objectFit: "contain",
-          }}
-        />
-      </div>
-
+      {/* 진행률 표시는 이 카드 하나로 통합했어요. 예전에는 상단 일러스트
+          배너("34/70" 예시 숫자가 박힌 그림)와 이 카드가 진행률을 중복
+          표시했는데, 배너는 지우고 실제 데이터를 보여주는 이 카드만
+          남겼어요. 장식(테이프/반짝임)도 가독성을 위해 뺐어요. */}
       <div
         style={{
-          position: "relative",
           display: "flex",
           flexDirection: "column",
           gap: "8px",
           padding: "16px 18px",
-          borderRadius: "16px",
+          borderRadius: CARD_RADIUS,
           backgroundColor: SAGE_GREEN_BG,
           marginBottom: "16px",
         }}
       >
-        {/* 진행률 카드에만 붙인 테이프예요. 도감 항목별 사진은 아래에서
-            PhotoSticker로 따로 꾸며서, 장식이 겹치지 않게 했어요. */}
-        <WashiTape
-          color="sage"
-          rotation={-3}
-          width={70}
-          height={20}
-          style={{ top: "-10px", right: "18px" }}
-        />
         <div
           style={{
             display: "flex",
@@ -128,12 +102,7 @@ export default function FoodDexView({
             {discoveredCount}/{FOOD_DEX_TOTAL_COUNT}개 발견
           </span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <div style={{ flex: "1 1 auto" }}>
-            <ProgressBar progress={progress} size="normal" color={SAGE_GREEN_DARK} />
-          </div>
-          <SparkleStarIcon size={16} color={SAGE_GREEN_DARK} />
-        </div>
+        <ProgressBar progress={progress} size="normal" color={SAGE_GREEN_DARK} />
       </div>
 
       {discoveredCount === 0 ? (

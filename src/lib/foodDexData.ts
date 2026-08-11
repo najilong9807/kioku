@@ -1,5 +1,5 @@
 // "맛집 도감"의 마스터 데이터예요. 사용자가 실제로 먹고 등록한 기록과는
-// 별개로, 도감에 존재하는 음식 70종 전체 목록이에요(FoodDexView가 이 목록
+// 별개로, 도감에 존재하는 음식 100종 전체 목록이에요(FoodDexView가 이 목록
 // 전체를 그리고, 그중 사용자가 태그로 남긴 것만 "발견"으로 표시해요).
 //
 // 도감 번호(dexNumber)는 이 배열에서의 위치로 정해져요. 항목을 추가할 때는
@@ -108,6 +108,45 @@ const FOOD_DEX_SEEDS: readonly FoodDexSeed[] = [
   { name: "족발", category: "술안주·야식" },
   { name: "곱창", category: "술안주·야식" },
   { name: "회", category: "술안주·야식" },
+  // 2026-08 도감 확장분(71~100)이에요. 기존 1~70번은 순서/번호를 절대
+  // 바꾸지 않고, 카테고리별로 나눠서 끝에만 추가했어요.
+  // 한식(71~75)
+  { name: "콩나물국밥", category: "한식" },
+  { name: "순대국밥", category: "한식" },
+  { name: "감자탕", category: "한식" },
+  { name: "닭갈비", category: "한식" },
+  { name: "전(부침개)", category: "한식" },
+  // 분식(76~79)
+  { name: "라볶이", category: "분식" },
+  { name: "물떡", category: "분식" },
+  { name: "계란빵", category: "분식" },
+  { name: "붕어빵", category: "분식" },
+  // 중식(80~83)
+  { name: "동파육", category: "중식" },
+  { name: "유린기", category: "중식" },
+  { name: "마파두부", category: "중식" },
+  { name: "고추잡채", category: "중식" },
+  // 일식(84~87)
+  { name: "규카츠", category: "일식" },
+  { name: "나베", category: "일식" },
+  { name: "소바", category: "일식" },
+  { name: "야키토리", category: "일식" },
+  // 양식(88~91)
+  { name: "라자냐", category: "양식" },
+  { name: "크림파스타", category: "양식" },
+  { name: "감바스", category: "양식" },
+  { name: "타코", category: "양식" },
+  // 카페·디저트(92~96)
+  { name: "아이스크림", category: "카페·디저트" },
+  { name: "티라미수", category: "카페·디저트" },
+  { name: "쿠키", category: "카페·디저트" },
+  { name: "젤라또", category: "카페·디저트" },
+  { name: "프레첼", category: "카페·디저트" },
+  // 술안주·야식(97~100)
+  { name: "닭발", category: "술안주·야식" },
+  { name: "오돌뼈", category: "술안주·야식" },
+  { name: "노가리", category: "술안주·야식" },
+  { name: "골뱅이무침", category: "술안주·야식" },
 ];
 
 // 위 시드 배열에 번호만 덧붙인, 실제로 쓰는 도감 마스터 목록이에요.
