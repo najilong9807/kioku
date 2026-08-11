@@ -3,7 +3,12 @@
 // 실제 공유/저장/폴백 동작은 lib/share.ts가 맡고, 여기서는 순수하게
 // "데이터 → 이미지(Blob)" 변환만 담당해요.
 import { formatFullKoreanDate, type Restaurant } from "../restaurantStorage";
-import { HANDWRITING_FONT_FAMILY, THEME_YELLOW_ACCENT } from "../theme";
+import {
+  DARK_NAVY,
+  HANDWRITING_FONT_FAMILY,
+  SKY_BLUE,
+  THEME_YELLOW_ACCENT,
+} from "../theme";
 import {
   canvasToBlob,
   clipRoundedRect,
@@ -20,7 +25,13 @@ import type { FoodCategory, FoodTestResult } from "./foodTest";
 import type { VisitSummary } from "./recordSummary";
 import { getCurrentSeason, type Season } from "./seasonIcon";
 
-const SAGE_GREEN = "#9CAF9A";
+// 2026-08 스카이블루 리디자인 톤 재조정: 카드 배경을 세이지그린에서
+// 스카이블루로 바꿨어요. 스카이블루는 세이지그린보다 훨씬 밝은 파스텔이라,
+// 그 위에 얹는 텍스트/장식 색도 흰색 계열 대신 다크 네이비(DARK_NAVY) 계열로
+// 맞춰야 대비가 나와요 — 아래 각 카드 함수에서 흰색 텍스트를 쓰던 자리들도
+// 함께 다크 네이비로 바꿨어요. 패널(흰 종이 카드) 안쪽은 배경색과 무관하게
+// 원래부터 밝은색이라 그대로 뒀어요.
+const CARD_BG_COLOR = SKY_BLUE;
 const INK = "#191f28";
 const APP_NAME = "이게맛다";
 
@@ -54,9 +65,9 @@ function handwritingFont(px: number): string {
   return `400 ${px}px ${HANDWRITING_FONT_FAMILY}`;
 }
 
-// BrandMarkIcon.tsx와 같은 모양(세이지 그린 노트 표지 + 책등 그림자 줄)을 작게
-// 그려서 워터마크로 써요. 카드 배경이 세이지그린이라 아이콘 자체는 흰 배경으로
-// 그려야 도드라져 보여요.
+// BrandMarkIcon.tsx와 같은 모양(노트 표지 + 책등 그림자 줄)을 작게 그려서
+// 워터마크로 써요. 흰 배경 + 진한 테두리라 카드 배경색(스카이블루)과
+// 무관하게 항상 도드라져 보여요.
 function drawBrandMark(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
   const scale = size / 24;
   ctx.save();
@@ -72,6 +83,8 @@ function drawBrandMark(ctx: CanvasRenderingContext2D, x: number, y: number, size
 // 카드 가장자리에서 margin만큼 안쪽으로 얇은 테두리를 둘러요. 실물 엽서처럼
 // "사진(내용) - 흰 여백 - 테두리" 느낌을 주는 장식이자, 인쇄 시 잘려나가기 쉬운
 // 가장자리보다 안쪽에 내용이 오도록 만드는 안전 여백의 기준선이기도 해요.
+// 스카이블루는 밝은 배경이라, 흰 테두리 대신 다크 네이비 계열의 옅은
+// 테두리를 써야 눈에 보여요.
 function drawPostcardFrame(
   ctx: CanvasRenderingContext2D,
   w: number,
@@ -85,7 +98,7 @@ function drawPostcardFrame(
     w - margin * 2,
     h - margin * 2,
     24,
-    "rgba(255, 255, 255, 0.55)",
+    "rgba(24, 35, 56, 0.22)",
     2,
   );
 }
@@ -102,7 +115,7 @@ function drawStampBadge(
   // 톱니(퍼포레이션): 원 둘레를 따라 작은 점을 고르게 찍어요.
   const perforationCount = 18;
   const perforationRadius = 2.6;
-  ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
+  ctx.fillStyle = "rgba(24, 35, 56, 0.4)";
   for (let i = 0; i < perforationCount; i++) {
     const angle = (i / perforationCount) * Math.PI * 2;
     const px = cx + Math.cos(angle) * radius;
@@ -115,14 +128,14 @@ function drawStampBadge(
   // 안쪽 원판
   ctx.beginPath();
   ctx.arc(cx, cy, radius - 9, 0, Math.PI * 2);
-  ctx.fillStyle = "rgba(255, 255, 255, 0.16)";
+  ctx.fillStyle = "rgba(24, 35, 56, 0.10)";
   ctx.fill();
   ctx.lineWidth = 1.5;
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+  ctx.strokeStyle = "rgba(24, 35, 56, 0.35)";
   ctx.stroke();
 
   // 중앙 별
-  ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+  ctx.fillStyle = "rgba(24, 35, 56, 0.65)";
   ctx.font = `${Math.round(radius * 0.9)}px ${SANS_FONT_STACK}`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -232,7 +245,7 @@ function drawWatermark(ctx: CanvasRenderingContext2D, centerX: number, bottomY: 
 
   drawBrandMark(ctx, startX, iconY, markSize);
 
-  ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+  ctx.fillStyle = "rgba(24, 35, 56, 0.85)";
   const textX = startX + markSize + gap;
   ctx.fillText(APP_NAME, textX, bottomY - 3);
 
@@ -244,7 +257,7 @@ function drawWatermark(ctx: CanvasRenderingContext2D, centerX: number, bottomY: 
     seasonX,
     seasonY,
     seasonIconSize,
-    "rgba(255, 255, 255, 0.6)",
+    "rgba(24, 35, 56, 0.55)",
   );
 }
 
@@ -288,7 +301,7 @@ function drawRatingStars(
 const FOOD_TEST_CARD_WIDTH = 720;
 const FOOD_TEST_CARD_HEIGHT = 960;
 
-// 먹보조사 결과 카드예요: 세이지그린 배경, 음식취향 이모지 배지, 유형명을
+// 먹보조사 결과 카드예요: 스카이블루 배경, 음식취향 이모지 배지, 유형명을
 // 크게, 한 줄 설명, 하단에 앱 워터마크를 작게 넣어요.
 export async function renderFoodTestResultCard(
   result: Pick<FoodTestResult, "title" | "description" | "foodCategory">,
@@ -298,11 +311,13 @@ export async function renderFoodTestResultCard(
   const { canvas, ctx } = createCardCanvas(w, h);
 
   // 배경
-  ctx.fillStyle = SAGE_GREEN;
+  ctx.fillStyle = CARD_BG_COLOR;
   ctx.fillRect(0, 0, w, h);
 
-  // 은은한 장식용 원 두 개 — 배경이 밋밋해 보이지 않게 해요.
-  ctx.fillStyle = "rgba(255, 255, 255, 0.10)";
+  // 은은한 장식용 원 두 개 — 배경이 밋밋해 보이지 않게 해요. 스카이블루는
+  // 밝은 배경이라, 세이지그린 배경 때보다 흰색 원의 불투명도를 올려야
+  // (0.10 → 0.35) 은은하게라도 도드라져 보여요.
+  ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
   ctx.beginPath();
   ctx.arc(w * 0.86, h * 0.16, 170, 0, Math.PI * 2);
   ctx.fill();
@@ -362,7 +377,7 @@ export async function renderFoodTestResultCard(
   const badgeCenterY = blockTop + badgeDiameter / 2;
   ctx.beginPath();
   ctx.arc(w / 2, badgeCenterY, badgeDiameter / 2, 0, Math.PI * 2);
-  ctx.fillStyle = "rgba(255, 255, 255, 0.20)";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.55)";
   ctx.fill();
   ctx.textBaseline = "middle";
   ctx.font = `76px ${EMOJI_FONT_STACK}`;
@@ -372,12 +387,12 @@ export async function renderFoodTestResultCard(
   const eyebrowY = blockTop + badgeDiameter + gapBadgeToEyebrow;
 
   // 상단 eyebrow 라벨
-  ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+  ctx.fillStyle = "rgba(24, 35, 56, 0.7)";
   ctx.font = sansFont(700, 22);
   ctx.fillText("먹 보 조 사   결 과", w / 2, eyebrowY);
 
   // 큰 유형명(두 줄까지 허용)
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = DARK_NAVY;
   ctx.font = sansFont(800, 58);
   const titleResult = wrapText(ctx, result.title, {
     x: w / 2,
@@ -389,7 +404,7 @@ export async function renderFoodTestResultCard(
   });
 
   // 한 줄 설명
-  ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+  ctx.fillStyle = "rgba(24, 35, 56, 0.8)";
   ctx.font = sansFont(500, 27);
   wrapText(ctx, result.description, {
     x: w / 2,
@@ -410,7 +425,7 @@ const RESTAURANT_CARD_HEIGHT = 1040;
 
 // 맛있는 하루 기록 카드예요: 가게 이름, 별점, 사진(있으면), 메모 일부(손글씨
 // 폰트), 방문일을 흰 종이 카드 위에 담고, 카드 밖 배경은 먹보조사 카드와 같은
-// 세이지그린 톤으로 맞춰요.
+// 스카이블루 톤으로 맞춰요.
 export async function renderRestaurantCard(restaurant: Restaurant): Promise<Blob> {
   // 메모에 쓰는 손글씨 폰트가 화면에 이미 쓰인 적 없다면(예: 사진 첨부 없이
   // 바로 공유) 미리 로드해둬요. 실패해도 대체 폰트로 계속 진행해요.
@@ -421,7 +436,7 @@ export async function renderRestaurantCard(restaurant: Restaurant): Promise<Blob
   const { canvas, ctx } = createCardCanvas(w, h);
 
   // 배경
-  ctx.fillStyle = SAGE_GREEN;
+  ctx.fillStyle = CARD_BG_COLOR;
   ctx.fillRect(0, 0, w, h);
 
   // 흰 종이 카드 패널
@@ -530,7 +545,7 @@ export async function renderRestaurantCard(restaurant: Restaurant): Promise<Blob
 const VISIT_SUMMARY_CARD_WIDTH = 720;
 const VISIT_SUMMARY_CARD_HEIGHT = 860;
 
-// "이번 주/이번 달" 기록 요약 카드예요. 먹보조사 결과 카드와 같은 세이지그린
+// "이번 주/이번 달" 기록 요약 카드예요. 먹보조사 결과 카드와 같은 스카이블루
 // 배경 + 장식 원을 쓰되, 가운데는 큰 숫자 두 개(이번 주/이번 달)를 나란히
 // 보여줘요.
 export async function renderVisitSummaryCard(
@@ -540,10 +555,10 @@ export async function renderVisitSummaryCard(
   const h = VISIT_SUMMARY_CARD_HEIGHT;
   const { canvas, ctx } = createCardCanvas(w, h);
 
-  ctx.fillStyle = SAGE_GREEN;
+  ctx.fillStyle = CARD_BG_COLOR;
   ctx.fillRect(0, 0, w, h);
 
-  ctx.fillStyle = "rgba(255, 255, 255, 0.10)";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
   ctx.beginPath();
   ctx.arc(w * 0.9, h * 0.12, 150, 0, Math.PI * 2);
   ctx.fill();
@@ -554,11 +569,11 @@ export async function renderVisitSummaryCard(
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
 
-  ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+  ctx.fillStyle = "rgba(24, 35, 56, 0.7)";
   ctx.font = sansFont(700, 24);
   ctx.fillText("나 의   맛 있 는   기 록", w / 2, 108);
 
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = DARK_NAVY;
   ctx.font = sansFont(800, 42);
   ctx.fillText(`${summary.monthLabel} 기록 요약`, w / 2, 168);
 
