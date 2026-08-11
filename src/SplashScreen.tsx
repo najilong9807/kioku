@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import catSunglassesSplash from "./assets/cat-sunglasses-splash.png";
+import dietSpeechBubble from "./assets/images/splash/diet-speech-bubble.png";
 import "./SplashScreen.css";
 import { BRAND_DISPLAY_FONT_FAMILY, DARK_NAVY } from "./theme";
 
@@ -79,11 +80,13 @@ const FOOD_STICKERS: FoodStickerSpec[] = [
   },
 ];
 
-// 앱 최초 로딩 시 잠깐 보여주는 인트로(스플래시) 화면이에요. "뜸부기" 리디자인
-// 레퍼런스(확정 고양이스플래쉬화면.png)를 기준으로, Sky Blue 배경 위에 로고 +
-// 음식 콜라주 + 고양이 스티커를 배치한 정적 포스터형으로 구성했어요. 이전
-// 버전(다이어리 표지가 열렸다 닫히는 3D 애니메이션)은 이번 리디자인에서
-// 완전히 교체했어요.
+// 앱 최초 로딩 시 잠깐 보여주는 인트로(스플래시) 화면이에요. 레퍼런스
+// "스플래쉬.png" 기준으로, Sky Blue 배경 위에 로고 + 음식 콜라주 + 고양이
+// 스티커를 배치한 정적 포스터형이에요. 이전 버전(다이어리 표지가 열렸다
+// 닫히는 3D 애니메이션)은 완전히 교체됐고, 이후 확정 PNG 스티커("다이어트
+// 할 거면 나가.png")가 생겨서 그 자리만 실제 에셋으로 바꿨어요. 음식
+// 6종(라멘/케이크/짜장면/커피/스테이크/떡볶이)은 아직 배경 제거된 실사
+// 에셋이 없어서 이모지로 임시 구현했어요 — FOOD_STICKERS 주석 참고.
 export default function SplashScreen({ onFinish }: { onFinish: () => void }) {
   const [isExiting, setIsExiting] = useState(false);
 
@@ -150,11 +153,15 @@ export default function SplashScreen({ onFinish }: { onFinish: () => void }) {
       </div>
 
       <div className="splash-cat-row">
-        <div className="splash-speech-bubble">
-          다이어트 할 거면
-          <br />
-          <span className="splash-speech-bubble__emphasis">나가.</span>
-        </div>
+        {/* 확정 PNG 스티커예요("다이어트 할 거면 나가.png"). 예전에는 CSS로
+            말풍선 모양을 흉내 냈는데, 실제 스티커 에셋이 생겨서 그대로
+            교체했어요(찢어진 종이 느낌의 테두리·밑줄까지 이미지 안에 다
+            있어서 별도 배경/테두리를 더 추가하지 않았어요). */}
+        <img
+          src={dietSpeechBubble}
+          alt="다이어트 할 거면 나가."
+          className="splash-speech-bubble-image"
+        />
         <img
           src={catSunglassesSplash}
           alt=""

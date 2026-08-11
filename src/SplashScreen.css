@@ -116,24 +116,14 @@
   margin-top: 14px;
 }
 
-.splash-speech-bubble {
-  position: relative;
-  padding: 10px 14px;
-  border-radius: 16px;
-  background-color: #ffffff;
-  box-shadow: 0 4px 10px rgba(24, 35, 56, 0.14);
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.4;
-  color: #182338;
-  text-align: center;
-}
-
-.splash-speech-bubble__emphasis {
-  text-decoration: underline;
-  text-decoration-color: #d95145;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 2px;
+/* 확정 PNG 스티커("다이어트 할 거면 나가.png")예요. 찢어진 종이 테두리와
+   밑줄이 이미지 안에 이미 있어서, 배경/그림자를 더 얹지 않고 크기와 살짝의
+   기울임만 줘요. */
+.splash-speech-bubble-image {
+  width: 132px;
+  height: auto;
+  display: block;
+  transform: rotate(-4deg);
 }
 
 /* 고양이.png는 실제 투명 배경이 아니라 옅은 회색 사각 배경이 그대로 박힌
