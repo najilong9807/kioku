@@ -11,7 +11,6 @@ import {
   BRAND_DISPLAY_FONT_FAMILY,
   CARD_RADIUS,
   DARK_NAVY,
-  PAPER_CREAM,
   SAGE_GREEN,
   SAGE_GREEN_BG,
   SAGE_GREEN_DARK,
@@ -54,7 +53,7 @@ export default function FoodDexView({
   );
 
   return (
-    <div style={{ backgroundColor: PAPER_CREAM, padding: "0 24px 24px" }}>
+    <div style={{ backgroundColor: "#ffffff", padding: "0 24px 24px" }}>
       {/* "맛집 도감" 타이틀이에요. 탭이라 뒤로가기 화살표는 두지 않았어요. */}
       <div style={{ padding: "16px 0 12px" }}>
         <div

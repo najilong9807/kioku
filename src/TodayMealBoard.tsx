@@ -57,7 +57,6 @@ import {
   CORAL_RED,
   DARK_NAVY,
   HANDWRITING_TEXT_STYLE,
-  PAPER_CREAM,
 } from "./theme";
 
 // 첨부 사진은 가로 폭 기준 이 값 이하로 리사이즈해서 저장해요.
@@ -1177,7 +1176,7 @@ function TodayMealBoard({
   };
 
   return (
-    <div style={{ backgroundColor: PAPER_CREAM }}>
+    <div style={{ backgroundColor: "#ffffff" }}>
       {/* "TODAY'S BITE" 헤더예요(레퍼런스 "03_오늘의_한입.png" 기준). 이
           화면은 피드라 장식은 헤더 문구 톤 정도로만 최소화했어요. */}
       <div style={{ padding: "16px 24px 12px" }}>

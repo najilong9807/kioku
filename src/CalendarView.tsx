@@ -30,7 +30,6 @@ import {
 import { SheetHeader } from "./lib/SheetHeader";
 import {
   BRAND_DISPLAY_FONT_FAMILY,
-  CARD_RADIUS,
   CORAL_RED,
   DARK_NAVY,
   DIVIDER_COLOR,
@@ -38,8 +37,6 @@ import {
   META_TEXT_STYLE,
   SAGE_GREEN,
   SECTION_TITLE_TEXT_STYLE,
-  SKY_BLUE_BG,
-  WARM_PAPER,
 } from "./theme";
 
 const WEEKDAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -467,15 +464,12 @@ export default function CalendarView({
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
-    {/* 캘린더 영역(헤더+달력)이에요. 아래 "다가오는 예정" 리스트 영역과
-        배경 톤을 다르게 둬서 두 영역을 시각적으로 분리해요 — 캘린더는
-        기존 Warm Paper, 리스트는 스카이블루 옅은 톤(SKY_BLUE_BG)이에요. */}
     <div
       style={{
         display: "flex",
         flexDirection: "column",
         gap: "16px",
-        backgroundColor: WARM_PAPER,
+        backgroundColor: "#ffffff",
         paddingBottom: "20px",
       }}
     >
@@ -659,17 +653,12 @@ export default function CalendarView({
       </div>
     </div>
 
-    {/* "다가오는 예정" 리스트 영역이에요. 캘린더 영역과 배경 톤을 다르게
-        (스카이블루 옅은 톤) 두고, 위쪽 모서리를 둥글려서 캘린더 위에 얹힌
-        카드처럼 보이게 했어요. */}
     <div
       style={{
         display: "flex",
         flexDirection: "column",
         flex: "1 1 auto",
-        backgroundColor: SKY_BLUE_BG,
-        borderTopLeftRadius: CARD_RADIUS,
-        borderTopRightRadius: CARD_RADIUS,
+        backgroundColor: "#ffffff",
         paddingTop: "16px",
         paddingBottom: "8px",
       }}

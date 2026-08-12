@@ -88,7 +88,6 @@ import {
   LIST_THUMBNAIL_RADIUS,
   LIST_THUMBNAIL_SIZE,
   META_TEXT_COLOR,
-  PAPER_CREAM,
   SAGE_GREEN_DARK,
   THEME_YELLOW,
   WARM_PAPER,
@@ -2140,7 +2139,7 @@ function App() {
           onViewFoodDex={() => setSelectedTab(FOOD_DEX_TAB_INDEX)}
         />
       ) : selectedTab === RESTAURANT_TAB_INDEX ? (
-        <div style={{ backgroundColor: PAPER_CREAM }}>
+        <div style={{ backgroundColor: "#ffffff" }}>
           {/* "AUGUST FOOD ARCHIVE" 매거진 헤더예요. PNG 대신 순수 코드(SVG
               찢어진 종이 태그 + 텍스트)로 재구현해서, 월/연도가 항상 오늘
               날짜 기준으로 자동 갱신돼요. */}
