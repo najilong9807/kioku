@@ -17,20 +17,21 @@ import {
   TrendingUp,
   UtensilsCrossed,
 } from "lucide-react";
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import mapMenuImage from "./assets/images/menu/map.png";
-import todayBiteMenuImage from "./assets/images/menu/today-bite.png";
-import todayMealMenuImage from "./assets/images/menu/today-meal.png";
-import upcomingBiteMenuImage from "./assets/images/menu/upcoming-bite.png";
-import { WashiTape } from "./components/scrapbook/WashiTape";
 import {
-  SparkleIcon,
-  SparkleStarIcon,
-  SwashUnderline,
-} from "./components/scrapbook/decorations";
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import CustomerSupportView from "./CustomerSupportView";
 import FoodTestModal from "./FoodTestView";
-import { FieldGuideIcon } from "./lib/quickActionIcons";
+import {
+  ChatHeartIcon,
+  FieldGuideIcon,
+  FoldedMapPinIcon,
+  RiceBowlIcon,
+} from "./lib/quickActionIcons";
 import {
   formatDDay,
   getDaysUntil,
@@ -38,7 +39,6 @@ import {
   type PlannedVisit,
 } from "./lib/plannedVisitStorage";
 import { computeVisitSummary } from "./lib/recordSummary";
-import { SeasonIcon } from "./lib/seasonIcon";
 import { shareImage } from "./lib/share";
 import { renderVisitSummaryCard } from "./lib/shareCard";
 import { SheetHeader } from "./lib/SheetHeader";
@@ -53,8 +53,6 @@ import {
   SAGE_GREEN_BG,
   SAGE_GREEN_DARK,
   SECTION_TITLE_TEXT_STYLE,
-  SKY_BLUE,
-  SKY_BLUE_BG,
   THEME_YELLOW_BG,
 } from "./theme";
 
@@ -92,11 +90,9 @@ function truncateForPreview(text: string, maxLength: number): string {
     : singleLine;
 }
 
-// "최근 맛있는 하루"/"최근 오늘의 한 입" 섹션 제목이에요. 예전엔 PNG
-// 일러스트(워시테이프+카메라+진행바 장식) 배너를 썼는데, 배너 안 숫자가
-// 실제 데이터가 아닌 장식이라 혼동을 줄 수 있어서 텍스트+SwashUnderline과
-// 실제 개수를 보여주는 카운트 배지로 바꿨어요. 배지의 숫자는 항상 실제
-// 데이터(전체 기록/작성 개수)예요 — 목표치 같은 가짜 분모는 넣지 않아요.
+// "최근 맛있는 하루"/"최근 오늘의 한 입" 섹션 제목이에요. 실제 개수를
+// 보여주는 카운트 배지를 함께 둬서, 배지의 숫자는 항상 실제 데이터(전체
+// 기록/작성 개수)예요 — 목표치 같은 가짜 분모는 넣지 않아요.
 function SectionHeader({
   title,
   count,
@@ -111,22 +107,19 @@ function SectionHeader({
       style={{
         padding: "0 24px 12px",
         display: "flex",
-        alignItems: "flex-end",
+        alignItems: "center",
         justifyContent: "space-between",
         gap: "8px",
       }}
     >
-      <div>
-        <div style={SECTION_TITLE_TEXT_STYLE}>{title}</div>
-        <SwashUnderline width={title.length * 11} color={SKY_BLUE} />
-      </div>
+      <div style={SECTION_TITLE_TEXT_STYLE}>{title}</div>
       <span
         style={{
           flexShrink: 0,
           padding: "4px 10px",
           borderRadius: "999px",
-          backgroundColor: SKY_BLUE_BG,
-          color: DARK_NAVY,
+          backgroundColor: SAGE_GREEN_BG,
+          color: SAGE_GREEN_DARK,
           fontSize: "12px",
           fontWeight: 700,
         }}
@@ -213,14 +206,6 @@ function StatsCard({ isLoaded, count }: { isLoaded: boolean; count: number }) {
           backgroundColor: THEME_YELLOW_BG,
         }}
       >
-        {/* 스크랩북 카드에 스티커를 붙여둔 느낌을 주는 장식이에요. 여러 카드에
-            다 붙이면 산만해져서, 카드 하나(통계 카드)에만 1개 얹었어요. */}
-        <span
-          style={{ position: "absolute", top: "-10px", right: "12px" }}
-          aria-hidden="true"
-        >
-          <SparkleStarIcon size={22} />
-        </span>
         <div
           style={{
             width: "36px",
@@ -290,14 +275,6 @@ function DDayCard({
           cursor: "pointer",
         }}
       >
-        {/* 통계 카드와 동일한 방식(같은 아이콘·같은 위치)으로 붙인 스티커예요.
-            이 카드에도 장식은 이거 하나뿐이에요. */}
-        <span
-          style={{ position: "absolute", top: "-10px", right: "12px" }}
-          aria-hidden="true"
-        >
-          <SparkleStarIcon size={22} />
-        </span>
         <div
           style={{
             width: "36px",
@@ -568,48 +545,49 @@ function AnniversaryCard({
   );
 }
 
-// 퀵액션 4개는 확정 PNG 에셋(카메라·폴라로이드·손글씨 라벨까지 포함된 큰
-// 일러스트)을 그대로 눌러요. 이미지 자체가 이미 스티커 형태라 뒤에 별도
-// 배경 타일이나 라운드 버튼을 만들지 않고, 이미지 하나가 곧 버튼이에요.
-// 라벨도 이미지 안에 이미 있어서 화면에 따로 텍스트를 반복하지 않고,
-// aria-label로만 접근성을 챙겨요.
+// 퀵액션 4개는 손그림 라인아트 아이콘(lib/quickActionIcons.tsx) 타일이에요.
+// 이미지 스티커 대신 아이콘+라벨 조합으로, 다른 기능형 카드들과 같은 톤을 써요.
 function QuickActionButton({
-  imageSrc,
-  imageAlt,
-  aspectRatio,
+  icon,
+  label,
   onClick,
 }: {
-  imageSrc: string;
-  imageAlt: string;
-  aspectRatio: number;
+  icon: ReactNode;
+  label: string;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-label={imageAlt}
       style={{
-        display: "block",
-        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "8px",
         border: "none",
         background: "none",
-        padding: 0,
+        padding: "4px 0 0",
         WebkitTapHighlightColor: "transparent",
         cursor: "pointer",
       }}
     >
-      <img
-        src={imageSrc}
-        alt=""
-        aria-hidden="true"
+      <span
         style={{
-          display: "block",
-          width: "100%",
-          aspectRatio: String(aspectRatio),
-          objectFit: "contain",
+          width: "56px",
+          height: "56px",
+          borderRadius: "18px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "#f2f4f6",
         }}
-      />
+      >
+        {icon}
+      </span>
+      <span style={{ fontSize: "13px", fontWeight: 600, color: "#333d4b" }}>
+        {label}
+      </span>
     </button>
   );
 }
@@ -637,8 +615,6 @@ export default function HomeScreen({
   onViewTodayMeal: () => void;
   onViewCalendar: () => void;
   onViewMap: () => void;
-  // 맛집 도감은 더 이상 별도 탭이 아니라 이 메뉴 리스트를 통해서만
-  // 들어가는 화면이라, 홈이 직접 탭 전환을 요청해요.
   onViewFoodDex: () => void;
 }) {
   const [recentPosts, setRecentPosts] = useState<ThreadPost[]>([]);
@@ -737,135 +713,72 @@ export default function HomeScreen({
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column" }}>
-      {/* 리디자인: 상단 텍스트 탭바가 프로필/알림 진입점을 다시 갖게 되면서,
-          홈 화면 전용이던 Sky Blue 히어로(로고+프로필/알림+고양이 이미지)는
-          걷어냈어요. 인사말부터는 그대로 흰 배경 위 Functional UI예요. */}
+    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      <div style={{ padding: "20px 24px 0" }}>
+        <div
+          style={{
+            fontSize: "18px",
+            fontWeight: 700,
+            color: "#191f28",
+          }}
+        >
+          안녕하세요, {nickname ?? "회원"}님
+        </div>
+        <div style={{ marginTop: "2px", fontSize: "13px", color: "#8b95a1" }}>
+          {formatTodayGreetingDate()}
+        </div>
+      </div>
+
+      {isRestaurantsLoaded && oneYearAgoRestaurants.length > 0 && (
+        <AnniversaryCard
+          restaurants={oneYearAgoRestaurants}
+          onSelectRestaurant={onSelectRestaurant}
+          onViewMore={openAnniversarySheet}
+        />
+      )}
+
+      <StatsCard isLoaded={isRestaurantsLoaded} count={restaurants.length} />
+
+      <VisitSummaryCard
+        isLoaded={isRestaurantsLoaded}
+        restaurants={restaurants}
+      />
+
+      <DDayCard
+        isLoaded={isPlannedVisitsLoaded}
+        plannedVisits={plannedVisits}
+        onClick={onViewCalendar}
+      />
+
       <div
         style={{
-          position: "relative",
-          backgroundColor: "#ffffff",
-          paddingTop: "20px",
-          paddingBottom: "4px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "24px",
+          display: "grid",
+          gridTemplateColumns: "repeat(4, 1fr)",
+          columnGap: "8px",
+          padding: "0 24px",
         }}
       >
-        <div style={{ position: "relative", padding: "0 24px" }}>
-          {/* 인사말 영역에 흩뿌린 작은 반짝임 스티커예요. */}
-          <span
-            style={{ position: "absolute", top: "-4px", right: "16px" }}
-            aria-hidden="true"
-          >
-            <SparkleIcon size={14} />
-          </span>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              fontSize: "18px",
-              fontWeight: 700,
-              color: "#191f28",
-            }}
-          >
-            안녕하세요, {nickname ?? "회원"}님
-            {/* 프로필 화면의 계절 스탬프(SeasonStampRow)와 같은 배경(SAGE_GREEN_BG)
-                + 아이콘 색(SAGE_GREEN_DARK) 조합으로 맞춰서, 같은 계절 아이콘
-                세트가 두 화면에서 같은 방식으로 표현되도록 했어요. */}
-            <span
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "24px",
-                height: "24px",
-                borderRadius: "50%",
-                backgroundColor: SAGE_GREEN_BG,
-                flexShrink: 0,
-              }}
-            >
-              <SeasonIcon size={14} color={SAGE_GREEN_DARK} />
-            </span>
-          </div>
-          <SwashUnderline width={130} />
-          <div style={{ marginTop: "2px", fontSize: "13px", color: "#8b95a1" }}>
-            {formatTodayGreetingDate()}
-          </div>
-        </div>
-
-        {isRestaurantsLoaded && oneYearAgoRestaurants.length > 0 && (
-            <AnniversaryCard
-              restaurants={oneYearAgoRestaurants}
-              onSelectRestaurant={onSelectRestaurant}
-              onViewMore={openAnniversarySheet}
-            />
-          )}
-
-          <StatsCard isLoaded={isRestaurantsLoaded} count={restaurants.length} />
-
-          <VisitSummaryCard
-            isLoaded={isRestaurantsLoaded}
-            restaurants={restaurants}
-          />
-
-          <DDayCard
-            isLoaded={isPlannedVisitsLoaded}
-            plannedVisits={plannedVisits}
-            onClick={onViewCalendar}
-          />
-
-          {/* 퀵액션 영역 시작을 알려주는 테이프 — 섹션 구분처럼 가로로
-              걸쳐놨어요. */}
-          <div style={{ position: "relative", height: "18px", margin: "0 24px" }}>
-            <WashiTape
-              color="sage"
-              rotation={-1}
-              width={220}
-              height={18}
-              style={{ top: 0, left: 0 }}
-            />
-          </div>
-
-          {/* 퀵액션 4개는 카메라·폴라로이드까지 담긴 큰 일러스트라 기존
-              56px 아이콘 타일(4열)로는 알아보기 어려워서, 2x2로 키웠어요.
-              4번째 자리는 원래 "스크랩"이었는데, 받은 에셋이 "다가올
-              한입"이라 라우팅도 캘린더 탭으로 바꿨어요(스크랩 화면은 이제
-              홈에서 바로 가는 길이 없어요 — 사용자 확인 완료). */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "12px",
-              padding: "0 24px",
-            }}
-          >
-            <QuickActionButton
-              imageSrc={todayMealMenuImage}
-              imageAlt="오늘의 식사"
-              aspectRatio={1}
-              onClick={onWriteRestaurant}
-            />
-            <QuickActionButton
-              imageSrc={todayBiteMenuImage}
-              imageAlt="오늘의 한 입"
-              aspectRatio={1.5}
-              onClick={onViewTodayMeal}
-            />
-            <QuickActionButton
-              imageSrc={mapMenuImage}
-              imageAlt="지도"
-              aspectRatio={1.5}
-              onClick={onViewMap}
-            />
-            <QuickActionButton
-              imageSrc={upcomingBiteMenuImage}
-              imageAlt="다가올 한 입"
-              aspectRatio={1.5}
-              onClick={onViewCalendar}
-            />
-          </div>
+        <QuickActionButton
+          icon={<RiceBowlIcon size={26} color={DARK_NAVY} />}
+          label="오늘의 식사"
+          onClick={onWriteRestaurant}
+        />
+        <QuickActionButton
+          icon={<ChatHeartIcon size={26} color={DARK_NAVY} />}
+          label="오늘의 한 입"
+          onClick={onViewTodayMeal}
+        />
+        <QuickActionButton
+          icon={<FoldedMapPinIcon size={26} color={DARK_NAVY} />}
+          label="지도"
+          onClick={onViewMap}
+        />
+        <QuickActionButton
+          icon={<CalendarDays size={26} color={DARK_NAVY} />}
+          label="다가올 한 입"
+          onClick={onViewCalendar}
+        />
+      </div>
 
           <div>
             <SectionHeader
@@ -960,7 +873,6 @@ export default function HomeScreen({
               </List>
             )}
           </div>
-      </div>
 
       <div style={{ marginTop: "24px" }}>
         <SectionHeader
