@@ -1,5 +1,5 @@
-/* 확정 PNG 에셋 기반 스플래시예요. Sky Blue 배경 위에 로고 + 음식 콜라주 +
-   고양이 배경 스티커를 겹쳐 놓은 매거진 콜라주 느낌이에요. */
+/* 확정 PNG 에셋 기반 스플래시예요. Sky Blue 배경 위에 로고 + 피자 고양이
+   이미지를 겹쳐 놓은 심플한 포스터 느낌이에요. */
 .splash-screen {
   position: fixed;
   inset: 0;
@@ -9,6 +9,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   overflow: hidden;
   padding: max(28px, env(safe-area-inset-top, 0px)) 20px
     max(20px, env(safe-area-inset-bottom, 0px));
@@ -30,110 +31,75 @@
   pointer-events: none;
 }
 
-/* 화면 곳곳에 소량(4개)만 흩뿌린 확정 PNG 장식(유성/별/하트)이에요. */
+/* 화면 곳곳에 소량(4개)만 흩뿌린 확정 PNG 장식(유성/별/하트)이에요. 음식
+   콜라주가 빠지면서 화면에서 유일하게 움직이는 장식이라, 살짝 회전한 채로
+   미세하게 흔들려요(rotate/translateY 왕복, 아이템마다 다른 타이밍). */
 .splash-scatter-decoration {
   position: absolute;
   height: auto;
   display: block;
   filter: drop-shadow(0 2px 4px rgba(24, 35, 56, 0.16));
+  animation-name: splash-decoration-float;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  transform: rotate(var(--splash-decoration-rotation, 0deg));
 }
 
-/* 로고 영역이에요. 고양이.png를 로고 뒤쪽에 배경처럼 깔아요. */
+@keyframes splash-decoration-float {
+  from {
+    transform: rotate(calc(var(--splash-decoration-rotation, 0deg) - 2deg)) translateY(0);
+  }
+  to {
+    transform: rotate(calc(var(--splash-decoration-rotation, 0deg) + 2deg)) translateY(-4px);
+  }
+}
+
+/* 고양이+로고 그룹이에요. 로딩 인디케이터를 화면 하단에 절대 위치로
+   따로 고정해뒀기 때문에(.splash-loading-dock), 이 그룹은 .splash-screen의
+   justify-content: center 하나로 화면 전체 높이 기준 정중앙에 놓여요.
+   고양이(위)와 로고(아래)는 세로로 쌓아서 겹치지 않고 각자 온전히
+   보이도록 했어요. */
 .splash-logo-wrap {
   position: relative;
-  margin-top: 4%;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
 }
 
-/* 고양이.png는 실제 투명 배경이 아니라 옅은 회색 사각 배경이 그대로 박힌
-   파일이에요. 이미지를 재가공하는 대신, 크게 키우고 불투명도를 낮춘 뒤
-   가장자리를 방사형 마스크로 페이드아웃해서 사각 프레임이 도드라지지
-   않게 하고, 로고 뒤에서 은은한 배경처럼만 보이도록 했어요. */
+/* 피자 고양이.png는 진짜 알파 투명 배경(RGBA)이라, 카드 틀이나 가장자리
+   페이드 마스크 없이 화면 배경(Sky Blue) 위에 바로 얹어도 자연스럽게
+   보여요. 뷰포트 폭 전체(.splash-screen의 좌우 padding을 overflow로 뚫고
+   나가요)에 맞춰 자연스러운 크기로 배치했어요. */
 .splash-hero-cat-bg {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 210px;
-  height: 210px;
-  object-fit: cover;
-  transform: translate(-50%, -50%) rotate(-4deg);
-  opacity: 0.32;
-  -webkit-mask-image: radial-gradient(circle, rgba(0, 0, 0, 1) 42%, rgba(0, 0, 0, 0) 74%);
-  mask-image: radial-gradient(circle, rgba(0, 0, 0, 1) 42%, rgba(0, 0, 0, 0) 74%);
-  pointer-events: none;
-  z-index: 0;
+  position: relative;
+  width: min(100vw, 480px);
+  height: auto;
+  display: block;
+  margin-bottom: 32px;
 }
 
 .splash-logo-image {
   position: relative;
   z-index: 1;
-  width: min(68vw, 250px);
+  width: min(72vw, 268px);
   height: auto;
   display: block;
   filter: drop-shadow(0 4px 10px rgba(24, 35, 56, 0.18));
 }
 
-/* 음식 콜라주 영역이에요. 안의 각 .splash-food는 이 컨테이너 기준으로
-   절대 위치를 잡아요. */
-.splash-collage {
-  position: relative;
-  width: min(84vw, 300px);
-  height: 230px;
-  margin-top: 14px;
-}
-
-/* 음식 스티커(확정 PNG, 배경 제거된 사진)예요. 옅은 그림자로 붕 떠 있는
-   느낌을 내고, 살짝 회전한 채로 미세하게 흔들려요(rotate/translateY 왕복).
-   원본 이미지를 그대로 쓰고, 위치·회전만 컨테이너 기준으로 배치해요. */
-.splash-food {
+/* 고양이+로고 그룹의 중앙 정렬과 무관하게, 화면 하단에 고정으로 도킹해요. */
+.splash-loading-dock {
   position: absolute;
-  display: block;
-  height: auto;
-  filter: drop-shadow(0 6px 12px rgba(24, 35, 56, 0.22));
-  animation-name: splash-food-float;
-  animation-timing-function: ease-in-out;
-  animation-iteration-count: infinite;
-  animation-direction: alternate;
-  transform: rotate(var(--splash-food-rotation, 0deg));
-}
-
-@keyframes splash-food-float {
-  from {
-    transform: rotate(calc(var(--splash-food-rotation, 0deg) - 1deg)) translateY(0);
-  }
-  to {
-    transform: rotate(calc(var(--splash-food-rotation, 0deg) + 1deg)) translateY(-3px);
-  }
-}
-
-/* "good food, good memory!" 텍스트 스티커예요. 콜라주 왼쪽 위 모서리에
-   살짝 걸치듯 놓은 보조 장식이에요. */
-.splash-good-food-sticker {
-  position: absolute;
-  top: -20px;
-  left: -12px;
-  width: 94px;
-  height: auto;
-  display: block;
-  transform: rotate(-8deg);
-  filter: drop-shadow(0 4px 8px rgba(24, 35, 56, 0.18));
-}
-
-/* 확정 PNG 스티커("다이어트 할 거면 나가.png")예요. 찢어진 종이 테두리와
-   밑줄이 이미지 안에 이미 있어서, 배경/그림자를 더 얹지 않고 크기와 살짝의
-   기울임만 줘요. */
-.splash-speech-bubble-image {
-  margin-top: 10px;
-  width: 118px;
-  height: auto;
-  display: block;
-  transform: rotate(-4deg);
+  left: 50%;
+  bottom: max(20px, env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .splash-loading {
-  margin-top: auto;
-  padding-top: 14px;
   display: flex;
   align-items: center;
   gap: 8px;
