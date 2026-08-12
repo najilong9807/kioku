@@ -2137,6 +2137,7 @@ function App() {
           onViewTodayMeal={() => setSelectedTab(TODAY_MEAL_TAB_INDEX)}
           onViewCalendar={() => setSelectedTab(CALENDAR_TAB_INDEX)}
           onViewMap={openMapSheet}
+          onViewFoodDex={() => setSelectedTab(FOOD_DEX_TAB_INDEX)}
         />
       ) : selectedTab === RESTAURANT_TAB_INDEX ? (
         <div style={{ backgroundColor: PAPER_CREAM }}>

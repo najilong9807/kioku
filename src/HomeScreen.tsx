@@ -30,6 +30,7 @@ import {
 } from "./components/scrapbook/decorations";
 import CustomerSupportView from "./CustomerSupportView";
 import FoodTestModal from "./FoodTestView";
+import { FieldGuideIcon } from "./lib/quickActionIcons";
 import {
   formatDDay,
   getDaysUntil,
@@ -624,6 +625,7 @@ export default function HomeScreen({
   onViewTodayMeal,
   onViewCalendar,
   onViewMap,
+  onViewFoodDex,
 }: {
   nickname: string | null;
   restaurants: Restaurant[];
@@ -635,6 +637,9 @@ export default function HomeScreen({
   onViewTodayMeal: () => void;
   onViewCalendar: () => void;
   onViewMap: () => void;
+  // 맛집 도감은 더 이상 별도 탭이 아니라 이 메뉴 리스트를 통해서만
+  // 들어가는 화면이라, 홈이 직접 탭 전환을 요청해요.
+  onViewFoodDex: () => void;
 }) {
   const [recentPosts, setRecentPosts] = useState<ThreadPost[]>([]);
   const [postsTotalCount, setPostsTotalCount] = useState(0);
@@ -1029,6 +1034,29 @@ export default function HomeScreen({
       </div>
 
       <Border />
+
+      <div onClick={onViewFoodDex} style={{ cursor: "pointer" }}>
+        <ListRow
+          withTouchEffect
+          withArrow
+          left={
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "36px",
+                height: "36px",
+                borderRadius: "12px",
+                backgroundColor: "#f2f4f6",
+              }}
+            >
+              <FieldGuideIcon size={18} color="#6b7684" />
+            </span>
+          }
+          contents={<ListRow.Texts type="1RowTypeA" top="맛집 도감" />}
+        />
+      </div>
 
       <div
         onClick={() => setIsFoodTestOpen(true)}
