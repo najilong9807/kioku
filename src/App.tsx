@@ -9,8 +9,10 @@ import {
   ListRow,
   Result,
   SearchField,
+  Tab,
   TextArea,
   TextField,
+  Top,
   useBottomSheet,
   useDialog,
 } from "@toss/tds-mobile";
@@ -25,7 +27,7 @@ import {
   type ReactNode,
 } from "react";
 import "./App.css";
-import BottomNavigation from "./BottomNavigation";
+import { BrandMarkIcon } from "./BrandMarkIcon";
 import CalendarView, { type PlannedVisitFormValues } from "./CalendarView";
 import { SwashUnderline } from "./components/scrapbook/decorations";
 import FoodDexView from "./FoodDexView";
@@ -65,7 +67,6 @@ import {
   type Rating,
 } from "./lib/rating";
 import { SheetHeader } from "./lib/SheetHeader";
-import type { ThreadPost } from "./lib/threadPosts";
 import { getUserIdentityHash } from "./lib/userIdentity";
 import MapView from "./MapView";
 import {
@@ -1370,6 +1371,11 @@ function TornPaperTag({ children }: { children: ReactNode }) {
   );
 }
 
+// 상단 탭바에 실제로 노출되는 4개 탭이에요. 맛집 도감(FOOD_DEX_TAB_INDEX)은
+// 더 이상 탭이 아니라 홈 화면의 메뉴 리스트를 통해서만 들어가는 화면이라
+// 이 배열에는 없지만, selectedTab 값 자체는 그대로 4를 가질 수 있어요.
+const MAIN_TABS = ["홈", "맛있는 하루", "오늘의 한 입", "다가올 한 입"] as const;
+
 const HOME_TAB_INDEX = 0;
 const RESTAURANT_TAB_INDEX = 1;
 const TODAY_MEAL_TAB_INDEX = 2;
@@ -2054,6 +2060,65 @@ function App() {
         <OnboardingSlides onFinish={handleOnboardingFinish} />
       )}
 
+      {/* 탭을 전환해도 항상 보이는 전역 상단바예요. 스크롤해도 화면 위에 고정돼요. */}
+      <div
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
+          backgroundColor: "#ffffff",
+        }}
+      >
+        <Top
+          title={
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <BrandMarkIcon size={22} />
+              <Top.TitleParagraph size={22}>이게맛다</Top.TitleParagraph>
+            </div>
+          }
+          right={
+            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              <ProfileIconButton
+                profileImage={profileImage}
+                onClick={openProfileSheet}
+              />
+              <NotificationBellButton
+                hasUnread={hasUnreadNotifications}
+                onClick={openNotificationsSheet}
+              />
+            </div>
+          }
+          subtitleBottom={
+            <Top.SubtitleParagraph size={17}>
+              {selectedTab === HOME_TAB_INDEX
+                ? "오늘도 맛있는 하루 보내세요."
+                : selectedTab === RESTAURANT_TAB_INDEX
+                  ? restaurants.length > 0
+                    ? `지금까지 ${restaurants.length}곳의 맛집을 기록했어요.`
+                    : "다녀온 맛집을 기록하고 모아보세요."
+                  : selectedTab === CALENDAR_TAB_INDEX
+                    ? "다음 맛집 방문을 미리 계획해보세요."
+                    : selectedTab === FOOD_DEX_TAB_INDEX
+                      ? "먹어본 메뉴를 하나씩 채워보세요."
+                      : "오늘 먹은 메뉴를 자유롭게 나눠보세요."}
+            </Top.SubtitleParagraph>
+          }
+        />
+      </div>
+
+      <div className="kioku-main-tabs" style={{ padding: "0 4px 16px" }}>
+        <Tab
+          size="small"
+          onChange={(index) => setSelectedTab(index)}
+        >
+          {MAIN_TABS.map((label, index) => (
+            <Tab.Item key={label} selected={selectedTab === index}>
+              {label}
+            </Tab.Item>
+          ))}
+        </Tab>
+      </div>
+
       {selectedTab === HOME_TAB_INDEX ? (
         <HomeScreen
           nickname={nickname}
@@ -2061,10 +2126,6 @@ function App() {
           isRestaurantsLoaded={isLoaded}
           plannedVisits={plannedVisits}
           isPlannedVisitsLoaded={isPlannedVisitsLoaded}
-          profileImage={profileImage}
-          hasUnreadNotifications={hasUnreadNotifications}
-          onOpenProfile={openProfileSheet}
-          onOpenNotifications={openNotificationsSheet}
           onWriteRestaurant={() => {
             setSelectedTab(RESTAURANT_TAB_INDEX);
             openAddSheet();
@@ -2402,10 +2463,6 @@ function App() {
       ) : (
         <TodayMealBoard onOpenRestaurantSearch={openSearchSheet} />
       )}
-
-      {/* 리디자인: 상단 텍스트 탭바를 대체하는 하단 아이콘 네비게이션이에요.
-          탭이 몇 개든, 어떤 화면이든 항상 화면 맨 아래 붙어있어요. */}
-      <BottomNavigation selectedTab={selectedTab} onSelectTab={setSelectedTab} />
     </>
   );
 }

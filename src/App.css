@@ -11,3 +11,37 @@
     margin: 0 auto;
   }
 }
+
+/* 메인 탭바(홈/맛있는 하루/오늘의 한 입/다가올 한 입)예요. TDS Tab
+   컴포넌트는 기본(non-fluid) 모드에서 각 탭 버튼(.tab__item)에 flex: 0 0
+   auto를 적용해서 라벨 길이에 따라 칸 너비가 콘텐츠 크기로 제각각이 돼요.
+   이 규칙과 동일한 특이도(class 2개)라 나중에 로드되는 TDS 쪽이
+   이겨버리길래, !important로 확실히 이겨서 4칸이 항상 똑같은 너비로
+   나뉘도록 했어요. */
+.kioku-main-tabs [role="tab"] {
+  flex: 1 1 0 !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  overflow: visible !important;
+  align-items: center !important;
+  padding: 8px 2px 0 !important;
+}
+
+.kioku-main-tabs .tab__item-title,
+.kioku-main-tabs .tab__item-title span {
+  white-space: nowrap !important;
+  font-size: 12px !important;
+}
+
+.kioku-main-tabs .tab__item-title {
+  text-align: center;
+  word-break: keep-all;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+.kioku-main-tabs .tab__list {
+  align-items: center !important;
+}

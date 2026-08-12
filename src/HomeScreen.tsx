@@ -18,13 +18,11 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import catPizzaHero from "./assets/cat-pizza-hero.png";
 import mapMenuImage from "./assets/images/menu/map.png";
 import todayBiteMenuImage from "./assets/images/menu/today-bite.png";
 import todayMealMenuImage from "./assets/images/menu/today-meal.png";
 import upcomingBiteMenuImage from "./assets/images/menu/upcoming-bite.png";
-import { PhotoSticker } from "./components/scrapbook/PhotoSticker";
-import { WashiTape, type WashiTapeColor } from "./components/scrapbook/WashiTape";
+import { WashiTape } from "./components/scrapbook/WashiTape";
 import {
   SparkleIcon,
   SparkleStarIcon,
@@ -32,8 +30,6 @@ import {
 } from "./components/scrapbook/decorations";
 import CustomerSupportView from "./CustomerSupportView";
 import FoodTestModal from "./FoodTestView";
-import { NotificationBellButton } from "./NotificationsView";
-import { ProfileIconButton } from "./ProfileView";
 import {
   formatDDay,
   getDaysUntil,
@@ -48,7 +44,6 @@ import { SheetHeader } from "./lib/SheetHeader";
 import { fetchTodayMealPosts, type ThreadPost } from "./lib/threadPosts";
 import { oneYearAgoDateInputValue, type Restaurant } from "./restaurantStorage";
 import {
-  BRAND_DISPLAY_FONT_FAMILY,
   DARK_NAVY,
   LIST_THUMBNAIL_RADIUS,
   LIST_THUMBNAIL_SIZE,
@@ -183,21 +178,6 @@ function SimpleListThumbnail({
         </span>
       )}
     </div>
-  );
-}
-
-// 히어로 영역에 흩뿌린 손그림 하트 도들이에요. 별(SparkleStarIcon/SparkleIcon)과
-// 함께 써서 장식 종류를 2가지로만 제한했어요.
-function HeartDoodle() {
-  return (
-    <svg width="16" height="14" viewBox="0 0 20 18" fill="none">
-      <path
-        d="M10 17 C3 12.5 1 8.5 3.2 5.6 C5 3.2 8.4 3.6 10 6.5 C11.6 3.6 15 3.2 16.8 5.6 C19 8.5 17 12.5 10 17 Z"
-        stroke={DARK_NAVY}
-        strokeWidth="1.4"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }
 
@@ -639,10 +619,6 @@ export default function HomeScreen({
   isRestaurantsLoaded,
   plannedVisits,
   isPlannedVisitsLoaded,
-  profileImage,
-  hasUnreadNotifications,
-  onOpenProfile,
-  onOpenNotifications,
   onWriteRestaurant,
   onSelectRestaurant,
   onViewTodayMeal,
@@ -654,13 +630,6 @@ export default function HomeScreen({
   isRestaurantsLoaded: boolean;
   plannedVisits: PlannedVisit[];
   isPlannedVisitsLoaded: boolean;
-  // 리디자인 이후 프로필/알림 진입점은 홈 화면에만 남아있어요(다른 화면의
-  // 공용 상단바가 사라지고 하단 아이콘 네비로 대체됐어요). 기능 자체는 그대로,
-  // 진입 위치만 홈으로 모았어요.
-  profileImage: string | null;
-  hasUnreadNotifications: boolean;
-  onOpenProfile: () => void;
-  onOpenNotifications: () => void;
   onWriteRestaurant: () => void;
   onSelectRestaurant: (restaurant: Restaurant) => void;
   onViewTodayMeal: () => void;
@@ -764,103 +733,13 @@ export default function HomeScreen({
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
-      {/* Sky Blue 히어로예요. 브랜드 포스터에 가깝게, 카드 프레임 없이
-          배경과 고양이 컷아웃이 그대로 이어지도록 했어요(레퍼런스
-          "01_홈.png"/"홈화면.png" 기준). 장식은 별 2개 + 하트 1개만 둬서
-          과하지 않게 했어요. */}
-      <div
-        style={{
-          position: "relative",
-          overflow: "hidden",
-          backgroundColor: SKY_BLUE,
-          backgroundImage:
-            "radial-gradient(120% 70% at 50% 0%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 60%)",
-          padding: "20px 24px 0",
-        }}
-      >
-        <span
-          style={{ position: "absolute", top: "18px", left: "20px" }}
-          aria-hidden="true"
-        >
-          <SparkleStarIcon size={16} color={DARK_NAVY} />
-        </span>
-        <span
-          style={{ position: "absolute", top: "64px", right: "28px" }}
-          aria-hidden="true"
-        >
-          <SparkleIcon size={14} color={DARK_NAVY} />
-        </span>
-        <span
-          style={{ position: "absolute", top: "104px", left: "12px" }}
-          aria-hidden="true"
-        >
-          <HeartDoodle />
-        </span>
-
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-          }}
-        >
-          <div>
-            <div
-              style={{
-                fontFamily: BRAND_DISPLAY_FONT_FAMILY,
-                fontSize: "30px",
-                color: DARK_NAVY,
-                letterSpacing: "0.5px",
-              }}
-            >
-              이게맛다
-            </div>
-            <div
-              style={{
-                marginTop: "2px",
-                fontSize: "13px",
-                fontWeight: 600,
-                color: DARK_NAVY,
-                opacity: 0.75,
-              }}
-            >
-              오늘도 맛있는 하루 보내세요.
-            </div>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-            <ProfileIconButton profileImage={profileImage} onClick={onOpenProfile} />
-            <NotificationBellButton
-              hasUnread={hasUnreadNotifications}
-              onClick={onOpenNotifications}
-            />
-          </div>
-        </div>
-
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <img
-            src={catPizzaHero}
-            alt=""
-            aria-hidden="true"
-            style={{
-              width: "82%",
-              maxWidth: "300px",
-              height: "auto",
-              display: "block",
-              marginTop: "4px",
-            }}
-          />
-        </div>
-      </div>
-
-      {/* 히어로 아래부터는 Functional UI로 전환해요. 흰 종이 위에 카드들이
-          놓인 느낌으로, 두꺼운 스크랩북 프레임(바인더 링 등)은 걷어내고 얇은
-          그림자만 남겼어요. */}
+      {/* 리디자인: 상단 텍스트 탭바가 프로필/알림 진입점을 다시 갖게 되면서,
+          홈 화면 전용이던 Sky Blue 히어로(로고+프로필/알림+고양이 이미지)는
+          걷어냈어요. 인사말부터는 그대로 흰 배경 위 Functional UI예요. */}
       <div
         style={{
           position: "relative",
           backgroundColor: "#ffffff",
-          borderTopLeftRadius: "24px",
-          borderTopRightRadius: "24px",
           paddingTop: "20px",
           paddingBottom: "4px",
           display: "flex",
@@ -868,15 +747,6 @@ export default function HomeScreen({
           gap: "24px",
         }}
       >
-        {/* 히어로와 콘텐츠 영역 사이 이음매에 걸쳐둔 체크 워시테이프예요. */}
-        <WashiTape
-          color="sage"
-          rotation={-4}
-          width={90}
-          height={24}
-          style={{ top: "-12px", left: "20px" }}
-        />
-
         <div style={{ position: "relative", padding: "0 24px" }}>
           {/* 인사말 영역에 흩뿌린 작은 반짝임 스티커예요. */}
           <span
