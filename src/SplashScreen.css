@@ -1,6 +1,5 @@
-/* 리디자인("뜸부기" 레퍼런스) — 정적 포스터형 스플래시예요. Sky Blue 배경 위에
-   로고 + 음식 콜라주 + 고양이 스티커를 겹쳐 놓은 매거진 콜라주 느낌으로
-   바꿨어요. 이전 버전(다이어리 표지 3D 애니메이션)은 완전히 대체됐어요. */
+/* 확정 PNG 에셋 기반 스플래시예요. Sky Blue 배경 위에 로고 + 음식 콜라주 +
+   고양이 배경 스티커를 겹쳐 놓은 매거진 콜라주 느낌이에요. */
 .splash-screen {
   position: fixed;
   inset: 0;
@@ -31,68 +30,67 @@
   pointer-events: none;
 }
 
-/* 로고 주변에 흩뿌린 작은 별 도들이에요. */
-.splash-doodle {
+/* 화면 곳곳에 소량(4개)만 흩뿌린 확정 PNG 장식(유성/별/하트)이에요. */
+.splash-scatter-decoration {
   position: absolute;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 2px 4px rgba(24, 35, 56, 0.16));
 }
 
-.splash-doodle--star-left {
-  top: 9%;
-  left: 8%;
+/* 로고 영역이에요. 고양이.png를 로고 뒤쪽에 배경처럼 깔아요. */
+.splash-logo-wrap {
+  position: relative;
+  margin-top: 4%;
+  display: flex;
+  justify-content: center;
 }
 
-.splash-doodle--star-right {
-  top: 4%;
-  right: 8%;
+/* 고양이.png는 실제 투명 배경이 아니라 옅은 회색 사각 배경이 그대로 박힌
+   파일이에요. 이미지를 재가공하는 대신, 크게 키우고 불투명도를 낮춘 뒤
+   가장자리를 방사형 마스크로 페이드아웃해서 사각 프레임이 도드라지지
+   않게 하고, 로고 뒤에서 은은한 배경처럼만 보이도록 했어요. */
+.splash-hero-cat-bg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 210px;
+  height: 210px;
+  object-fit: cover;
+  transform: translate(-50%, -50%) rotate(-4deg);
+  opacity: 0.32;
+  -webkit-mask-image: radial-gradient(circle, rgba(0, 0, 0, 1) 42%, rgba(0, 0, 0, 0) 74%);
+  mask-image: radial-gradient(circle, rgba(0, 0, 0, 1) 42%, rgba(0, 0, 0, 0) 74%);
+  pointer-events: none;
+  z-index: 0;
 }
 
-.splash-doodle--star-coral {
-  top: 3%;
-  right: 26%;
-}
-
-.splash-logo {
-  margin-top: 6%;
-  text-align: center;
-}
-
-.splash-logo__title {
-  margin: 0;
-  font-size: clamp(38px, 12vw, 52px);
-  font-weight: 400;
-  color: #182338;
-  letter-spacing: 1px;
-}
-
-.splash-logo__subtitle {
-  margin: 4px 0 0;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 2px;
-  color: #182338;
-  opacity: 0.75;
+.splash-logo-image {
+  position: relative;
+  z-index: 1;
+  width: min(68vw, 250px);
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 4px 10px rgba(24, 35, 56, 0.18));
 }
 
 /* 음식 콜라주 영역이에요. 안의 각 .splash-food는 이 컨테이너 기준으로
    절대 위치를 잡아요. */
 .splash-collage {
   position: relative;
-  width: min(88vw, 320px);
-  height: 250px;
-  margin-top: 20px;
+  width: min(84vw, 300px);
+  height: 230px;
+  margin-top: 14px;
 }
 
-/* 음식 스티커 카드예요. 흰 배경 + 둥근 모서리 + 옅은 그림자로 사진 스티커
+/* 음식 스티커(확정 PNG, 배경 제거된 사진)예요. 옅은 그림자로 붕 떠 있는
    느낌을 내고, 살짝 회전한 채로 미세하게 흔들려요(rotate/translateY 왕복).
-   실제 배경 제거 음식 사진이 오면 emoji 대신 <img>로 교체할 자리예요. */
+   원본 이미지를 그대로 쓰고, 위치·회전만 컨테이너 기준으로 배치해요. */
 .splash-food {
   position: absolute;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #ffffff;
-  border-radius: 20%;
-  box-shadow: 0 6px 14px rgba(24, 35, 56, 0.22);
+  display: block;
+  height: auto;
+  filter: drop-shadow(0 6px 12px rgba(24, 35, 56, 0.22));
   animation-name: splash-food-float;
   animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;
@@ -109,38 +107,33 @@
   }
 }
 
-.splash-cat-row {
-  display: flex;
-  align-items: flex-end;
-  gap: 10px;
-  margin-top: 14px;
+/* "good food, good memory!" 텍스트 스티커예요. 콜라주 왼쪽 위 모서리에
+   살짝 걸치듯 놓은 보조 장식이에요. */
+.splash-good-food-sticker {
+  position: absolute;
+  top: -20px;
+  left: -12px;
+  width: 94px;
+  height: auto;
+  display: block;
+  transform: rotate(-8deg);
+  filter: drop-shadow(0 4px 8px rgba(24, 35, 56, 0.18));
 }
 
 /* 확정 PNG 스티커("다이어트 할 거면 나가.png")예요. 찢어진 종이 테두리와
    밑줄이 이미지 안에 이미 있어서, 배경/그림자를 더 얹지 않고 크기와 살짝의
    기울임만 줘요. */
 .splash-speech-bubble-image {
-  width: 132px;
+  margin-top: 10px;
+  width: 118px;
   height: auto;
   display: block;
   transform: rotate(-4deg);
 }
 
-/* 고양이.png는 실제 투명 배경이 아니라 옅은 회색 사각 배경이 그대로 박힌
-   파일이에요. 이미지를 재가공하는 대신, 그 사각 프레임 자체를 흰 스티커
-   카드처럼 둥근 모서리+그림자로 감싸서 자연스러운 카드로 보이게 했어요. */
-.splash-cat {
-  width: 92px;
-  height: 92px;
-  object-fit: cover;
-  border-radius: 18px;
-  box-shadow: 0 6px 14px rgba(24, 35, 56, 0.22);
-  transform: rotate(-3deg);
-}
-
 .splash-loading {
   margin-top: auto;
-  padding-top: 20px;
+  padding-top: 14px;
   display: flex;
   align-items: center;
   gap: 8px;
